@@ -1,0 +1,36 @@
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Index from "./pages/Index";
+import OrdersPage from "./pages/OrdersPage";
+import ClientsPage from "./pages/ClientsPage";
+import InventoryPage from "./pages/InventoryPage";
+import FinancialPage from "./pages/FinancialPage";
+import SettingsPage from "./pages/SettingsPage";
+import NotFound from "./pages/NotFound";
+
+const queryClient = new QueryClient();
+
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/ordens" element={<OrdersPage />} />
+          <Route path="/clientes" element={<ClientsPage />} />
+          <Route path="/estoque" element={<InventoryPage />} />
+          <Route path="/financeiro" element={<FinancialPage />} />
+          <Route path="/configuracoes" element={<SettingsPage />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
+    </TooltipProvider>
+  </QueryClientProvider>
+);
+
+export default App;
