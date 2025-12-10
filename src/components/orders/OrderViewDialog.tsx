@@ -90,13 +90,50 @@ export function OrderViewDialog({ open, onOpenChange, order, onEdit }: OrderView
 
   if (!order) return null;
 
-  const items = order.items || [
-    { id: 1, name: "Tela iPhone 14 Pro", type: "product", price: 350, quantity: 1 },
-    { id: 101, name: "Mão de Obra - Troca de Tela", type: "service", price: 80, quantity: 1 },
-  ];
+  const items = (order.items || []).map((item: any) => ({
+    ...item,
+    price: item.sale_price || item.price || 0,
+  }));
 
-  const total = items.reduce((sum: number, item: any) => sum + item.price * item.quantity, 0);
+  const total = items.reduce((sum: number, item: any) => sum + (item.price || 0) * item.quantity, 0);
   const categoryFields = categoryDisplayFields[order.category] || [];
+  
+  // Parse checklist from category_specific_fields
+  const categorySpecificFields = order.category_specific_fields as Record<string, any> || {};
+  let mobileChecklist: Record<string, boolean | null> = {};
+  let checklistObservations = '';
+  
+  if (categorySpecificFields.mobile_checklist) {
+    try {
+      mobileChecklist = typeof categorySpecificFields.mobile_checklist === 'string' 
+        ? JSON.parse(categorySpecificFields.mobile_checklist) 
+        : categorySpecificFields.mobile_checklist;
+    } catch { mobileChecklist = {}; }
+  }
+  if (categorySpecificFields.checklist_observations) {
+    checklistObservations = categorySpecificFields.checklist_observations;
+  }
+  
+  const hasChecklist = Object.keys(mobileChecklist).length > 0;
+
+  // Checklist labels mapping
+  const checklistLabels: Record<string, string> = {
+    display: 'Tela/Display',
+    touchscreen: 'Touchscreen',
+    camera_frontal: 'Câmera Frontal',
+    camera_traseira: 'Câmera Traseira',
+    microfone: 'Microfone',
+    alto_falante: 'Alto-falante',
+    auricular: 'Auricular',
+    wifi: 'Wi-Fi',
+    bluetooth: 'Bluetooth',
+    bateria: 'Bateria',
+    biometria: 'Biometria',
+    vibracao: 'Vibração',
+    botoes: 'Botões',
+    chip: 'Chip/SIM',
+    sensores: 'Sensores',
+  };
 
   const handlePrint = () => {
     const printContent = printRef.current;
@@ -107,62 +144,70 @@ export function OrderViewDialog({ open, onOpenChange, order, onEdit }: OrderView
 
     const styles = `
       <style>
+        @page {
+          size: A4;
+          margin: 15mm;
+        }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { 
           font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-          padding: 20px;
+          padding: 0;
           color: #1a1a1a;
-          line-height: 1.5;
+          line-height: 1.4;
+          font-size: 11px;
+          width: 210mm;
+          min-height: 297mm;
         }
         .print-header {
           text-align: center;
           border-bottom: 2px solid #333;
-          padding-bottom: 15px;
-          margin-bottom: 20px;
+          padding-bottom: 12px;
+          margin-bottom: 15px;
         }
         .print-header h1 {
-          font-size: 24px;
-          margin-bottom: 5px;
+          font-size: 20px;
+          margin-bottom: 4px;
         }
         .print-header p {
-          font-size: 12px;
+          font-size: 10px;
           color: #666;
         }
         .os-number {
-          font-size: 20px;
+          font-size: 16px;
           font-weight: bold;
           color: #0066cc;
-          margin: 10px 0;
+          margin: 8px 0;
         }
         .section {
-          margin-bottom: 20px;
+          margin-bottom: 12px;
           border: 1px solid #ddd;
-          border-radius: 8px;
-          padding: 15px;
+          border-radius: 6px;
+          padding: 10px;
+          page-break-inside: avoid;
         }
         .section-title {
-          font-size: 14px;
+          font-size: 11px;
           font-weight: bold;
           color: #333;
           border-bottom: 1px solid #eee;
-          padding-bottom: 8px;
-          margin-bottom: 12px;
+          padding-bottom: 6px;
+          margin-bottom: 8px;
           text-transform: uppercase;
         }
         .info-grid {
           display: grid;
           grid-template-columns: repeat(3, 1fr);
-          gap: 12px;
+          gap: 8px;
         }
         .info-item {
-          font-size: 12px;
+          font-size: 10px;
         }
         .info-item label {
           display: block;
           color: #666;
-          font-size: 10px;
+          font-size: 9px;
           text-transform: uppercase;
-          margin-bottom: 2px;
+          margin-bottom: 1px;
         }
         .info-item span {
           font-weight: 500;
@@ -170,13 +215,13 @@ export function OrderViewDialog({ open, onOpenChange, order, onEdit }: OrderView
         .items-table {
           width: 100%;
           border-collapse: collapse;
-          margin-top: 10px;
+          margin-top: 8px;
         }
         .items-table th, .items-table td {
           border: 1px solid #ddd;
-          padding: 8px;
+          padding: 6px;
           text-align: left;
-          font-size: 12px;
+          font-size: 10px;
         }
         .items-table th {
           background: #f5f5f5;
@@ -186,29 +231,61 @@ export function OrderViewDialog({ open, onOpenChange, order, onEdit }: OrderView
           background: #f0f7ff;
           font-weight: bold;
         }
+        .checklist-grid {
+          display: grid;
+          grid-template-columns: repeat(5, 1fr);
+          gap: 4px;
+          font-size: 9px;
+        }
+        .checklist-item {
+          padding: 4px 6px;
+          border-radius: 4px;
+          display: flex;
+          align-items: center;
+          gap: 4px;
+        }
+        .checklist-ok {
+          background: #e8f5e9;
+          color: #2e7d32;
+        }
+        .checklist-defect {
+          background: #ffebee;
+          color: #c62828;
+        }
+        .checklist-na {
+          background: #f5f5f5;
+          color: #666;
+        }
+        .checklist-observations {
+          margin-top: 8px;
+          padding: 8px;
+          background: #fffde7;
+          border-radius: 4px;
+          font-size: 10px;
+        }
         .signature-section {
           display: grid;
           grid-template-columns: 1fr 1fr;
-          gap: 40px;
-          margin-top: 40px;
-          padding-top: 20px;
+          gap: 30px;
+          margin-top: 25px;
+          padding-top: 15px;
         }
         .signature-box {
           text-align: center;
         }
         .signature-line {
           border-top: 1px solid #333;
-          margin-top: 50px;
-          padding-top: 8px;
-          font-size: 12px;
+          margin-top: 40px;
+          padding-top: 6px;
+          font-size: 10px;
         }
         .badge {
           display: inline-block;
-          padding: 2px 8px;
+          padding: 2px 6px;
           border-radius: 4px;
-          font-size: 10px;
+          font-size: 9px;
           font-weight: 600;
-          margin-left: 8px;
+          margin-left: 6px;
         }
         .badge-status {
           background: #e3f2fd;
@@ -227,21 +304,26 @@ export function OrderViewDialog({ open, onOpenChange, order, onEdit }: OrderView
           color: #2e7d32;
         }
         .print-footer {
-          margin-top: 30px;
+          margin-top: 20px;
           text-align: center;
-          font-size: 10px;
+          font-size: 9px;
           color: #999;
           border-top: 1px solid #eee;
-          padding-top: 15px;
+          padding-top: 10px;
         }
         .defect-box {
           background: #fafafa;
-          padding: 10px;
+          padding: 8px;
           border-radius: 4px;
-          font-size: 13px;
+          font-size: 11px;
+        }
+        .terms-text {
+          font-size: 9px;
+          color: #666;
+          line-height: 1.4;
         }
         @media print {
-          body { padding: 10px; }
+          body { padding: 0; }
           .section { page-break-inside: avoid; }
         }
       </style>
@@ -261,11 +343,11 @@ export function OrderViewDialog({ open, onOpenChange, order, onEdit }: OrderView
             <h1>ORDEM DE SERVIÇO</h1>
             <p>Assistência Técnica</p>
             <div class="os-number">
-              ${order.id}
+              ${order.os_number || order.id}
               <span class="badge badge-status">${statusConfig[order.status as keyof typeof statusConfig]?.label || order.status}</span>
               <span class="badge ${priorityClass}">Prioridade: ${priorityConfig[order.priority as keyof typeof priorityConfig]?.label || order.priority}</span>
             </div>
-            <p>Data de Abertura: ${order.createdAt}</p>
+            <p>Data de Abertura: ${new Date(order.created_at).toLocaleDateString('pt-BR')}</p>
           </div>
 
           <div class="section">
@@ -299,14 +381,17 @@ export function OrderViewDialog({ open, onOpenChange, order, onEdit }: OrderView
               </div>
               <div class="info-item">
                 <label>Número de Série</label>
-                <span>${order.serialNumber || "Não informado"}</span>
+                <span>${order.serial_number || "Não informado"}</span>
               </div>
-              ${categoryFields.map(field => `
+              ${categoryFields.map(field => {
+                const value = categorySpecificFields[field.key] || order[field.key];
+                return `
                 <div class="info-item">
                   <label>${field.label}</label>
-                  <span>${order[field.key] || "Não informado"}</span>
+                  <span>${value || "Não informado"}</span>
                 </div>
-              `).join('')}
+              `;
+              }).join('')}
               <div class="info-item">
                 <label>Senha</label>
                 <span>${order.password || "Não informado"}</span>
@@ -322,6 +407,25 @@ export function OrderViewDialog({ open, onOpenChange, order, onEdit }: OrderView
             <div class="section-title">Defeito Relatado</div>
             <div class="defect-box">${order.issue}</div>
           </div>
+
+          ${hasChecklist ? `
+          <div class="section">
+            <div class="section-title">Checklist de Entrada</div>
+            <div class="checklist-grid">
+              ${Object.entries(mobileChecklist).map(([key, value]) => {
+                const label = checklistLabels[key] || key;
+                const statusClass = value === true ? 'checklist-ok' : value === false ? 'checklist-defect' : 'checklist-na';
+                const statusText = value === true ? '✓' : value === false ? '✗' : '-';
+                return `<div class="checklist-item ${statusClass}">${statusText} ${label}</div>`;
+              }).join('')}
+            </div>
+            ${checklistObservations ? `
+            <div class="checklist-observations">
+              <strong>Observações:</strong> ${checklistObservations}
+            </div>
+            ` : ''}
+          </div>
+          ` : ''}
 
           <div class="section">
             <div class="section-title">Produtos e Serviços</div>
@@ -339,10 +443,10 @@ export function OrderViewDialog({ open, onOpenChange, order, onEdit }: OrderView
                 ${items.map((item: any) => `
                   <tr>
                     <td>${item.name}</td>
-                    <td>${item.type === 'product' ? 'Produto' : 'Serviço'}</td>
+                    <td>${item.item_type === 'product' || item.type === 'product' ? 'Produto' : 'Serviço'}</td>
                     <td style="text-align: center;">${item.quantity}</td>
-                    <td style="text-align: right;">R$ ${item.price.toFixed(2)}</td>
-                    <td style="text-align: right;">R$ ${(item.price * item.quantity).toFixed(2)}</td>
+                    <td style="text-align: right;">R$ ${(item.price || 0).toFixed(2)}</td>
+                    <td style="text-align: right;">R$ ${((item.price || 0) * item.quantity).toFixed(2)}</td>
                   </tr>
                 `).join('')}
                 <tr class="total-row">
@@ -393,7 +497,7 @@ export function OrderViewDialog({ open, onOpenChange, order, onEdit }: OrderView
         <DialogHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <DialogTitle className="text-xl">{order.id}</DialogTitle>
+              <DialogTitle className="text-xl">{order.os_number || order.id}</DialogTitle>
               <Badge
                 variant="outline"
                 className={cn("text-xs", statusConfig[order.status as keyof typeof statusConfig]?.className)}
@@ -456,12 +560,12 @@ export function OrderViewDialog({ open, onOpenChange, order, onEdit }: OrderView
               </div>
               <div>
                 <p className="text-muted-foreground">Número de Série</p>
-                <p className="font-medium font-mono">{order.serialNumber || "Não informado"}</p>
+                <p className="font-medium font-mono">{order.serial_number || "Não informado"}</p>
               </div>
               
               {/* Campos específicos da categoria */}
               {categoryFields.map((field) => {
-                const value = order[field.key];
+                const value = categorySpecificFields[field.key] || order[field.key];
                 if (!value) return null;
                 const IconComponent = field.icon;
                 return (
@@ -486,6 +590,35 @@ export function OrderViewDialog({ open, onOpenChange, order, onEdit }: OrderView
             </div>
           </div>
 
+          {/* Checklist de Entrada */}
+          {hasChecklist && (
+            <div className="glass rounded-lg p-4 space-y-3">
+              <h3 className="font-semibold text-foreground flex items-center gap-2">
+                <FileText className="w-4 h-4" />
+                Checklist de Entrada
+              </h3>
+              <div className="grid grid-cols-3 md:grid-cols-5 gap-2">
+                {Object.entries(mobileChecklist).map(([key, value]) => {
+                  const label = checklistLabels[key] || key;
+                  return (
+                    <div key={key} className={`px-2 py-1 rounded text-xs flex items-center gap-1 ${
+                      value === true ? 'bg-success/20 text-success' : 
+                      value === false ? 'bg-destructive/20 text-destructive' : 
+                      'bg-muted text-muted-foreground'
+                    }`}>
+                      {value === true ? '✓' : value === false ? '✗' : '-'} {label}
+                    </div>
+                  );
+                })}
+              </div>
+              {checklistObservations && (
+                <div className="p-2 bg-warning/10 rounded text-sm">
+                  <strong>Obs:</strong> {checklistObservations}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Defeito */}
           <div className="glass rounded-lg p-4 space-y-3">
             <h3 className="font-semibold text-foreground flex items-center gap-2">
@@ -505,7 +638,7 @@ export function OrderViewDialog({ open, onOpenChange, order, onEdit }: OrderView
               {items.map((item: any) => (
                 <div key={item.id} className="flex items-center justify-between p-3">
                   <div className="flex items-center gap-3">
-                    {item.type === "product" ? (
+                    {item.item_type === "product" || item.type === "product" ? (
                       <Package className="w-4 h-4 text-info" />
                     ) : (
                       <Wrench className="w-4 h-4 text-success" />
@@ -513,11 +646,11 @@ export function OrderViewDialog({ open, onOpenChange, order, onEdit }: OrderView
                     <div>
                       <p className="text-sm font-medium">{item.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        {item.quantity}x R$ {item.price.toFixed(2)}
+                        {item.quantity}x R$ {(item.price || 0).toFixed(2)}
                       </p>
                     </div>
                   </div>
-                  <span className="font-medium">R$ {(item.price * item.quantity).toFixed(2)}</span>
+                  <span className="font-medium">R$ {((item.price || 0) * item.quantity).toFixed(2)}</span>
                 </div>
               ))}
               <div className="flex items-center justify-between p-3 bg-secondary/30">
@@ -540,20 +673,22 @@ export function OrderViewDialog({ open, onOpenChange, order, onEdit }: OrderView
                   <p className="font-medium">OS Criada</p>
                   <p className="text-xs text-muted-foreground flex items-center gap-1">
                     <Calendar className="w-3 h-3" />
-                    {order.createdAt} às 14:30
+                    {new Date(order.created_at).toLocaleDateString('pt-BR')} às {new Date(order.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                   </p>
                 </div>
               </div>
-              <div className="flex items-start gap-3">
-                <div className="w-2 h-2 rounded-full bg-info mt-1.5" />
-                <div>
-                  <p className="font-medium">Status alterado para Em Andamento</p>
-                  <p className="text-xs text-muted-foreground flex items-center gap-1">
-                    <Calendar className="w-3 h-3" />
-                    {order.createdAt} às 15:00
-                  </p>
+              {order.completed_at && (
+                <div className="flex items-start gap-3">
+                  <div className="w-2 h-2 rounded-full bg-info mt-1.5" />
+                  <div>
+                    <p className="font-medium">Concluído</p>
+                    <p className="text-xs text-muted-foreground flex items-center gap-1">
+                      <Calendar className="w-3 h-3" />
+                      {new Date(order.completed_at).toLocaleDateString('pt-BR')} às {new Date(order.completed_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div>

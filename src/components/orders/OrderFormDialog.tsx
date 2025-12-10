@@ -309,7 +309,7 @@ export function OrderFormDialog({ open, onOpenChange, mode = "create", orderData
 
       const items: OrderItemInput[] = orderItems.map(item => ({
         item_type: item.type,
-        item_id: item.id,
+        item_id: item.id.startsWith('manual-') ? undefined : item.id,
         name: item.name,
         cost_price: item.cost_price,
         sale_price: item.sale_price,
