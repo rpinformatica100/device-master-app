@@ -45,7 +45,7 @@ export function ManualItemDialog({ open, onOpenChange, onAdd }: ManualItemDialog
     const qty = parseInt(quantity) || 1;
 
     onAdd({
-      id: `manual-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      id: crypto.randomUUID(),
       name: name.trim(),
       type,
       cost_price: cost,
