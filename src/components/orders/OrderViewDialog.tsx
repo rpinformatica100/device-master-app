@@ -135,6 +135,14 @@ export function OrderViewDialog({ open, onOpenChange, order, onEdit }: OrderView
     sensores: 'Sensores',
   };
 
+  // HTML escape function to prevent XSS attacks
+  const escapeHtml = (text: string | null | undefined): string => {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  };
+
   const handlePrint = () => {
     const printContent = printRef.current;
     if (!printContent) return;
@@ -329,13 +337,13 @@ export function OrderViewDialog({ open, onOpenChange, order, onEdit }: OrderView
       </style>
     `;
 
-    const priorityClass = `badge-priority-${order.priority}`;
+    const priorityClass = `badge-priority-${escapeHtml(order.priority)}`;
 
     printWindow.document.write(`
       <!DOCTYPE html>
       <html>
         <head>
-          <title>OS ${order.id}</title>
+          <title>OS ${escapeHtml(order.id)}</title>
           ${styles}
         </head>
         <body>
@@ -343,9 +351,9 @@ export function OrderViewDialog({ open, onOpenChange, order, onEdit }: OrderView
             <h1>ORDEM DE SERVIÇO</h1>
             <p>Assistência Técnica</p>
             <div class="os-number">
-              ${order.os_number || order.id}
-              <span class="badge badge-status">${statusConfig[order.status as keyof typeof statusConfig]?.label || order.status}</span>
-              <span class="badge ${priorityClass}">Prioridade: ${priorityConfig[order.priority as keyof typeof priorityConfig]?.label || order.priority}</span>
+              ${escapeHtml(order.os_number || order.id)}
+              <span class="badge badge-status">${escapeHtml(statusConfig[order.status as keyof typeof statusConfig]?.label || order.status)}</span>
+              <span class="badge ${priorityClass}">Prioridade: ${escapeHtml(priorityConfig[order.priority as keyof typeof priorityConfig]?.label || order.priority)}</span>
             </div>
             <p>Data de Abertura: ${new Date(order.created_at).toLocaleDateString('pt-BR')}</p>
           </div>
@@ -355,15 +363,15 @@ export function OrderViewDialog({ open, onOpenChange, order, onEdit }: OrderView
             <div class="info-grid">
               <div class="info-item">
                 <label>Nome</label>
-                <span>${order.client?.name || "Não informado"}</span>
+                <span>${escapeHtml(order.client?.name) || "Não informado"}</span>
               </div>
               <div class="info-item">
                 <label>Telefone</label>
-                <span>${order.client?.phone || "Não informado"}</span>
+                <span>${escapeHtml(order.client?.phone) || "Não informado"}</span>
               </div>
               <div class="info-item">
                 <label>Email</label>
-                <span>${order.client?.email || "Não informado"}</span>
+                <span>${escapeHtml(order.client?.email) || "Não informado"}</span>
               </div>
             </div>
           </div>
@@ -373,39 +381,39 @@ export function OrderViewDialog({ open, onOpenChange, order, onEdit }: OrderView
             <div class="info-grid">
               <div class="info-item">
                 <label>Dispositivo</label>
-                <span>${order.device}</span>
+                <span>${escapeHtml(order.device)}</span>
               </div>
               <div class="info-item">
                 <label>Categoria</label>
-                <span>${order.category}</span>
+                <span>${escapeHtml(order.category)}</span>
               </div>
               <div class="info-item">
                 <label>Número de Série</label>
-                <span>${order.serial_number || "Não informado"}</span>
+                <span>${escapeHtml(order.serial_number) || "Não informado"}</span>
               </div>
               ${categoryFields.map(field => {
                 const value = categorySpecificFields[field.key] || order[field.key];
                 return `
                 <div class="info-item">
-                  <label>${field.label}</label>
-                  <span>${value || "Não informado"}</span>
+                  <label>${escapeHtml(field.label)}</label>
+                  <span>${escapeHtml(value) || "Não informado"}</span>
                 </div>
               `;
               }).join('')}
               <div class="info-item">
                 <label>Senha</label>
-                <span>${order.password || "Não informado"}</span>
+                <span>${escapeHtml(order.password) || "Não informado"}</span>
               </div>
               <div class="info-item">
                 <label>Acessórios</label>
-                <span>${order.accessories || "Nenhum"}</span>
+                <span>${escapeHtml(order.accessories) || "Nenhum"}</span>
               </div>
             </div>
           </div>
 
           <div class="section">
             <div class="section-title">Defeito Relatado</div>
-            <div class="defect-box">${order.issue}</div>
+            <div class="defect-box">${escapeHtml(order.issue)}</div>
           </div>
 
           ${hasChecklist ? `
@@ -416,12 +424,12 @@ export function OrderViewDialog({ open, onOpenChange, order, onEdit }: OrderView
                 const label = checklistLabels[key] || key;
                 const statusClass = value === true ? 'checklist-ok' : value === false ? 'checklist-defect' : 'checklist-na';
                 const statusText = value === true ? '✓' : value === false ? '✗' : '-';
-                return `<div class="checklist-item ${statusClass}">${statusText} ${label}</div>`;
+                return `<div class="checklist-item ${statusClass}">${statusText} ${escapeHtml(label)}</div>`;
               }).join('')}
             </div>
             ${checklistObservations ? `
             <div class="checklist-observations">
-              <strong>Observações:</strong> ${checklistObservations}
+              <strong>Observações:</strong> ${escapeHtml(checklistObservations)}
             </div>
             ` : ''}
           </div>
@@ -442,7 +450,7 @@ export function OrderViewDialog({ open, onOpenChange, order, onEdit }: OrderView
               <tbody>
                 ${items.map((item: any) => `
                   <tr>
-                    <td>${item.name}</td>
+                    <td>${escapeHtml(item.name)}</td>
                     <td>${item.item_type === 'product' || item.type === 'product' ? 'Produto' : 'Serviço'}</td>
                     <td style="text-align: center;">${item.quantity}</td>
                     <td style="text-align: right;">R$ ${(item.price || 0).toFixed(2)}</td>
