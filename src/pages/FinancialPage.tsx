@@ -3,7 +3,7 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { motion } from "framer-motion";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { FinancialChart } from "@/components/dashboard/FinancialChart";
-import { DollarSign, TrendingUp, TrendingDown, Wallet, Loader2, Eye, Receipt, Package, Plus, CreditCard } from "lucide-react";
+import { DollarSign, TrendingUp, TrendingDown, Wallet, Loader2, Eye, Receipt, Package, Plus, CreditCard, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,7 +21,7 @@ import { TransactionFormDialog } from "@/components/financial/TransactionFormDia
 import { PaymentDialog, PaymentData } from "@/components/financial/PaymentDialog";
 
 export default function FinancialPage() {
-  const { transactions, loading, summary, createTransaction, updateTransaction } = useFinancial();
+  const { transactions, loading, summary, createTransaction, updateTransaction, deleteTransaction } = useFinancial();
   const [selectedTransaction, setSelectedTransaction] = useState<FinancialTransaction | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -217,14 +217,24 @@ export default function FinancialPage() {
                         R$ {Number(transaction.profit_amount).toFixed(2)}
                       </td>
                       <td className="p-4">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => handleViewDetails(transaction)}
-                        >
-                          <Eye className="w-4 h-4" />
-                        </Button>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => handleViewDetails(transaction)}
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-destructive hover:text-destructive"
+                            onClick={() => deleteTransaction(transaction.id)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </td>
                     </motion.tr>
                   ))}

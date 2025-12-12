@@ -26,6 +26,7 @@ export function useOrders() {
 
   const fetchOrders = async () => {
     try {
+      // Fetch orders with clients in one query
       const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
         .select('*, clients(*)')
@@ -33,21 +34,28 @@ export function useOrders() {
       
       if (ordersError) throw ordersError;
 
-      // Fetch items for each order
-      const ordersWithItems: Order[] = await Promise.all(
-        (ordersData || []).map(async (order) => {
-          const { data: items } = await supabase
+      // Fetch all order items in one query
+      const orderIds = (ordersData || []).map(o => o.id);
+      const { data: allItems } = orderIds.length > 0 
+        ? await supabase
             .from('order_items')
             .select('*')
-            .eq('order_id', order.id);
-          
-          return {
-            ...order,
-            client: order.clients as Client | null,
-            items: (items || []) as OrderItem[],
-          } as Order;
-        })
-      );
+            .in('order_id', orderIds)
+        : { data: [] };
+
+      // Group items by order_id
+      const itemsByOrderId = (allItems || []).reduce((acc, item) => {
+        if (!acc[item.order_id]) acc[item.order_id] = [];
+        acc[item.order_id].push(item);
+        return acc;
+      }, {} as Record<string, OrderItem[]>);
+
+      // Map orders with their items
+      const ordersWithItems: Order[] = (ordersData || []).map(order => ({
+        ...order,
+        client: order.clients as Client | null,
+        items: itemsByOrderId[order.id] || [],
+      } as Order));
 
       setOrders(ordersWithItems);
     } catch (error: any) {
@@ -112,7 +120,26 @@ export function useOrders() {
         if (itemsError) throw itemsError;
       }
 
-      await fetchOrders();
+      // Update state immediately with the new order
+      const { data: newOrderData } = await supabase
+        .from('orders')
+        .select('*, clients(*)')
+        .eq('id', order.id)
+        .single();
+      
+      if (newOrderData) {
+        const { data: orderItems } = await supabase
+          .from('order_items')
+          .select('*')
+          .eq('order_id', order.id);
+        
+        const fullOrder: Order = {
+          ...newOrderData,
+          client: newOrderData.clients as Client | null,
+          items: (orderItems || []) as OrderItem[],
+        };
+        setOrders(prev => [fullOrder, ...prev]);
+      }
       toast({ title: 'Ordem de serviço criada com sucesso!' });
       return order;
     } catch (error: any) {
@@ -193,7 +220,26 @@ export function useOrders() {
         await createFinancialTransactionFromOrder(id, paymentInfo);
       }
 
-      await fetchOrders();
+      // Update state immediately with the updated order
+      const { data: updatedOrderData } = await supabase
+        .from('orders')
+        .select('*, clients(*)')
+        .eq('id', id)
+        .single();
+      
+      if (updatedOrderData) {
+        const { data: orderItems } = await supabase
+          .from('order_items')
+          .select('*')
+          .eq('order_id', id);
+        
+        const fullOrder: Order = {
+          ...updatedOrderData,
+          client: updatedOrderData.clients as Client | null,
+          items: (orderItems || []) as OrderItem[],
+        };
+        setOrders(prev => prev.map(o => o.id === id ? fullOrder : o));
+      }
       toast({ title: 'Ordem de serviço atualizada com sucesso!' });
       return order;
     } catch (error: any) {
@@ -300,6 +346,19 @@ export function useOrders() {
 
   const deleteOrder = async (id: string) => {
     try {
+      // Delete associated financial transactions first
+      await supabase
+        .from('financial_transactions')
+        .delete()
+        .eq('order_id', id);
+
+      // Delete order items
+      await supabase
+        .from('order_items')
+        .delete()
+        .eq('order_id', id);
+
+      // Delete the order
       const { error } = await supabase
         .from('orders')
         .delete()
@@ -307,7 +366,7 @@ export function useOrders() {
       
       if (error) throw error;
       setOrders(prev => prev.filter(o => o.id !== id));
-      toast({ title: 'Ordem de serviço excluída com sucesso!' });
+      toast({ title: 'Ordem de serviço e transações associadas excluídas!' });
       return true;
     } catch (error: any) {
       toast({
