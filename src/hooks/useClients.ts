@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Client } from '@/types/database';
 import { toast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 
 export function useClients() {
+  const { user } = useAuth();
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -27,11 +29,12 @@ export function useClients() {
     }
   };
 
-  const createClient = async (client: Omit<Client, 'id' | 'created_at' | 'updated_at'>) => {
+  const createClient = async (client: Omit<Client, 'id' | 'created_at' | 'updated_at' | 'user_id'>) => {
+    if (!user) return null;
     try {
       const { data, error } = await supabase
         .from('clients')
-        .insert(client)
+        .insert({ ...client, user_id: user.id })
         .select()
         .single();
       

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Order, OrderItem, OrderItemInput, Client } from '@/types/database';
 import { toast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 
 export interface PaymentInfo {
   payment_method: string;
@@ -19,6 +20,7 @@ export interface PaymentInfo {
 }
 
 export function useOrders() {
+  const { user } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -69,9 +71,10 @@ export function useOrders() {
   };
 
   const createOrder = async (
-    orderData: Omit<Order, 'id' | 'created_at' | 'updated_at' | 'os_number' | 'client' | 'items'>,
+    orderData: Omit<Order, 'id' | 'created_at' | 'updated_at' | 'os_number' | 'client' | 'items' | 'user_id'>,
     items: OrderItemInput[]
   ) => {
+    if (!user) return null;
     try {
       const os_number = await generateOsNumber();
       
@@ -88,6 +91,7 @@ export function useOrders() {
           total_cost,
           total_sale,
           total_profit,
+          user_id: user.id,
         })
         .select()
         .single();
@@ -276,6 +280,7 @@ export function useOrders() {
         .insert({
           order_id: orderId,
           client_id: order.client_id,
+          user_id: user?.id,
           description: `${order.os_number} - ${client?.name || 'Cliente não identificado'} - ${order.device}`,
           type: 'receita',
           category: 'ordem_servico',

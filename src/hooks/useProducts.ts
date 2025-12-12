@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Product } from '@/types/database';
 import { toast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 
 export function useProducts() {
+  const { user } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -27,11 +29,12 @@ export function useProducts() {
     }
   };
 
-  const createProduct = async (product: Omit<Product, 'id' | 'created_at' | 'updated_at'>) => {
+  const createProduct = async (product: Omit<Product, 'id' | 'created_at' | 'updated_at' | 'user_id'>) => {
+    if (!user) return null;
     try {
       const { data, error } = await supabase
         .from('products')
-        .insert(product)
+        .insert({ ...product, user_id: user.id })
         .select()
         .single();
       
