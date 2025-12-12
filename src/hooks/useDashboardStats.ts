@@ -7,6 +7,8 @@ interface DashboardStats {
   stockItems: number;
   lowStockItems: number;
   monthlyRevenue: number;
+  monthlyCost: number;
+  monthlyProfit: number;
   revenueChange: number;
 }
 
@@ -19,13 +21,13 @@ export function useDashboardStats() {
       const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
       const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
 
-      // Open orders (not completed)
+      // Open orders (not completed/delivered)
       const { count: openOrders } = await supabase
         .from("orders")
         .select("*", { count: "exact", head: true })
-        .not("status", "eq", "concluido");
+        .not("status", "in", "(concluido,entregue)");
 
-      // Active clients (with orders this month or last 3 months)
+      // Active clients (with orders in last 3 months)
       const threeMonthsAgo = new Date();
       threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
       const { data: activeClientsData } = await supabase
@@ -44,22 +46,24 @@ export function useDashboardStats() {
       const stockItems = products?.reduce((sum, p) => sum + (p.stock || 0), 0) || 0;
       const lowStockItems = products?.filter(p => (p.stock || 0) < (p.min_stock || 0)).length || 0;
 
-      // Monthly revenue from completed orders
-      const { data: currentMonthOrders } = await supabase
-        .from("orders")
-        .select("total_sale")
+      // Monthly revenue from financial_transactions (more accurate)
+      const { data: currentMonthTransactions } = await supabase
+        .from("financial_transactions")
+        .select("amount, cost_amount, profit_amount, type")
         .gte("created_at", startOfMonth.toISOString())
-        .eq("status", "concluido");
+        .eq("type", "receita");
 
-      const { data: lastMonthOrders } = await supabase
-        .from("orders")
-        .select("total_sale")
+      const { data: lastMonthTransactions } = await supabase
+        .from("financial_transactions")
+        .select("amount, type")
         .gte("created_at", startOfLastMonth.toISOString())
         .lte("created_at", endOfLastMonth.toISOString())
-        .eq("status", "concluido");
+        .eq("type", "receita");
 
-      const monthlyRevenue = currentMonthOrders?.reduce((sum, o) => sum + Number(o.total_sale || 0), 0) || 0;
-      const lastMonthRevenue = lastMonthOrders?.reduce((sum, o) => sum + Number(o.total_sale || 0), 0) || 0;
+      const monthlyRevenue = currentMonthTransactions?.reduce((sum, t) => sum + Number(t.amount || 0), 0) || 0;
+      const monthlyCost = currentMonthTransactions?.reduce((sum, t) => sum + Number(t.cost_amount || 0), 0) || 0;
+      const monthlyProfit = currentMonthTransactions?.reduce((sum, t) => sum + Number(t.profit_amount || 0), 0) || 0;
+      const lastMonthRevenue = lastMonthTransactions?.reduce((sum, t) => sum + Number(t.amount || 0), 0) || 0;
       
       const revenueChange = lastMonthRevenue > 0 
         ? Math.round(((monthlyRevenue - lastMonthRevenue) / lastMonthRevenue) * 100)
@@ -71,9 +75,12 @@ export function useDashboardStats() {
         stockItems,
         lowStockItems,
         monthlyRevenue,
+        monthlyCost,
+        monthlyProfit,
         revenueChange
       };
-    }
+    },
+    staleTime: 30000, // Cache for 30 seconds
   });
 }
 
@@ -98,6 +105,7 @@ export function useRecentOrders() {
 
       if (error) throw error;
       return data;
-    }
+    },
+    staleTime: 30000, // Cache for 30 seconds
   });
 }

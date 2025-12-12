@@ -48,7 +48,8 @@ export function useFinancial() {
         .single();
       
       if (error) throw error;
-      await fetchTransactions();
+      // Update state immediately without refetching
+      setTransactions(prev => [{ ...data, client: null, order: null } as FinancialTransaction, ...prev]);
       toast({ title: 'Transação criada com sucesso!' });
       return data;
     } catch (error: any) {
@@ -76,7 +77,10 @@ export function useFinancial() {
         .single();
       
       if (error) throw error;
-      await fetchTransactions();
+      // Update state immediately without refetching
+      setTransactions(prev => prev.map(t => 
+        t.id === id ? { ...t, ...data } as FinancialTransaction : t
+      ));
       toast({ title: 'Transação atualizada com sucesso!' });
       return data;
     } catch (error: any) {
