@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Service } from '@/types/database';
 import { toast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 
 export function useServices() {
+  const { user } = useAuth();
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -27,11 +29,12 @@ export function useServices() {
     }
   };
 
-  const createService = async (service: Omit<Service, 'id' | 'created_at' | 'updated_at'>) => {
+  const createService = async (service: Omit<Service, 'id' | 'created_at' | 'updated_at' | 'user_id'>) => {
+    if (!user) return null;
     try {
       const { data, error } = await supabase
         .from('services')
-        .insert(service)
+        .insert({ ...service, user_id: user.id })
         .select()
         .single();
       

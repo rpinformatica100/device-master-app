@@ -2,8 +2,10 @@ import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { FinancialTransaction } from '@/types/database';
 import { toast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 
 export function useFinancial() {
+  const { user } = useAuth();
   const [transactions, setTransactions] = useState<FinancialTransaction[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -35,12 +37,13 @@ export function useFinancial() {
   };
 
   const createTransaction = async (
-    transaction: Omit<FinancialTransaction, 'id' | 'created_at' | 'updated_at' | 'client' | 'order'>
+    transaction: Omit<FinancialTransaction, 'id' | 'created_at' | 'updated_at' | 'client' | 'order' | 'user_id'>
   ) => {
+    if (!user) return null;
     try {
       const { data, error } = await supabase
         .from('financial_transactions')
-        .insert(transaction)
+        .insert({ ...transaction, user_id: user.id })
         .select()
         .single();
       
