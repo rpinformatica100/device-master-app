@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -5,9 +6,54 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Building2, User, Bell, Palette } from "lucide-react";
+import { Building2, User, Bell, Palette, Loader2 } from "lucide-react";
+import { useCompanySettings } from "@/hooks/useCompanySettings";
+import { useTheme } from "@/hooks/useTheme";
+import { useAuth } from "@/hooks/useAuth";
+import { MaskedInput } from "@/components/ui/masked-input";
 
 export default function SettingsPage() {
+  const { settings, loading, saveSettings } = useCompanySettings();
+  const { theme, setTheme } = useTheme();
+  const { user } = useAuth();
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Company form state
+  const [razaoSocial, setRazaoSocial] = useState("");
+  const [nomeFantasia, setNomeFantasia] = useState("");
+  const [cnpj, setCnpj] = useState("");
+  const [inscricaoEstadual, setInscricaoEstadual] = useState("");
+  const [telefone, setTelefone] = useState("");
+  const [email, setEmail] = useState("");
+  const [endereco, setEndereco] = useState("");
+
+  // Load settings into form
+  useEffect(() => {
+    if (settings) {
+      setRazaoSocial(settings.razao_social || "");
+      setNomeFantasia(settings.nome_fantasia || "");
+      setCnpj(settings.cnpj || "");
+      setInscricaoEstadual(settings.inscricao_estadual || "");
+      setTelefone(settings.telefone || "");
+      setEmail(settings.email || "");
+      setEndereco(settings.endereco || "");
+    }
+  }, [settings]);
+
+  const handleSaveCompany = async () => {
+    setIsSaving(true);
+    await saveSettings({
+      razao_social: razaoSocial || null,
+      nome_fantasia: nomeFantasia || null,
+      cnpj: cnpj || null,
+      inscricao_estadual: inscricaoEstadual || null,
+      telefone: telefone || null,
+      email: email || null,
+      endereco: endereco || null,
+    });
+    setIsSaving(false);
+  };
+
   return (
     <MainLayout>
       <div className="p-8">
@@ -49,39 +95,88 @@ export default function SettingsPage() {
 
             <TabsContent value="empresa" className="glass rounded-xl p-6 space-y-6">
               <h3 className="text-lg font-semibold text-foreground mb-4">Dados da Empresa</h3>
-              <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="razao">Razão Social</Label>
-                  <Input id="razao" placeholder="Razão social da empresa" />
+              {loading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="w-6 h-6 animate-spin text-primary" />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="fantasia">Nome Fantasia</Label>
-                  <Input id="fantasia" placeholder="Nome fantasia" defaultValue="TechOS Assistência" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="cnpj">CNPJ</Label>
-                  <Input id="cnpj" placeholder="00.000.000/0000-00" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="ie">Inscrição Estadual</Label>
-                  <Input id="ie" placeholder="Inscrição estadual" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="telefone">Telefone</Label>
-                  <Input id="telefone" placeholder="(00) 0000-0000" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">E-mail</Label>
-                  <Input id="email" type="email" placeholder="contato@empresa.com" />
-                </div>
-                <div className="col-span-2 space-y-2">
-                  <Label htmlFor="endereco">Endereço Completo</Label>
-                  <Input id="endereco" placeholder="Rua, número, bairro, cidade - UF, CEP" />
-                </div>
-              </div>
-              <div className="flex justify-end">
-                <Button>Salvar Alterações</Button>
-              </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="razao">Razão Social</Label>
+                      <Input 
+                        id="razao" 
+                        placeholder="Razão social da empresa" 
+                        value={razaoSocial}
+                        onChange={(e) => setRazaoSocial(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="fantasia">Nome Fantasia</Label>
+                      <Input 
+                        id="fantasia" 
+                        placeholder="Nome fantasia" 
+                        value={nomeFantasia}
+                        onChange={(e) => setNomeFantasia(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="cnpj">CNPJ</Label>
+                      <MaskedInput 
+                        id="cnpj" 
+                        mask="00.000.000/0000-00"
+                        placeholder="00.000.000/0000-00" 
+                        value={cnpj}
+                        onAccept={(value) => setCnpj(value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="ie">Inscrição Estadual</Label>
+                      <Input 
+                        id="ie" 
+                        placeholder="Inscrição estadual" 
+                        value={inscricaoEstadual}
+                        onChange={(e) => setInscricaoEstadual(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="telefone">Telefone</Label>
+                      <MaskedInput 
+                        id="telefone" 
+                        mask="(00) 00000-0000"
+                        placeholder="(00) 00000-0000" 
+                        value={telefone}
+                        onAccept={(value) => setTelefone(value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="email">E-mail</Label>
+                      <Input 
+                        id="email" 
+                        type="email" 
+                        placeholder="contato@empresa.com" 
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                      />
+                    </div>
+                    <div className="col-span-2 space-y-2">
+                      <Label htmlFor="endereco">Endereço Completo</Label>
+                      <Input 
+                        id="endereco" 
+                        placeholder="Rua, número, bairro, cidade - UF, CEP" 
+                        value={endereco}
+                        onChange={(e) => setEndereco(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <div className="flex justify-end">
+                    <Button onClick={handleSaveCompany} disabled={isSaving}>
+                      {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                      Salvar Alterações
+                    </Button>
+                  </div>
+                </>
+              )}
             </TabsContent>
 
             <TabsContent value="usuario" className="glass rounded-xl p-6 space-y-6">
@@ -93,7 +188,7 @@ export default function SettingsPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="emailUser">E-mail</Label>
-                  <Input id="emailUser" type="email" defaultValue="admin@techos.com" />
+                  <Input id="emailUser" type="email" value={user?.email || ""} disabled />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="senhaAtual">Senha Atual</Label>
@@ -151,7 +246,10 @@ export default function SettingsPage() {
                     <p className="font-medium text-foreground">Tema Escuro</p>
                     <p className="text-sm text-muted-foreground">Ativar modo escuro na interface</p>
                   </div>
-                  <Switch defaultChecked />
+                  <Switch 
+                    checked={theme === 'dark'} 
+                    onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
+                  />
                 </div>
                 <div className="flex items-center justify-between p-4 rounded-lg bg-secondary/30">
                   <div>
