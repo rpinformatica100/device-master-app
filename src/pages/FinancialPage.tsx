@@ -12,6 +12,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 import { useFinancial } from "@/hooks/useFinancial";
 import { FinancialTransaction } from "@/types/database";
@@ -26,6 +36,9 @@ export default function FinancialPage() {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [transactionToDelete, setTransactionToDelete] = useState<FinancialTransaction | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleViewDetails = (transaction: FinancialTransaction) => {
     setSelectedTransaction(transaction);
@@ -52,6 +65,23 @@ export default function FinancialPage() {
     });
     setIsPaymentDialogOpen(false);
     setIsDetailOpen(false);
+  };
+
+  const handleDeleteClick = (transaction: FinancialTransaction) => {
+    setTransactionToDelete(transaction);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!transactionToDelete) return;
+    setIsDeleting(true);
+    try {
+      await deleteTransaction(transactionToDelete.id);
+      setIsDeleteDialogOpen(false);
+      setTransactionToDelete(null);
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   if (loading) {
@@ -230,7 +260,7 @@ export default function FinancialPage() {
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8 text-destructive hover:text-destructive"
-                            onClick={() => deleteTransaction(transaction.id)}
+                            onClick={() => handleDeleteClick(transaction)}
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>
@@ -493,6 +523,29 @@ export default function FinancialPage() {
         amount={Number(selectedTransaction?.amount || 0)}
         onConfirm={handlePaymentConfirm}
       />
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir transação?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir "{transactionToDelete?.description}"?
+              Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </MainLayout>
   );
 }

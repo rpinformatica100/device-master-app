@@ -142,7 +142,7 @@ export function OrderFormDialog({ open, onOpenChange, mode = "create", orderData
         setStatus(orderData.status || "aguardando");
         
         const items: LocalOrderItem[] = (orderData.items || []).map(item => ({
-          id: item.id,
+          id: item.item_id || `manual-${crypto.randomUUID()}`,
           name: item.name,
           type: item.item_type as "product" | "service",
           cost_price: Number(item.cost_price),
