@@ -29,7 +29,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Check, ChevronsUpDown, Plus, X, Package, Wrench, User, Loader2, ClipboardCheck, PenLine } from "lucide-react";
+import { Check, ChevronsUpDown, Plus, X, Package, Wrench, User, Loader2, ClipboardCheck, PenLine, UserPlus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useClients } from "@/hooks/useClients";
 import { useProducts } from "@/hooks/useProducts";
@@ -39,6 +39,7 @@ import { Client, Order, OrderItemInput } from "@/types/database";
 import { PaymentDialog, PaymentData } from "@/components/financial/PaymentDialog";
 import { MobileChecklist } from "@/components/orders/MobileChecklist";
 import { ManualItemDialog } from "@/components/orders/ManualItemDialog";
+import { QuickClientDialog } from "@/components/clients/QuickClientDialog";
 
 interface LocalOrderItem {
   id: string;
@@ -110,6 +111,7 @@ export function OrderFormDialog({ open, onOpenChange, mode = "create", orderData
   const [pendingPaymentData, setPendingPaymentData] = useState<PaymentInfo | null>(null);
   const [showChecklist, setShowChecklist] = useState(false);
   const [showManualItem, setShowManualItem] = useState(false);
+  const [showQuickClient, setShowQuickClient] = useState(false);
 
   const [device, setDevice] = useState("");
   const [category, setCategory] = useState("");
@@ -347,9 +349,15 @@ export function OrderFormDialog({ open, onOpenChange, mode = "create", orderData
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
           {/* Cliente */}
           <div className="md:col-span-2 space-y-3">
-            <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-              <User className="w-4 h-4" />
-              Cliente
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                <User className="w-4 h-4" />
+                Cliente
+              </div>
+              <Button variant="outline" size="sm" onClick={() => setShowQuickClient(true)}>
+                <UserPlus className="w-4 h-4 mr-1" />
+                Novo Cliente
+              </Button>
             </div>
             <Popover open={clientOpen} onOpenChange={setClientOpen}>
               <PopoverTrigger asChild>
@@ -648,6 +656,13 @@ export function OrderFormDialog({ open, onOpenChange, mode = "create", orderData
       open={showManualItem}
       onOpenChange={setShowManualItem}
       onAdd={addManualItem}
+    />
+
+    {/* Quick Client Dialog */}
+    <QuickClientDialog
+      open={showQuickClient}
+      onOpenChange={setShowQuickClient}
+      onClientCreated={(client) => setSelectedClient(client as Client)}
     />
     </>
   );

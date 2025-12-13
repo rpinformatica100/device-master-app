@@ -109,8 +109,13 @@ export function useOrders() {
       // Insert order items
       if (items.length > 0) {
         const orderItems = items.map(item => ({
-          ...item,
           order_id: order.id,
+          item_type: item.item_type,
+          item_id: item.item_id || null,
+          name: item.name,
+          cost_price: item.cost_price,
+          sale_price: item.sale_price,
+          quantity: item.quantity,
         }));
 
         const { error: itemsError } = await supabase
@@ -203,8 +208,13 @@ export function useOrders() {
         // Insert new items
         if (items.length > 0) {
           const orderItems = items.map(item => ({
-            ...item,
             order_id: id,
+            item_type: item.item_type,
+            item_id: item.item_id || null,
+            name: item.name,
+            cost_price: item.cost_price,
+            sale_price: item.sale_price,
+            quantity: item.quantity,
           }));
 
           const { error: itemsError } = await supabase
