@@ -3,6 +3,7 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { motion } from "framer-motion";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { FinancialChart } from "@/components/dashboard/FinancialChart";
+import { CostBreakdownSection } from "@/components/financial/CostBreakdownSection";
 import { DollarSign, TrendingUp, TrendingDown, Wallet, Loader2, Eye, Receipt, Package, Plus, CreditCard, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -156,6 +157,9 @@ export default function FinancialPage() {
         <div className="mb-8">
           <FinancialChart />
         </div>
+
+        {/* Cost Breakdown */}
+        <CostBreakdownSection transactions={transactions} />
 
         {/* Transactions */}
         <motion.div
