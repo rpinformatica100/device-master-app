@@ -70,12 +70,16 @@ export function useOrders() {
   };
 
   const generateOsNumber = async (): Promise<string> => {
-    const { count } = await supabase
-      .from('orders')
-      .select('*', { count: 'exact', head: true });
+    // Use database function with SECURITY DEFINER to get globally unique OS number
+    const { data, error } = await supabase.rpc('generate_next_os_number');
     
-    const nextNumber = (count || 0) + 1;
-    return `OS-${String(nextNumber).padStart(4, '0')}`;
+    if (error || !data) {
+      // Fallback: use timestamp-based unique number if RPC fails
+      const timestamp = Date.now().toString(36).toUpperCase();
+      return `OS-${timestamp}`;
+    }
+    
+    return data;
   };
 
   const createOrder = async (
