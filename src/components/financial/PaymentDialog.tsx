@@ -136,24 +136,24 @@ export function PaymentDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
+      <DialogContent className="max-w-sm max-h-[85vh] overflow-y-auto">
+        <DialogHeader className="pb-2">
+          <DialogTitle className="text-base">{title}</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6 py-4">
+        <div className="space-y-4">
           {/* Valor */}
-          <div className="text-center p-4 rounded-lg bg-primary/10">
-            <p className="text-sm text-muted-foreground">Valor Total</p>
-            <p className="text-3xl font-bold text-primary">
+          <div className="text-center p-3 rounded-lg bg-primary/10">
+            <p className="text-xs text-muted-foreground">Valor Total</p>
+            <p className="text-2xl font-bold text-primary">
               R$ {amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </p>
           </div>
 
           {/* Método de Pagamento */}
-          <div className="space-y-3">
-            <Label>Forma de Pagamento *</Label>
-            <div className="grid grid-cols-2 gap-2">
+          <div className="space-y-2">
+            <Label className="text-sm">Forma de Pagamento *</Label>
+            <div className="grid grid-cols-4 gap-1.5">
               {paymentMethods.map((method) => {
                 const Icon = method.icon;
                 return (
@@ -161,14 +161,15 @@ export function PaymentDialog({
                     key={method.value}
                     type="button"
                     variant="outline"
+                    size="sm"
                     className={cn(
-                      "h-auto py-3 flex flex-col items-center gap-1",
+                      "h-auto py-2 px-1 flex flex-col items-center gap-0.5",
                       paymentMethod === method.value && "border-primary bg-primary/10"
                     )}
                     onClick={() => setPaymentMethod(method.value)}
                   >
-                    <Icon className="w-5 h-5" />
-                    <span className="text-xs">{method.label}</span>
+                    <Icon className="w-4 h-4" />
+                    <span className="text-[10px] leading-tight text-center">{method.label}</span>
                   </Button>
                 );
               })}
@@ -309,24 +310,25 @@ export function PaymentDialog({
           )}
 
           {/* Observações */}
-          <div className="space-y-2">
-            <Label>Observações</Label>
+          <div className="space-y-1">
+            <Label className="text-sm">Observações</Label>
             <Textarea
-              placeholder="Informações adicionais sobre o pagamento..."
+              placeholder="Observações..."
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              rows={2}
+              rows={1}
+              className="text-sm"
             />
           </div>
         </div>
 
-        <div className="flex justify-end gap-3 pt-4 border-t border-border">
-          <Button variant="secondary" onClick={() => handleOpenChange(false)}>
+        <div className="flex justify-end gap-2 pt-3 border-t border-border">
+          <Button variant="secondary" size="sm" onClick={() => handleOpenChange(false)}>
             Cancelar
           </Button>
-          <Button onClick={handleConfirm} disabled={!paymentMethod || isLoading}>
+          <Button size="sm" onClick={handleConfirm} disabled={!paymentMethod || isLoading}>
             {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-            Confirmar Pagamento
+            Confirmar
           </Button>
         </div>
       </DialogContent>
