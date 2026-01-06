@@ -7,6 +7,7 @@ interface DashboardStats {
   stockItems: number;
   lowStockItems: number;
   monthlyRevenue: number;
+  monthlyPendingRevenue: number;
   monthlyCost: number;
   monthlyProfit: number;
   revenueChange: number;
@@ -46,27 +47,36 @@ export function useDashboardStats() {
       const stockItems = products?.reduce((sum, p) => sum + (p.stock || 0), 0) || 0;
       const lowStockItems = products?.filter(p => (p.stock || 0) < (p.min_stock || 0)).length || 0;
 
-      // Monthly revenue from financial_transactions (more accurate)
+      // Monthly revenue from financial_transactions - separate paid vs pending
       const { data: currentMonthTransactions } = await supabase
         .from("financial_transactions")
-        .select("amount, cost_amount, profit_amount, type")
+        .select("amount, cost_amount, profit_amount, type, status")
         .gte("created_at", startOfMonth.toISOString())
         .eq("type", "receita");
 
       const { data: lastMonthTransactions } = await supabase
         .from("financial_transactions")
-        .select("amount, type")
+        .select("amount, type, status")
         .gte("created_at", startOfLastMonth.toISOString())
         .lte("created_at", endOfLastMonth.toISOString())
         .eq("type", "receita");
 
-      const monthlyRevenue = currentMonthTransactions?.reduce((sum, t) => sum + Number(t.amount || 0), 0) || 0;
-      const monthlyCost = currentMonthTransactions?.reduce((sum, t) => sum + Number(t.cost_amount || 0), 0) || 0;
-      const monthlyProfit = currentMonthTransactions?.reduce((sum, t) => sum + Number(t.profit_amount || 0), 0) || 0;
-      const lastMonthRevenue = lastMonthTransactions?.reduce((sum, t) => sum + Number(t.amount || 0), 0) || 0;
+      // Calculate paid revenue only
+      const paidTransactions = currentMonthTransactions?.filter(t => t.status === 'pago') || [];
+      const pendingTransactions = currentMonthTransactions?.filter(t => t.status === 'pendente') || [];
       
-      const revenueChange = lastMonthRevenue > 0 
-        ? Math.round(((monthlyRevenue - lastMonthRevenue) / lastMonthRevenue) * 100)
+      const monthlyRevenue = paidTransactions.reduce((sum, t) => sum + Number(t.amount || 0), 0);
+      const monthlyPendingRevenue = pendingTransactions.reduce((sum, t) => sum + Number(t.amount || 0), 0);
+      const monthlyCost = paidTransactions.reduce((sum, t) => sum + Number(t.cost_amount || 0), 0);
+      const monthlyProfit = paidTransactions.reduce((sum, t) => sum + Number(t.profit_amount || 0), 0);
+      
+      // Compare paid revenue only
+      const lastMonthPaidRevenue = lastMonthTransactions
+        ?.filter(t => t.status === 'pago')
+        ?.reduce((sum, t) => sum + Number(t.amount || 0), 0) || 0;
+      
+      const revenueChange = lastMonthPaidRevenue > 0 
+        ? Math.round(((monthlyRevenue - lastMonthPaidRevenue) / lastMonthPaidRevenue) * 100)
         : 0;
 
       return {
@@ -75,6 +85,7 @@ export function useDashboardStats() {
         stockItems,
         lowStockItems,
         monthlyRevenue,
+        monthlyPendingRevenue,
         monthlyCost,
         monthlyProfit,
         revenueChange

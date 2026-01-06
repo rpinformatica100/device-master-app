@@ -58,10 +58,10 @@ const Index = () => {
             delay={0.2}
           />
           <StatCard
-            title="Faturamento"
+            title="Faturamento (Pago)"
             value={isLoading ? "..." : formatCurrency(stats?.monthlyRevenue || 0)}
-            change={isLoading ? "" : stats?.revenueChange ? `${stats.revenueChange > 0 ? '+' : ''}${stats.revenueChange}% vs mês anterior` : "Este mês"}
-            changeType={stats?.revenueChange && stats.revenueChange > 0 ? "positive" : stats?.revenueChange && stats.revenueChange < 0 ? "negative" : "neutral"}
+            change={isLoading ? "" : stats?.monthlyPendingRevenue ? `+ ${formatCurrency(stats.monthlyPendingRevenue)} pendente` : stats?.revenueChange ? `${stats.revenueChange > 0 ? '+' : ''}${stats.revenueChange}% vs mês anterior` : "Este mês"}
+            changeType={stats?.monthlyPendingRevenue ? "neutral" : stats?.revenueChange && stats.revenueChange > 0 ? "positive" : stats?.revenueChange && stats.revenueChange < 0 ? "negative" : "neutral"}
             icon={DollarSign}
             delay={0.3}
           />

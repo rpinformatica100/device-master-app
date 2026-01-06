@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -21,13 +21,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Search, Filter, Eye, Edit, Trash2, Loader2, FileText } from "lucide-react";
+import { Plus, Search, Filter, Eye, Edit, Trash2, Loader2, FileText, CheckCircle, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { OrderFormDialog } from "@/components/orders/OrderFormDialog";
 import { OrderViewDialog } from "@/components/orders/OrderViewDialog";
 import { useOrders } from "@/hooks/useOrders";
 import { Order } from "@/types/database";
 import { format } from "date-fns";
+import { supabase } from "@/integrations/supabase/client";
 
 const statusConfig: Record<string, { label: string; className: string }> = {
   em_andamento: { label: "Em Andamento", className: "bg-info/20 text-info border-info/30" },
@@ -54,6 +55,35 @@ export default function OrdersPage() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [formMode, setFormMode] = useState<"create" | "edit">("create");
   const [isDeleting, setIsDeleting] = useState(false);
+  const [paymentStatuses, setPaymentStatuses] = useState<Record<string, string>>({});
+
+  // Fetch payment statuses for completed orders
+  useEffect(() => {
+    const fetchPaymentStatuses = async () => {
+      const completedOrderIds = orders
+        .filter(o => o.status === 'concluido' || o.status === 'entregue')
+        .map(o => o.id);
+      
+      if (completedOrderIds.length === 0) return;
+
+      const { data } = await supabase
+        .from('financial_transactions')
+        .select('order_id, status')
+        .in('order_id', completedOrderIds);
+
+      if (data) {
+        const statusMap: Record<string, string> = {};
+        data.forEach(t => {
+          if (t.order_id) statusMap[t.order_id] = t.status;
+        });
+        setPaymentStatuses(statusMap);
+      }
+    };
+
+    if (orders.length > 0) {
+      fetchPaymentStatuses();
+    }
+  }, [orders]);
 
   const filteredOrders = orders.filter((order) => {
     const clientName = order.client?.name || "";
@@ -232,12 +262,27 @@ export default function OrdersPage() {
                         {order.issue}
                       </td>
                       <td className="p-4">
-                        <Badge
-                          variant="outline"
-                          className={cn("text-xs", statusConfig[order.status]?.className)}
-                        >
-                          {statusConfig[order.status]?.label || order.status}
-                        </Badge>
+                        <div className="flex items-center gap-2">
+                          <Badge
+                            variant="outline"
+                            className={cn("text-xs", statusConfig[order.status]?.className)}
+                          >
+                            {statusConfig[order.status]?.label || order.status}
+                          </Badge>
+                          {(order.status === 'concluido' || order.status === 'entregue') && (
+                            paymentStatuses[order.id] === 'pago' ? (
+                              <Badge variant="outline" className="text-xs bg-success/20 text-success border-success/30 gap-1">
+                                <CheckCircle className="w-3 h-3" />
+                                Pago
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline" className="text-xs bg-warning/20 text-warning border-warning/30 gap-1">
+                                <Clock className="w-3 h-3" />
+                                Pendente
+                              </Badge>
+                            )
+                          )}
+                        </div>
                       </td>
                       <td className="p-4">
                         <Badge
