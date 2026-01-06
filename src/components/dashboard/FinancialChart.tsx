@@ -15,14 +15,7 @@ export function FinancialChart() {
       sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
       sixMonthsAgo.setDate(1);
 
-      // Get completed orders (revenue)
-      const { data: orders } = await supabase
-        .from("orders")
-        .select("total_sale, created_at")
-        .gte("created_at", sixMonthsAgo.toISOString())
-        .eq("status", "concluido");
-
-      // Get expenses from financial transactions
+      // Get all financial transactions (single source of truth)
       const { data: transactions } = await supabase
         .from("financial_transactions")
         .select("amount, type, created_at")
@@ -39,16 +32,7 @@ export function FinancialChart() {
         monthlyData[key] = { receita: 0, despesa: 0 };
       }
 
-      // Sum orders by month (revenue)
-      orders?.forEach(order => {
-        const date = new Date(order.created_at);
-        const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-        if (monthlyData[key]) {
-          monthlyData[key].receita += Number(order.total_sale || 0);
-        }
-      });
-
-      // Sum transactions by month
+      // Sum transactions by month (single source of truth - no more duplicate counting)
       transactions?.forEach(tx => {
         const date = new Date(tx.created_at);
         const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;

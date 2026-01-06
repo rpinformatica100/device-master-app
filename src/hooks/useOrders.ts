@@ -183,9 +183,25 @@ export function useOrders() {
       const isCompleting = 
         (orderData.status === 'concluido' || orderData.status === 'entregue') &&
         oldOrder?.status !== 'concluido' && oldOrder?.status !== 'entregue';
+      
+      // Check if status is being REVERTED from completed/entregue
+      const isReversing = 
+        (oldOrder?.status === 'concluido' || oldOrder?.status === 'entregue') &&
+        orderData.status !== 'concluido' && orderData.status !== 'entregue' &&
+        orderData.status !== undefined;
 
       if (isCompleting) {
         updateData.completed_at = new Date().toISOString();
+      }
+      
+      // Handle reversal: delete financial transaction and clear completed_at
+      if (isReversing) {
+        await supabase
+          .from('financial_transactions')
+          .delete()
+          .eq('order_id', id);
+        
+        updateData.completed_at = null;
       }
 
       // Remove joined data from update
