@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { motion } from "framer-motion";
 import { StatCard } from "@/components/dashboard/StatCard";
@@ -26,10 +26,13 @@ import {
 import { cn } from "@/lib/utils";
 import { useFinancial } from "@/hooks/useFinancial";
 import { FinancialTransaction } from "@/types/database";
-import { format } from "date-fns";
+import { format, isWithinInterval, startOfDay, endOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { TransactionFormDialog } from "@/components/financial/TransactionFormDialog";
 import { PaymentDialog, PaymentData } from "@/components/financial/PaymentDialog";
+import { FinancialFilters, FilterState, defaultFilters } from "@/components/financial/FinancialFilters";
+import { exportToExcel, exportToPDF } from "@/lib/exportFinancial";
+import { toast } from "@/hooks/use-toast";
 
 export default function FinancialPage() {
   const { transactions, loading, summary, createTransaction, updateTransaction, deleteTransaction } = useFinancial();
@@ -40,6 +43,113 @@ export default function FinancialPage() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [transactionToDelete, setTransactionToDelete] = useState<FinancialTransaction | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [filters, setFilters] = useState<FilterState>(defaultFilters);
+
+  // Filtered transactions based on filters
+  const filteredTransactions = useMemo(() => {
+    return transactions.filter((t) => {
+      // Date filter
+      if (filters.startDate && filters.endDate) {
+        const transactionDate = new Date(t.created_at);
+        if (
+          !isWithinInterval(transactionDate, {
+            start: startOfDay(filters.startDate),
+            end: endOfDay(filters.endDate),
+          })
+        ) {
+          return false;
+        }
+      }
+
+      // Type filter
+      if (filters.type !== "all" && t.type !== filters.type) {
+        return false;
+      }
+
+      // Status filter
+      if (filters.status !== "all" && t.status !== filters.status) {
+        return false;
+      }
+
+      // Category filter
+      if (filters.category !== "all" && t.category !== filters.category) {
+        return false;
+      }
+
+      // Search term filter
+      if (
+        filters.searchTerm &&
+        !t.description.toLowerCase().includes(filters.searchTerm.toLowerCase())
+      ) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [transactions, filters]);
+
+  // Filtered summary
+  const filteredSummary = useMemo(() => {
+    const totalReceitas = filteredTransactions
+      .filter((t) => t.type === "receita")
+      .reduce((sum, t) => sum + Number(t.amount), 0);
+
+    const totalDespesas = filteredTransactions
+      .filter((t) => t.type === "despesa")
+      .reduce((sum, t) => sum + Number(t.amount), 0);
+
+    const totalCustos = filteredTransactions
+      .filter((t) => t.type === "receita")
+      .reduce((sum, t) => sum + Number(t.cost_amount), 0);
+
+    const totalLucro = filteredTransactions
+      .filter((t) => t.type === "receita")
+      .reduce((sum, t) => sum + Number(t.profit_amount), 0);
+
+    return {
+      totalReceitas,
+      totalDespesas,
+      totalCustos,
+      totalLucro,
+      saldo: totalReceitas - totalDespesas,
+      margemMedia: totalReceitas > 0 ? (totalLucro / totalReceitas) * 100 : 0,
+    };
+  }, [filteredTransactions]);
+
+  const handleExportExcel = () => {
+    if (filteredTransactions.length === 0) {
+      toast({
+        title: "Nenhuma transação para exportar",
+        description: "Ajuste os filtros para incluir transações.",
+        variant: "destructive",
+      });
+      return;
+    }
+    exportToExcel({
+      transactions: filteredTransactions,
+      startDate: filters.startDate,
+      endDate: filters.endDate,
+      summary: filteredSummary,
+    });
+    toast({ title: "Exportação iniciada!" });
+  };
+
+  const handleExportPDF = () => {
+    if (filteredTransactions.length === 0) {
+      toast({
+        title: "Nenhuma transação para exportar",
+        description: "Ajuste os filtros para incluir transações.",
+        variant: "destructive",
+      });
+      return;
+    }
+    exportToPDF({
+      transactions: filteredTransactions,
+      startDate: filters.startDate,
+      endDate: filters.endDate,
+      summary: filteredSummary,
+    });
+  };
 
   const handleViewDetails = (transaction: FinancialTransaction) => {
     setSelectedTransaction(transaction);
@@ -117,27 +227,27 @@ export default function FinancialPage() {
           </Button>
         </motion.div>
 
-        {/* Stats */}
+        {/* Stats - Use filtered data for period stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <StatCard
-            title="Saldo Atual"
-            value={`R$ ${summary.saldoAtual.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+            title="Saldo (Período)"
+            value={`R$ ${filteredSummary.saldo.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
             change="Receitas - Despesas"
-            changeType="neutral"
+            changeType={filteredSummary.saldo >= 0 ? "positive" : "negative"}
             icon={Wallet}
             delay={0}
           />
           <StatCard
-            title="Receitas (Mês)"
-            value={`R$ ${summary.receitasMes.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
-            change={`${summary.margemMedia.toFixed(1)}% margem média`}
+            title="Receitas (Período)"
+            value={`R$ ${filteredSummary.totalReceitas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+            change={`${filteredSummary.margemMedia.toFixed(1)}% margem média`}
             changeType="positive"
             icon={TrendingUp}
             delay={0.1}
           />
           <StatCard
-            title="Custos (Mês)"
-            value={`R$ ${summary.custosMes.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+            title="Custos (Período)"
+            value={`R$ ${filteredSummary.totalCustos.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
             change="Custo de produtos/serviços"
             changeType="neutral"
             icon={TrendingDown}
@@ -145,21 +255,30 @@ export default function FinancialPage() {
           />
           <StatCard
             title="Lucro Líquido"
-            value={`R$ ${summary.lucroLiquido.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
-            change={`R$ ${summary.totalPendente.toFixed(2)} pendente`}
+            value={`R$ ${filteredSummary.totalLucro.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+            change={`${filteredTransactions.length} transações`}
             changeType="positive"
             icon={DollarSign}
             delay={0.3}
           />
         </div>
 
+        {/* Filters */}
+        <FinancialFilters
+          filters={filters}
+          onFiltersChange={setFilters}
+          onExportExcel={handleExportExcel}
+          onExportPDF={handleExportPDF}
+          transactions={filteredTransactions}
+        />
+
         {/* Chart */}
         <div className="mb-8">
           <FinancialChart />
         </div>
 
-        {/* Cost Breakdown */}
-        <CostBreakdownSection transactions={transactions} />
+        {/* Cost Breakdown - Use filtered transactions */}
+        <CostBreakdownSection transactions={filteredTransactions} />
 
         {/* Transactions */}
         <motion.div
@@ -168,16 +287,21 @@ export default function FinancialPage() {
           transition={{ duration: 0.5, delay: 0.4 }}
           className="glass rounded-xl overflow-hidden"
         >
-          <div className="p-6 border-b border-border">
-            <h3 className="text-lg font-semibold text-foreground">Últimas Transações</h3>
+          <div className="p-6 border-b border-border flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-foreground">Transações</h3>
+            <span className="text-sm text-muted-foreground">
+              {filteredTransactions.length} transação(ões)
+            </span>
           </div>
 
-          {transactions.length === 0 ? (
+          {filteredTransactions.length === 0 ? (
             <div className="p-8 text-center">
               <Receipt className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">Nenhuma transação registrada</p>
+              <p className="text-muted-foreground">Nenhuma transação encontrada</p>
               <p className="text-sm text-muted-foreground mt-1">
-                As transações são criadas automaticamente quando uma OS é concluída
+                {transactions.length > 0 
+                  ? "Tente ajustar os filtros para ver mais transações" 
+                  : "As transações são criadas automaticamente quando uma OS é concluída"}
               </p>
             </div>
           ) : (
@@ -196,7 +320,7 @@ export default function FinancialPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {transactions.map((transaction, index) => (
+                  {filteredTransactions.map((transaction, index) => (
                     <motion.tr
                       key={transaction.id}
                       initial={{ opacity: 0, x: -20 }}

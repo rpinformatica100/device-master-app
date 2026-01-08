@@ -220,8 +220,27 @@ export function useOrders() {
         updateData.completed_at = new Date().toISOString();
       }
       
-      // Handle reversal: delete financial transaction and clear completed_at
+      // Handle reversal: delete financial transaction, clear completed_at, and RESTORE STOCK
       if (isReversing) {
+        // First, get order items to restore stock
+        const { data: existingItems } = await supabase
+          .from('order_items')
+          .select('*')
+          .eq('order_id', id);
+        
+        // Restore stock for products
+        if (existingItems && existingItems.length > 0) {
+          const itemsToRestore: OrderItemInput[] = existingItems.map(item => ({
+            item_type: item.item_type as 'product' | 'service',
+            item_id: item.item_id,
+            name: item.name,
+            cost_price: item.cost_price,
+            sale_price: item.sale_price,
+            quantity: item.quantity,
+          }));
+          await updateProductStock(itemsToRestore, 'increment');
+        }
+
         await supabase
           .from('financial_transactions')
           .delete()
@@ -296,7 +315,11 @@ export function useOrders() {
         };
         setOrders(prev => prev.map(o => o.id === id ? fullOrder : o));
       }
-      toast({ title: 'Ordem de serviço atualizada com sucesso!' });
+      
+      const successMessage = isReversing 
+        ? 'Ordem revertida e estoque restaurado!' 
+        : 'Ordem de serviço atualizada com sucesso!';
+      toast({ title: successMessage });
       return order;
     } catch (error: any) {
       toast({
