@@ -114,7 +114,8 @@ export function OrderViewDialog({ open, onOpenChange, order, onEdit }: OrderView
     checklistObservations = categorySpecificFields.checklist_observations;
   }
   
-  const hasChecklist = Object.keys(mobileChecklist).length > 0;
+  const isMobileDevice = order.category === 'smartphone' || order.category === 'tablet';
+  const hasChecklist = isMobileDevice && Object.keys(mobileChecklist).length > 0;
 
   // Checklist labels mapping
   const checklistLabels: Record<string, string> = {

@@ -82,6 +82,29 @@ export function useOrders() {
     return data;
   };
 
+  const updateProductStock = async (items: OrderItemInput[], action: 'decrement' | 'increment') => {
+    for (const item of items) {
+      if (item.item_type === 'product' && item.item_id) {
+        const { data: product } = await supabase
+          .from('products')
+          .select('stock')
+          .eq('id', item.item_id)
+          .single();
+        
+        if (product) {
+          const newStock = action === 'decrement' 
+            ? product.stock - item.quantity 
+            : product.stock + item.quantity;
+          
+          await supabase
+            .from('products')
+            .update({ stock: Math.max(0, newStock) })
+            .eq('id', item.item_id);
+        }
+      }
+    }
+  };
+
   const createOrder = async (
     orderData: Omit<Order, 'id' | 'created_at' | 'updated_at' | 'os_number' | 'client' | 'items' | 'user_id'>,
     items: OrderItemInput[]
@@ -127,6 +150,9 @@ export function useOrders() {
           .insert(orderItems);
         
         if (itemsError) throw itemsError;
+
+        // Decrement stock for products when order is created
+        await updateProductStock(items, 'decrement');
       }
 
       // Update state immediately with the new order
@@ -376,6 +402,25 @@ export function useOrders() {
 
   const deleteOrder = async (id: string) => {
     try {
+      // Get order items to restore stock
+      const { data: orderItems } = await supabase
+        .from('order_items')
+        .select('*')
+        .eq('order_id', id);
+
+      // Restore stock for products
+      if (orderItems && orderItems.length > 0) {
+        const itemsToRestore: OrderItemInput[] = orderItems.map(item => ({
+          item_type: item.item_type as 'product' | 'service',
+          item_id: item.item_id,
+          name: item.name,
+          cost_price: item.cost_price,
+          sale_price: item.sale_price,
+          quantity: item.quantity,
+        }));
+        await updateProductStock(itemsToRestore, 'increment');
+      }
+
       // Delete associated financial transactions first
       await supabase
         .from('financial_transactions')
@@ -396,7 +441,7 @@ export function useOrders() {
       
       if (error) throw error;
       setOrders(prev => prev.filter(o => o.id !== id));
-      toast({ title: 'Ordem de serviço e transações associadas excluídas!' });
+      toast({ title: 'Ordem de serviço excluída e estoque restaurado!' });
       return true;
     } catch (error: any) {
       toast({

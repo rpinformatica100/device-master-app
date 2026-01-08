@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -59,6 +59,18 @@ export function MobileChecklist({
     return initial;
   });
   const [observations, setObservations] = useState(initialObservations);
+
+  // Sync state with props when dialog opens
+  useEffect(() => {
+    if (open) {
+      const newChecklist: Record<string, boolean | null> = {};
+      defaultChecklistItems.forEach(item => {
+        newChecklist[item.id] = initialChecklist[item.id] ?? null;
+      });
+      setChecklist(newChecklist);
+      setObservations(initialObservations);
+    }
+  }, [open, initialChecklist, initialObservations]);
 
   const handleItemChange = (id: string, value: boolean | null) => {
     setChecklist(prev => ({ ...prev, [id]: value }));
