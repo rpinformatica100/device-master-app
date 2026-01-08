@@ -45,10 +45,10 @@ export function CostBreakdownSection({ transactions }: CostBreakdownSectionProps
             itemName: item.name,
             itemType: item.type === 'product' ? 'product' : 'service',
             quantity: item.quantity || 1,
-            costPerUnit: item.cost / (item.quantity || 1),
+            costPerUnit: item.cost,
             totalCost: item.cost * (item.quantity || 1),
             salePrice: item.sale * (item.quantity || 1),
-            profit: item.profit * (item.quantity || 1),
+            profit: item.profit,
             date: transaction.created_at,
           });
         }

@@ -283,13 +283,13 @@ export function OrderFormDialog({ open, onOpenChange, mode = "create", orderData
 
     setIsSubmitting(true);
     try {
-      // Merge checklist into category_specific_fields
+      // Merge checklist into category_specific_fields only for mobile devices
+      const isMobileDevice = category === 'smartphone' || category === 'tablet';
       const finalCategoryFields = {
         ...categorySpecificFields,
-        ...(hasChecklist ? { 
-          mobile_checklist: JSON.stringify(mobileChecklist),
-          checklist_observations: checklistObservations,
-        } : {}),
+        // Only include checklist for mobile devices, clear otherwise
+        mobile_checklist: isMobileDevice && hasChecklist ? JSON.stringify(mobileChecklist) : undefined,
+        checklist_observations: isMobileDevice && hasChecklist ? checklistObservations : undefined,
       };
 
       const orderPayload = {
@@ -493,10 +493,26 @@ export function OrderFormDialog({ open, onOpenChange, mode = "create", orderData
                   <ClipboardCheck className="w-4 h-4" />
                   Checklist de Entrada (Opcional)
                 </Label>
-                <Button variant="outline" size="sm" onClick={() => setShowChecklist(true)}>
-                  <ClipboardCheck className="w-4 h-4 mr-1" />
-                  {hasChecklist ? "Editar Checklist" : "Fazer Checklist"}
-                </Button>
+                <div className="flex gap-2">
+                  {hasChecklist && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="text-destructive hover:text-destructive"
+                      onClick={() => {
+                        setMobileChecklist({});
+                        setChecklistObservations("");
+                      }}
+                    >
+                      <X className="w-4 h-4 mr-1" />
+                      Limpar
+                    </Button>
+                  )}
+                  <Button variant="outline" size="sm" onClick={() => setShowChecklist(true)}>
+                    <ClipboardCheck className="w-4 h-4 mr-1" />
+                    {hasChecklist ? "Editar Checklist" : "Fazer Checklist"}
+                  </Button>
+                </div>
               </div>
               {hasChecklist && (
                 <div className="p-3 bg-muted/50 rounded-lg text-sm">
