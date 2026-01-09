@@ -300,6 +300,62 @@ export type Database = {
           },
         ]
       }
+      personal_transactions: {
+        Row: {
+          amount: number
+          category: string | null
+          created_at: string
+          date: string
+          description: string
+          id: string
+          notes: string | null
+          payment_method: string | null
+          source_withdrawal_id: string | null
+          status: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          category?: string | null
+          created_at?: string
+          date?: string
+          description: string
+          id?: string
+          notes?: string | null
+          payment_method?: string | null
+          source_withdrawal_id?: string | null
+          status?: string
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category?: string | null
+          created_at?: string
+          date?: string
+          description?: string
+          id?: string
+          notes?: string | null
+          payment_method?: string | null
+          source_withdrawal_id?: string | null
+          status?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personal_transactions_source_withdrawal_fkey"
+            columns: ["source_withdrawal_id"]
+            isOneToOne: false
+            referencedRelation: "withdrawals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           category: string | null
@@ -374,6 +430,60 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      withdrawals: {
+        Row: {
+          amount: number
+          confirmed_at: string | null
+          created_at: string
+          description: string | null
+          financial_transaction_id: string | null
+          id: string
+          personal_transaction_id: string | null
+          reference_month: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          confirmed_at?: string | null
+          created_at?: string
+          description?: string | null
+          financial_transaction_id?: string | null
+          id?: string
+          personal_transaction_id?: string | null
+          reference_month: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          confirmed_at?: string | null
+          created_at?: string
+          description?: string | null
+          financial_transaction_id?: string | null
+          id?: string
+          personal_transaction_id?: string | null
+          reference_month?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "withdrawals_financial_transaction_id_fkey"
+            columns: ["financial_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "financial_transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "withdrawals_personal_transaction_fkey"
+            columns: ["personal_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "personal_transactions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

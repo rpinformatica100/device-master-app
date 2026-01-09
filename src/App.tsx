@@ -11,6 +11,8 @@ import OrdersPage from "./pages/OrdersPage";
 import ClientsPage from "./pages/ClientsPage";
 import InventoryPage from "./pages/InventoryPage";
 import FinancialPage from "./pages/FinancialPage";
+import ProLaborePage from "./pages/ProLaborePage";
+import PersonalFinancePage from "./pages/PersonalFinancePage";
 import SettingsPage from "./pages/SettingsPage";
 import NotFound from "./pages/NotFound";
 
@@ -54,6 +56,8 @@ function AppRoutes() {
       <Route path="/clientes" element={<ProtectedRoute><ClientsPage /></ProtectedRoute>} />
       <Route path="/estoque" element={<ProtectedRoute><InventoryPage /></ProtectedRoute>} />
       <Route path="/financeiro" element={<ProtectedRoute><FinancialPage /></ProtectedRoute>} />
+      <Route path="/prolabore" element={<ProtectedRoute><ProLaborePage /></ProtectedRoute>} />
+      <Route path="/pessoal" element={<ProtectedRoute><PersonalFinancePage /></ProtectedRoute>} />
       <Route path="/configuracoes" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
