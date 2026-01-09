@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Client } from '@/types/database';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { getUserFriendlyError } from '@/lib/errorMessages';
 
 export function useClients() {
   const { user } = useAuth();
@@ -18,10 +19,10 @@ export function useClients() {
       
       if (error) throw error;
       setClients(data || []);
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: 'Erro ao carregar clientes',
-        description: error.message,
+        description: getUserFriendlyError(error, 'fetchClients'),
         variant: 'destructive',
       });
     } finally {
@@ -42,10 +43,10 @@ export function useClients() {
       setClients(prev => [...prev, data]);
       toast({ title: 'Cliente cadastrado com sucesso!' });
       return data;
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: 'Erro ao cadastrar cliente',
-        description: error.message,
+        description: getUserFriendlyError(error, 'createClient'),
         variant: 'destructive',
       });
       return null;
@@ -65,10 +66,10 @@ export function useClients() {
       setClients(prev => prev.map(c => c.id === id ? data : c));
       toast({ title: 'Cliente atualizado com sucesso!' });
       return data;
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: 'Erro ao atualizar cliente',
-        description: error.message,
+        description: getUserFriendlyError(error, 'updateClient'),
         variant: 'destructive',
       });
       return null;
@@ -86,10 +87,10 @@ export function useClients() {
       setClients(prev => prev.filter(c => c.id !== id));
       toast({ title: 'Cliente excluído com sucesso!' });
       return true;
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: 'Erro ao excluir cliente',
-        description: error.message,
+        description: getUserFriendlyError(error, 'deleteClient'),
         variant: 'destructive',
       });
       return false;

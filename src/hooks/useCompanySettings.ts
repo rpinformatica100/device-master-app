@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { getUserFriendlyError } from '@/lib/errorMessages';
 
 export interface CompanySettings {
   id: string;
@@ -33,7 +34,7 @@ export function useCompanySettings() {
       
       if (error) throw error;
       setSettings(data);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error fetching company settings:', error);
     } finally {
       setLoading(false);
@@ -66,10 +67,10 @@ export function useCompanySettings() {
       
       toast({ title: 'Configurações salvas com sucesso!' });
       return true;
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: 'Erro ao salvar configurações',
-        description: error.message,
+        description: getUserFriendlyError(error, 'saveSettings'),
         variant: 'destructive',
       });
       return false;

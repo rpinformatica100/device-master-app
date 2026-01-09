@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Order, OrderItem, OrderItemInput, Client } from '@/types/database';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { getUserFriendlyError } from '@/lib/errorMessages';
 
 export interface PaymentInfo {
   payment_method: string;
@@ -58,10 +59,10 @@ export function useOrders() {
       } as Order));
 
       setOrders(ordersWithItems);
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: 'Erro ao carregar ordens',
-        description: error.message,
+        description: getUserFriendlyError(error, 'fetchOrders'),
         variant: 'destructive',
       });
     } finally {
@@ -177,10 +178,10 @@ export function useOrders() {
       }
       toast({ title: 'Ordem de serviço criada com sucesso!' });
       return order;
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: 'Erro ao criar ordem de serviço',
-        description: error.message,
+        description: getUserFriendlyError(error, 'createOrder'),
         variant: 'destructive',
       });
       return null;
@@ -321,10 +322,10 @@ export function useOrders() {
         : 'Ordem de serviço atualizada com sucesso!';
       toast({ title: successMessage });
       return order;
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: 'Erro ao atualizar ordem de serviço',
-        description: error.message,
+        description: getUserFriendlyError(error, 'updateOrder'),
         variant: 'destructive',
       });
       return null;
@@ -418,7 +419,7 @@ export function useOrders() {
           details,
         });
 
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error creating financial transaction:', error);
     }
   };
@@ -466,10 +467,10 @@ export function useOrders() {
       setOrders(prev => prev.filter(o => o.id !== id));
       toast({ title: 'Ordem de serviço excluída e estoque restaurado!' });
       return true;
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: 'Erro ao excluir ordem de serviço',
-        description: error.message,
+        description: getUserFriendlyError(error, 'deleteOrder'),
         variant: 'destructive',
       });
       return false;
