@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { FinancialTransaction } from '@/types/database';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { getUserFriendlyError } from '@/lib/errorMessages';
 
 export function useFinancial() {
   const { user } = useAuth();
@@ -25,10 +26,10 @@ export function useFinancial() {
       }));
       
       setTransactions(formattedData);
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: 'Erro ao carregar transações',
-        description: error.message,
+        description: getUserFriendlyError(error, 'fetchTransactions'),
         variant: 'destructive',
       });
     } finally {
@@ -52,10 +53,10 @@ export function useFinancial() {
       setTransactions(prev => [{ ...data, client: null, order: null } as FinancialTransaction, ...prev]);
       toast({ title: 'Transação criada com sucesso!' });
       return data;
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: 'Erro ao criar transação',
-        description: error.message,
+        description: getUserFriendlyError(error, 'createTransaction'),
         variant: 'destructive',
       });
       return null;
@@ -83,10 +84,10 @@ export function useFinancial() {
       ));
       toast({ title: 'Transação atualizada com sucesso!' });
       return data;
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: 'Erro ao atualizar transação',
-        description: error.message,
+        description: getUserFriendlyError(error, 'updateTransaction'),
         variant: 'destructive',
       });
       return null;
@@ -104,10 +105,10 @@ export function useFinancial() {
       setTransactions(prev => prev.filter(t => t.id !== id));
       toast({ title: 'Transação excluída com sucesso!' });
       return true;
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: 'Erro ao excluir transação',
-        description: error.message,
+        description: getUserFriendlyError(error, 'deleteTransaction'),
         variant: 'destructive',
       });
       return false;

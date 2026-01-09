@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Product } from '@/types/database';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { getUserFriendlyError } from '@/lib/errorMessages';
 
 export function useProducts() {
   const { user } = useAuth();
@@ -18,10 +19,10 @@ export function useProducts() {
       
       if (error) throw error;
       setProducts(data || []);
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: 'Erro ao carregar produtos',
-        description: error.message,
+        description: getUserFriendlyError(error, 'fetchProducts'),
         variant: 'destructive',
       });
     } finally {
@@ -42,10 +43,10 @@ export function useProducts() {
       setProducts(prev => [...prev, data]);
       toast({ title: 'Produto cadastrado com sucesso!' });
       return data;
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: 'Erro ao cadastrar produto',
-        description: error.message,
+        description: getUserFriendlyError(error, 'createProduct'),
         variant: 'destructive',
       });
       return null;
@@ -65,10 +66,10 @@ export function useProducts() {
       setProducts(prev => prev.map(p => p.id === id ? data : p));
       toast({ title: 'Produto atualizado com sucesso!' });
       return data;
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: 'Erro ao atualizar produto',
-        description: error.message,
+        description: getUserFriendlyError(error, 'updateProduct'),
         variant: 'destructive',
       });
       return null;
@@ -86,10 +87,10 @@ export function useProducts() {
       setProducts(prev => prev.filter(p => p.id !== id));
       toast({ title: 'Produto excluído com sucesso!' });
       return true;
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: 'Erro ao excluir produto',
-        description: error.message,
+        description: getUserFriendlyError(error, 'deleteProduct'),
         variant: 'destructive',
       });
       return false;

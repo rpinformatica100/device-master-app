@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Service } from '@/types/database';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { getUserFriendlyError } from '@/lib/errorMessages';
 
 export function useServices() {
   const { user } = useAuth();
@@ -18,10 +19,10 @@ export function useServices() {
       
       if (error) throw error;
       setServices(data || []);
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: 'Erro ao carregar serviços',
-        description: error.message,
+        description: getUserFriendlyError(error, 'fetchServices'),
         variant: 'destructive',
       });
     } finally {
@@ -42,10 +43,10 @@ export function useServices() {
       setServices(prev => [...prev, data]);
       toast({ title: 'Serviço cadastrado com sucesso!' });
       return data;
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: 'Erro ao cadastrar serviço',
-        description: error.message,
+        description: getUserFriendlyError(error, 'createService'),
         variant: 'destructive',
       });
       return null;
@@ -65,10 +66,10 @@ export function useServices() {
       setServices(prev => prev.map(s => s.id === id ? data : s));
       toast({ title: 'Serviço atualizado com sucesso!' });
       return data;
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: 'Erro ao atualizar serviço',
-        description: error.message,
+        description: getUserFriendlyError(error, 'updateService'),
         variant: 'destructive',
       });
       return null;
@@ -86,10 +87,10 @@ export function useServices() {
       setServices(prev => prev.filter(s => s.id !== id));
       toast({ title: 'Serviço excluído com sucesso!' });
       return true;
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: 'Erro ao excluir serviço',
-        description: error.message,
+        description: getUserFriendlyError(error, 'deleteService'),
         variant: 'destructive',
       });
       return false;
