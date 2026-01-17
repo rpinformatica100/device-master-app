@@ -17,14 +17,17 @@ export type Database = {
       clients: {
         Row: {
           address: string | null
+          bairro: string | null
           cep: string | null
           city: string | null
+          complemento: string | null
           cpf: string | null
           created_at: string
           email: string | null
           id: string
           name: string
           notes: string | null
+          numero: string | null
           phone: string | null
           state: string | null
           updated_at: string
@@ -32,14 +35,17 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          bairro?: string | null
           cep?: string | null
           city?: string | null
+          complemento?: string | null
           cpf?: string | null
           created_at?: string
           email?: string | null
           id?: string
           name: string
           notes?: string | null
+          numero?: string | null
           phone?: string | null
           state?: string | null
           updated_at?: string
@@ -47,14 +53,17 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          bairro?: string | null
           cep?: string | null
           city?: string | null
+          complemento?: string | null
           cpf?: string | null
           created_at?: string
           email?: string | null
           id?: string
           name?: string
           notes?: string | null
+          numero?: string | null
           phone?: string | null
           state?: string | null
           updated_at?: string
@@ -64,40 +73,61 @@ export type Database = {
       }
       company_settings: {
         Row: {
+          bairro: string | null
+          cep: string | null
+          cidade: string | null
           cnpj: string | null
+          complemento: string | null
           created_at: string
           email: string | null
           endereco: string | null
+          estado: string | null
           id: string
           inscricao_estadual: string | null
           nome_fantasia: string | null
+          numero: string | null
           razao_social: string | null
+          rua: string | null
           telefone: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          bairro?: string | null
+          cep?: string | null
+          cidade?: string | null
           cnpj?: string | null
+          complemento?: string | null
           created_at?: string
           email?: string | null
           endereco?: string | null
+          estado?: string | null
           id?: string
           inscricao_estadual?: string | null
           nome_fantasia?: string | null
+          numero?: string | null
           razao_social?: string | null
+          rua?: string | null
           telefone?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          bairro?: string | null
+          cep?: string | null
+          cidade?: string | null
           cnpj?: string | null
+          complemento?: string | null
           created_at?: string
           email?: string | null
           endereco?: string | null
+          estado?: string | null
           id?: string
           inscricao_estadual?: string | null
           nome_fantasia?: string | null
+          numero?: string | null
           razao_social?: string | null
+          rua?: string | null
           telefone?: string | null
           updated_at?: string
           user_id?: string

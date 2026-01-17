@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -10,13 +10,16 @@ import { Building2, User, Bell, Palette, Loader2 } from "lucide-react";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { useTheme } from "@/hooks/useTheme";
 import { useAuth } from "@/hooks/useAuth";
-import { MaskedInput } from "@/components/ui/masked-input";
+import { MaskedInput, CepInput } from "@/components/ui/masked-input";
+import { fetchAddressByCep } from "@/lib/cep";
+import { toast } from "sonner";
 
 export default function SettingsPage() {
   const { settings, loading, saveSettings } = useCompanySettings();
   const { theme, setTheme } = useTheme();
   const { user } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
+  const [isFetchingCep, setIsFetchingCep] = useState(false);
 
   // Company form state
   const [razaoSocial, setRazaoSocial] = useState("");
@@ -25,7 +28,13 @@ export default function SettingsPage() {
   const [inscricaoEstadual, setInscricaoEstadual] = useState("");
   const [telefone, setTelefone] = useState("");
   const [email, setEmail] = useState("");
-  const [endereco, setEndereco] = useState("");
+  const [cep, setCep] = useState("");
+  const [rua, setRua] = useState("");
+  const [numero, setNumero] = useState("");
+  const [complemento, setComplemento] = useState("");
+  const [bairro, setBairro] = useState("");
+  const [cidade, setCidade] = useState("");
+  const [estado, setEstado] = useState("");
 
   // Load settings into form
   useEffect(() => {
@@ -36,9 +45,35 @@ export default function SettingsPage() {
       setInscricaoEstadual(settings.inscricao_estadual || "");
       setTelefone(settings.telefone || "");
       setEmail(settings.email || "");
-      setEndereco(settings.endereco || "");
+      setCep((settings as any).cep || "");
+      setRua((settings as any).rua || "");
+      setNumero((settings as any).numero || "");
+      setComplemento((settings as any).complemento || "");
+      setBairro((settings as any).bairro || "");
+      setCidade((settings as any).cidade || "");
+      setEstado((settings as any).estado || "");
     }
   }, [settings]);
+
+  const handleCepChange = useCallback(async (maskedValue: string, unmaskedValue: string) => {
+    setCep(maskedValue);
+    
+    if (unmaskedValue.length === 8) {
+      setIsFetchingCep(true);
+      const address = await fetchAddressByCep(unmaskedValue);
+      setIsFetchingCep(false);
+      
+      if (address) {
+        setRua(address.logradouro || rua);
+        setBairro(address.bairro || bairro);
+        setCidade(address.localidade || cidade);
+        setEstado(address.uf || estado);
+        toast.success("Endereço preenchido automaticamente!");
+      } else {
+        toast.error("CEP não encontrado");
+      }
+    }
+  }, [rua, bairro, cidade, estado]);
 
   const handleSaveCompany = async () => {
     setIsSaving(true);
@@ -49,8 +84,14 @@ export default function SettingsPage() {
       inscricao_estadual: inscricaoEstadual || null,
       telefone: telefone || null,
       email: email || null,
-      endereco: endereco || null,
-    });
+      cep: cep || null,
+      rua: rua || null,
+      numero: numero || null,
+      complemento: complemento || null,
+      bairro: bairro || null,
+      cidade: cidade || null,
+      estado: estado || null,
+    } as any);
     setIsSaving(false);
   };
 
@@ -101,7 +142,7 @@ export default function SettingsPage() {
                 </div>
               ) : (
                 <>
-                  <div className="grid grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="razao">Razão Social</Label>
                       <Input 
@@ -159,17 +200,85 @@ export default function SettingsPage() {
                         onChange={(e) => setEmail(e.target.value)}
                       />
                     </div>
-                    <div className="col-span-2 space-y-2">
-                      <Label htmlFor="endereco">Endereço Completo</Label>
-                      <Input 
-                        id="endereco" 
-                        placeholder="Rua, número, bairro, cidade - UF, CEP" 
-                        value={endereco}
-                        onChange={(e) => setEndereco(e.target.value)}
-                      />
+                  </div>
+
+                  {/* Address Section */}
+                  <div className="pt-4 border-t border-border">
+                    <h4 className="text-md font-medium text-foreground mb-4">Endereço</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="cep">CEP</Label>
+                        <div className="relative">
+                          <CepInput
+                            id="cep"
+                            placeholder="00000-000"
+                            value={cep}
+                            onAccept={handleCepChange}
+                          />
+                          {isFetchingCep && (
+                            <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground" />
+                          )}
+                        </div>
+                      </div>
+                      <div className="md:col-span-2 space-y-2">
+                        <Label htmlFor="rua">Logradouro (Rua/Avenida)</Label>
+                        <Input 
+                          id="rua" 
+                          placeholder="Ex: Rua das Flores" 
+                          value={rua}
+                          onChange={(e) => setRua(e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="numero">Número</Label>
+                        <Input 
+                          id="numero" 
+                          placeholder="Ex: 123" 
+                          value={numero}
+                          onChange={(e) => setNumero(e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="complemento">Complemento</Label>
+                        <Input 
+                          id="complemento" 
+                          placeholder="Ex: Sala 101" 
+                          value={complemento}
+                          onChange={(e) => setComplemento(e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="bairro">Bairro</Label>
+                        <Input 
+                          id="bairro" 
+                          placeholder="Ex: Centro" 
+                          value={bairro}
+                          onChange={(e) => setBairro(e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="cidade">Cidade</Label>
+                        <Input 
+                          id="cidade" 
+                          placeholder="Cidade" 
+                          value={cidade}
+                          onChange={(e) => setCidade(e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="estado">Estado</Label>
+                        <Input 
+                          id="estado" 
+                          placeholder="UF" 
+                          maxLength={2}
+                          value={estado}
+                          onChange={(e) => setEstado(e.target.value.toUpperCase())}
+                        />
+                      </div>
                     </div>
                   </div>
-                  <div className="flex justify-end">
+
+                  <div className="flex justify-end pt-4">
                     <Button onClick={handleSaveCompany} disabled={isSaving}>
                       {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                       Salvar Alterações

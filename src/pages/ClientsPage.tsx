@@ -45,6 +45,9 @@ export default function ClientsPage() {
     cpf: "",
     cep: "",
     address: "",
+    numero: "",
+    complemento: "",
+    bairro: "",
     city: "",
     state: "",
     notes: "",
@@ -66,6 +69,9 @@ export default function ClientsPage() {
       cpf: "",
       cep: "",
       address: "",
+      numero: "",
+      complemento: "",
+      bairro: "",
       city: "",
       state: "",
       notes: "",
@@ -87,6 +93,9 @@ export default function ClientsPage() {
       cpf: client.cpf || "",
       cep: client.cep || "",
       address: client.address || "",
+      numero: (client as any).numero || "",
+      complemento: (client as any).complemento || "",
+      bairro: (client as any).bairro || "",
       city: client.city || "",
       state: client.state || "",
       notes: client.notes || "",
@@ -110,7 +119,8 @@ export default function ClientsPage() {
       if (address) {
         setFormData(prev => ({
           ...prev,
-          address: address.logradouro ? `${address.logradouro}${address.bairro ? `, ${address.bairro}` : ''}` : prev.address,
+          address: address.logradouro || prev.address,
+          bairro: address.bairro || prev.bairro,
           city: address.localidade || prev.city,
           state: address.uf || prev.state,
         }));
@@ -149,6 +159,18 @@ export default function ClientsPage() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const formatClientAddress = (client: Client) => {
+    const parts = [];
+    if (client.address) parts.push(client.address);
+    if ((client as any).numero) parts.push((client as any).numero);
+    if ((client as any).complemento) parts.push((client as any).complemento);
+    if ((client as any).bairro) parts.push((client as any).bairro);
+    if (client.city) parts.push(client.city);
+    if (client.state) parts.push(client.state);
+    if (client.cep) parts.push(`CEP: ${client.cep}`);
+    return parts.join(", ");
   };
 
   if (loading) {
@@ -265,14 +287,10 @@ export default function ClientsPage() {
                     <span>{client.phone}</span>
                   </div>
                 )}
-                {client.address && (
+                {(client.address || client.city) && (
                   <div className="flex items-start gap-2 text-muted-foreground">
                     <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                    <span className="line-clamp-2">
-                      {client.address}
-                      {client.city && `, ${client.city}`}
-                      {client.state && ` - ${client.state}`}
-                    </span>
+                    <span className="line-clamp-2">{formatClientAddress(client)}</span>
                   </div>
                 )}
               </div>
@@ -289,7 +307,7 @@ export default function ClientsPage() {
 
       {/* Form Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-md sm:max-w-lg">
+        <DialogContent className="max-w-md sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>
               {selectedClient ? "Editar Cliente" : "Novo Cliente"}
@@ -348,13 +366,42 @@ export default function ClientsPage() {
                   )}
                 </div>
               </div>
+              
+              {/* Address Fields */}
               <div className="sm:col-span-2 space-y-1.5">
-                <Label htmlFor="address">Endereço</Label>
+                <Label htmlFor="address">Logradouro (Rua/Avenida)</Label>
                 <Input
                   id="address"
-                  placeholder="Rua, número, bairro"
+                  placeholder="Ex: Rua das Flores"
                   value={formData.address}
                   onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="numero">Número</Label>
+                <Input
+                  id="numero"
+                  placeholder="Ex: 123"
+                  value={formData.numero}
+                  onChange={(e) => setFormData({ ...formData, numero: e.target.value })}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="complemento">Complemento</Label>
+                <Input
+                  id="complemento"
+                  placeholder="Ex: Apto 101, Bloco A"
+                  value={formData.complemento}
+                  onChange={(e) => setFormData({ ...formData, complemento: e.target.value })}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="bairro">Bairro</Label>
+                <Input
+                  id="bairro"
+                  placeholder="Ex: Centro"
+                  value={formData.bairro}
+                  onChange={(e) => setFormData({ ...formData, bairro: e.target.value })}
                 />
               </div>
               <div className="space-y-1.5">
@@ -371,8 +418,9 @@ export default function ClientsPage() {
                 <Input
                   id="state"
                   placeholder="UF"
+                  maxLength={2}
                   value={formData.state}
-                  onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                  onChange={(e) => setFormData({ ...formData, state: e.target.value.toUpperCase() })}
                 />
               </div>
               <div className="sm:col-span-2 space-y-1.5">
