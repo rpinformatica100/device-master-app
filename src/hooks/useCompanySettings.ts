@@ -14,6 +14,13 @@ export interface CompanySettings {
   telefone: string | null;
   email: string | null;
   endereco: string | null;
+  cep: string | null;
+  rua: string | null;
+  numero: string | null;
+  complemento: string | null;
+  bairro: string | null;
+  cidade: string | null;
+  estado: string | null;
   created_at: string;
   updated_at: string;
 }
