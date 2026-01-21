@@ -20,6 +20,8 @@ export type Database = {
           bairro: string | null
           cep: string | null
           city: string | null
+          client_type: string | null
+          cnpj: string | null
           complemento: string | null
           cpf: string | null
           created_at: string
@@ -38,6 +40,8 @@ export type Database = {
           bairro?: string | null
           cep?: string | null
           city?: string | null
+          client_type?: string | null
+          cnpj?: string | null
           complemento?: string | null
           cpf?: string | null
           created_at?: string
@@ -56,6 +60,8 @@ export type Database = {
           bairro?: string | null
           cep?: string | null
           city?: string | null
+          client_type?: string | null
+          cnpj?: string | null
           complemento?: string | null
           cpf?: string | null
           created_at?: string

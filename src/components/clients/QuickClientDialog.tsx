@@ -5,12 +5,19 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 import { useClients } from "@/hooks/useClients";
-import { MaskedInput, CepInput } from "@/components/ui/masked-input";
+import { MaskedInput, CepInput, CnpjInput } from "@/components/ui/masked-input";
 import { fetchAddressByCep } from "@/lib/cep";
 import { toast } from "sonner";
 
@@ -26,7 +33,9 @@ export function QuickClientDialog({ open, onOpenChange, onClientCreated }: Quick
   const [isFetchingCep, setIsFetchingCep] = useState(false);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [clientType, setClientType] = useState<"pessoa_fisica" | "pessoa_juridica">("pessoa_fisica");
   const [cpf, setCpf] = useState("");
+  const [cnpj, setCnpj] = useState("");
   const [cep, setCep] = useState("");
   const [address, setAddress] = useState("");
   const [numero, setNumero] = useState("");
@@ -57,7 +66,9 @@ export function QuickClientDialog({ open, onOpenChange, onClientCreated }: Quick
   const resetForm = () => {
     setName("");
     setPhone("");
+    setClientType("pessoa_fisica");
     setCpf("");
+    setCnpj("");
     setCep("");
     setAddress("");
     setNumero("");
@@ -74,7 +85,9 @@ export function QuickClientDialog({ open, onOpenChange, onClientCreated }: Quick
       const client = await createClient({
         name: name.trim(),
         phone: phone || null,
-        cpf: cpf || null,
+        client_type: clientType,
+        cpf: clientType === "pessoa_fisica" ? (cpf || null) : null,
+        cnpj: clientType === "pessoa_juridica" ? (cnpj || null) : null,
         cep: cep || null,
         address: address || null,
         numero: numero || null,
@@ -124,15 +137,43 @@ export function QuickClientDialog({ open, onOpenChange, onClientCreated }: Quick
             </div>
             
             <div className="space-y-1.5">
-              <Label htmlFor="quick-cpf">CPF</Label>
-              <MaskedInput 
-                id="quick-cpf" 
-                mask="000.000.000-00"
-                placeholder="000.000.000-00"
-                value={cpf}
-                onAccept={(value) => setCpf(value)}
-              />
+              <Label htmlFor="quick-client-type">Tipo de Pessoa</Label>
+              <Select
+                value={clientType}
+                onValueChange={(value: "pessoa_fisica" | "pessoa_juridica") => setClientType(value)}
+              >
+                <SelectTrigger id="quick-client-type">
+                  <SelectValue placeholder="Selecione o tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pessoa_fisica">Pessoa Física</SelectItem>
+                  <SelectItem value="pessoa_juridica">Pessoa Jurídica</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
+
+            {clientType === "pessoa_fisica" ? (
+              <div className="space-y-1.5">
+                <Label htmlFor="quick-cpf">CPF</Label>
+                <MaskedInput 
+                  id="quick-cpf" 
+                  mask="000.000.000-00"
+                  placeholder="000.000.000-00"
+                  value={cpf}
+                  onAccept={(value) => setCpf(value)}
+                />
+              </div>
+            ) : (
+              <div className="space-y-1.5">
+                <Label htmlFor="quick-cnpj">CNPJ</Label>
+                <CnpjInput 
+                  id="quick-cnpj" 
+                  placeholder="00.000.000/0000-00"
+                  value={cnpj}
+                  onAccept={(value) => setCnpj(value)}
+                />
+              </div>
+            )}
 
             <div className="space-y-1.5">
               <Label htmlFor="quick-cep">CEP</Label>

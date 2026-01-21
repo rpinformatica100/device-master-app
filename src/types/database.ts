@@ -7,8 +7,13 @@ export interface Client {
   email?: string | null;
   phone?: string | null;
   cpf?: string | null;
+  cnpj?: string | null;
+  client_type?: string | null;
   cep?: string | null;
   address?: string | null;
+  numero?: string | null;
+  complemento?: string | null;
+  bairro?: string | null;
   city?: string | null;
   state?: string | null;
   notes?: string | null;
