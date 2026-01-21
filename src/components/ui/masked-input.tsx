@@ -62,4 +62,12 @@ export const CepInput = forwardRef<
 ));
 CepInput.displayName = "CepInput";
 
+export const CnpjInput = forwardRef<
+  HTMLInputElement,
+  Omit<MaskedInputProps, "mask" | "definitions">
+>(({ ...props }, ref) => (
+  <MaskedInput ref={ref} mask="00.000.000/0000-00" {...props} />
+));
+CnpjInput.displayName = "CnpjInput";
+
 export { MaskedInput };

@@ -19,12 +19,19 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Search, Phone, Mail, MapPin, User, Edit, Trash2, Loader2 } from "lucide-react";
+import { Plus, Search, Phone, Mail, MapPin, User, Edit, Trash2, Loader2, Building2 } from "lucide-react";
 import { useClients } from "@/hooks/useClients";
 import { Client } from "@/types/database";
-import { CpfInput, PhoneInput, CepInput } from "@/components/ui/masked-input";
+import { CpfInput, PhoneInput, CepInput, CnpjInput } from "@/components/ui/masked-input";
 import { fetchAddressByCep } from "@/lib/cep";
 import { toast } from "sonner";
 
@@ -42,7 +49,9 @@ export default function ClientsPage() {
     name: "",
     email: "",
     phone: "",
+    client_type: "pessoa_fisica" as "pessoa_fisica" | "pessoa_juridica",
     cpf: "",
+    cnpj: "",
     cep: "",
     address: "",
     numero: "",
@@ -58,7 +67,8 @@ export default function ClientsPage() {
       client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (client.email && client.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (client.phone && client.phone.includes(searchTerm)) ||
-      (client.cpf && client.cpf.includes(searchTerm))
+      (client.cpf && client.cpf.includes(searchTerm)) ||
+      (client.cnpj && client.cnpj.includes(searchTerm))
   );
 
   const resetForm = () => {
@@ -66,7 +76,9 @@ export default function ClientsPage() {
       name: "",
       email: "",
       phone: "",
+      client_type: "pessoa_fisica",
       cpf: "",
+      cnpj: "",
       cep: "",
       address: "",
       numero: "",
@@ -90,12 +102,14 @@ export default function ClientsPage() {
       name: client.name,
       email: client.email || "",
       phone: client.phone || "",
+      client_type: (client.client_type as "pessoa_fisica" | "pessoa_juridica") || "pessoa_fisica",
       cpf: client.cpf || "",
+      cnpj: client.cnpj || "",
       cep: client.cep || "",
       address: client.address || "",
-      numero: (client as any).numero || "",
-      complemento: (client as any).complemento || "",
-      bairro: (client as any).bairro || "",
+      numero: client.numero || "",
+      complemento: client.complemento || "",
+      bairro: client.bairro || "",
       city: client.city || "",
       state: client.state || "",
       notes: client.notes || "",
@@ -164,9 +178,9 @@ export default function ClientsPage() {
   const formatClientAddress = (client: Client) => {
     const parts = [];
     if (client.address) parts.push(client.address);
-    if ((client as any).numero) parts.push((client as any).numero);
-    if ((client as any).complemento) parts.push((client as any).complemento);
-    if ((client as any).bairro) parts.push((client as any).bairro);
+    if (client.numero) parts.push(client.numero);
+    if (client.complemento) parts.push(client.complemento);
+    if (client.bairro) parts.push(client.bairro);
     if (client.city) parts.push(client.city);
     if (client.state) parts.push(client.state);
     if (client.cep) parts.push(`CEP: ${client.cep}`);
@@ -250,7 +264,11 @@ export default function ClientsPage() {
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <User className="w-6 h-6 text-primary" />
+                  {client.client_type === "pessoa_juridica" ? (
+                    <Building2 className="w-6 h-6 text-primary" />
+                  ) : (
+                    <User className="w-6 h-6 text-primary" />
+                  )}
                 </div>
                 <div className="flex gap-2">
                   <Button 
@@ -295,9 +313,13 @@ export default function ClientsPage() {
                 )}
               </div>
 
-              {client.cpf && (
+              {(client.cpf || client.cnpj) && (
                 <div className="mt-4 pt-4 border-t border-border">
-                  <p className="text-xs text-muted-foreground">CPF: {client.cpf}</p>
+                  {client.client_type === "pessoa_juridica" && client.cnpj ? (
+                    <p className="text-xs text-muted-foreground">CNPJ: {client.cnpj}</p>
+                  ) : client.cpf ? (
+                    <p className="text-xs text-muted-foreground">CPF: {client.cpf}</p>
+                  ) : null}
                 </div>
               )}
             </motion.div>
@@ -344,14 +366,43 @@ export default function ClientsPage() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="cpf">CPF</Label>
-                <CpfInput
-                  id="cpf"
-                  placeholder="000.000.000-00"
-                  value={formData.cpf}
-                  onAccept={(masked) => setFormData({ ...formData, cpf: masked })}
-                />
+                <Label htmlFor="client_type">Tipo de Pessoa</Label>
+                <Select
+                  value={formData.client_type}
+                  onValueChange={(value: "pessoa_fisica" | "pessoa_juridica") => 
+                    setFormData({ ...formData, client_type: value })
+                  }
+                >
+                  <SelectTrigger id="client_type">
+                    <SelectValue placeholder="Selecione o tipo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pessoa_fisica">Pessoa Física</SelectItem>
+                    <SelectItem value="pessoa_juridica">Pessoa Jurídica</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
+              {formData.client_type === "pessoa_fisica" ? (
+                <div className="space-y-1.5">
+                  <Label htmlFor="cpf">CPF</Label>
+                  <CpfInput
+                    id="cpf"
+                    placeholder="000.000.000-00"
+                    value={formData.cpf}
+                    onAccept={(masked) => setFormData({ ...formData, cpf: masked })}
+                  />
+                </div>
+              ) : (
+                <div className="space-y-1.5">
+                  <Label htmlFor="cnpj">CNPJ</Label>
+                  <CnpjInput
+                    id="cnpj"
+                    placeholder="00.000.000/0000-00"
+                    value={formData.cnpj}
+                    onAccept={(masked) => setFormData({ ...formData, cnpj: masked })}
+                  />
+                </div>
+              )}
               <div className="space-y-1.5">
                 <Label htmlFor="cep">CEP</Label>
                 <div className="relative">
