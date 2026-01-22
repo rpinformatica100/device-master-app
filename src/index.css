@@ -147,6 +147,28 @@
     background-clip: text;
     color: transparent;
   }
+  
+  /* Hide scrollbar for mobile */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* Mobile touch improvements */
+  @media (max-width: 768px) {
+    input, select, textarea, button {
+      font-size: 16px !important; /* Prevents zoom on iOS */
+    }
+    
+    .touch-target {
+      min-height: 44px;
+      min-width: 44px;
+    }
+  }
 }
 
 /* Custom scrollbar */

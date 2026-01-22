@@ -55,6 +55,7 @@ export function FinancialFilters({
 }: FinancialFiltersProps) {
   const [isStartOpen, setIsStartOpen] = useState(false);
   const [isEndOpen, setIsEndOpen] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const handlePresetClick = (preset: string) => {
     const now = new Date();
@@ -98,64 +99,91 @@ export function FinancialFilters({
     filters.searchTerm !== "";
 
   return (
-    <div className="glass rounded-xl p-4 mb-6 space-y-4">
-      {/* Period Presets */}
-      <div className="flex flex-wrap gap-2">
-        <span className="text-sm text-muted-foreground self-center mr-2">Período:</span>
+    <div className="glass rounded-xl p-3 mb-4 space-y-2">
+      {/* Compact Period Presets - Horizontal Scroll on Mobile */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
+        <span className="text-xs text-muted-foreground whitespace-nowrap">Período:</span>
+        <div className="flex gap-1.5">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 px-2 text-xs whitespace-nowrap"
+            onClick={() => handlePresetClick("thisMonth")}
+          >
+            Este mês
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 px-2 text-xs whitespace-nowrap"
+            onClick={() => handlePresetClick("lastMonth")}
+          >
+            Mês passado
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 px-2 text-xs whitespace-nowrap"
+            onClick={() => handlePresetClick("last3Months")}
+          >
+            3 meses
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 px-2 text-xs whitespace-nowrap"
+            onClick={() => handlePresetClick("last6Months")}
+          >
+            6 meses
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 px-2 text-xs whitespace-nowrap"
+            onClick={() => handlePresetClick("thisYear")}
+          >
+            Ano
+          </Button>
+        </div>
+      </div>
+
+      {/* Collapsible Filters - Toggle on Mobile */}
+      <div className="md:hidden">
         <Button
-          variant="outline"
+          variant="ghost"
           size="sm"
-          onClick={() => handlePresetClick("thisMonth")}
+          className="w-full h-7 text-xs text-muted-foreground"
+          onClick={() => setIsExpanded(!isExpanded)}
         >
-          Este mês
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => handlePresetClick("lastMonth")}
-        >
-          Mês passado
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => handlePresetClick("last3Months")}
-        >
-          Últimos 3 meses
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => handlePresetClick("last6Months")}
-        >
-          Últimos 6 meses
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => handlePresetClick("thisYear")}
-        >
-          Este ano
+          <Filter className="w-3 h-3 mr-1" />
+          {isExpanded ? "Ocultar filtros" : "Mostrar filtros"}
+          {hasActiveFilters && (
+            <span className="ml-1 w-2 h-2 rounded-full bg-primary" />
+          )}
         </Button>
       </div>
 
-      {/* Date Range & Filters */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+      {/* Date Range & Filters - Always visible on desktop, collapsible on mobile */}
+      <div className={cn(
+        "grid grid-cols-2 md:grid-cols-6 gap-2",
+        !isExpanded && "hidden md:grid"
+      )}>
         {/* Start Date */}
-        <div className="space-y-2">
-          <Label className="text-xs text-muted-foreground">Data Inicial</Label>
+        <div className="space-y-1">
+          <Label className="text-[10px] text-muted-foreground">Início</Label>
           <Popover open={isStartOpen} onOpenChange={setIsStartOpen}>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
+                size="sm"
                 className={cn(
-                  "w-full justify-start text-left font-normal",
+                  "w-full h-8 justify-start text-left text-xs font-normal",
                   !filters.startDate && "text-muted-foreground"
                 )}
               >
-                <CalendarIcon className="mr-2 h-4 w-4" />
+                <CalendarIcon className="mr-1.5 h-3 w-3" />
                 {filters.startDate
-                  ? format(filters.startDate, "dd/MM/yyyy", { locale: ptBR })
+                  ? format(filters.startDate, "dd/MM/yy", { locale: ptBR })
                   : "Selecionar"}
               </Button>
             </PopoverTrigger>
@@ -175,20 +203,21 @@ export function FinancialFilters({
         </div>
 
         {/* End Date */}
-        <div className="space-y-2">
-          <Label className="text-xs text-muted-foreground">Data Final</Label>
+        <div className="space-y-1">
+          <Label className="text-[10px] text-muted-foreground">Fim</Label>
           <Popover open={isEndOpen} onOpenChange={setIsEndOpen}>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
+                size="sm"
                 className={cn(
-                  "w-full justify-start text-left font-normal",
+                  "w-full h-8 justify-start text-left text-xs font-normal",
                   !filters.endDate && "text-muted-foreground"
                 )}
               >
-                <CalendarIcon className="mr-2 h-4 w-4" />
+                <CalendarIcon className="mr-1.5 h-3 w-3" />
                 {filters.endDate
-                  ? format(filters.endDate, "dd/MM/yyyy", { locale: ptBR })
+                  ? format(filters.endDate, "dd/MM/yy", { locale: ptBR })
                   : "Selecionar"}
               </Button>
             </PopoverTrigger>
@@ -208,13 +237,13 @@ export function FinancialFilters({
         </div>
 
         {/* Type Filter */}
-        <div className="space-y-2">
-          <Label className="text-xs text-muted-foreground">Tipo</Label>
+        <div className="space-y-1">
+          <Label className="text-[10px] text-muted-foreground">Tipo</Label>
           <Select
             value={filters.type}
             onValueChange={(value) => onFiltersChange({ ...filters, type: value })}
           >
-            <SelectTrigger>
+            <SelectTrigger className="h-8 text-xs">
               <SelectValue placeholder="Tipo" />
             </SelectTrigger>
             <SelectContent>
@@ -226,13 +255,13 @@ export function FinancialFilters({
         </div>
 
         {/* Status Filter */}
-        <div className="space-y-2">
-          <Label className="text-xs text-muted-foreground">Status</Label>
+        <div className="space-y-1">
+          <Label className="text-[10px] text-muted-foreground">Status</Label>
           <Select
             value={filters.status}
             onValueChange={(value) => onFiltersChange({ ...filters, status: value })}
           >
-            <SelectTrigger>
+            <SelectTrigger className="h-8 text-xs">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
@@ -245,19 +274,19 @@ export function FinancialFilters({
         </div>
 
         {/* Category Filter */}
-        <div className="space-y-2">
-          <Label className="text-xs text-muted-foreground">Categoria</Label>
+        <div className="space-y-1">
+          <Label className="text-[10px] text-muted-foreground">Categoria</Label>
           <Select
             value={filters.category}
             onValueChange={(value) => onFiltersChange({ ...filters, category: value })}
           >
-            <SelectTrigger>
+            <SelectTrigger className="h-8 text-xs">
               <SelectValue placeholder="Categoria" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todas</SelectItem>
-              <SelectItem value="ordem_servico">Ordem de Serviço</SelectItem>
-              <SelectItem value="venda_direta">Venda Direta</SelectItem>
+              <SelectItem value="ordem_servico">OS</SelectItem>
+              <SelectItem value="venda_direta">Venda</SelectItem>
               <SelectItem value="aluguel">Aluguel</SelectItem>
               <SelectItem value="fornecedor">Fornecedor</SelectItem>
               <SelectItem value="salario">Salário</SelectItem>
@@ -267,10 +296,11 @@ export function FinancialFilters({
         </div>
 
         {/* Search */}
-        <div className="space-y-2">
-          <Label className="text-xs text-muted-foreground">Buscar</Label>
+        <div className="space-y-1 col-span-2 md:col-span-1">
+          <Label className="text-[10px] text-muted-foreground">Buscar</Label>
           <Input
             placeholder="Descrição..."
+            className="h-8 text-xs"
             value={filters.searchTerm}
             onChange={(e) =>
               onFiltersChange({ ...filters, searchTerm: e.target.value })
@@ -279,39 +309,39 @@ export function FinancialFilters({
         </div>
       </div>
 
-      {/* Actions */}
-      <div className="flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-border">
+      {/* Actions - Compact */}
+      <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-border">
         <div className="flex items-center gap-2">
           {hasActiveFilters && (
             <Button
               variant="ghost"
               size="sm"
               onClick={clearFilters}
-              className="text-muted-foreground"
+              className="h-7 px-2 text-xs text-muted-foreground"
             >
-              <X className="w-4 h-4 mr-1" />
-              Limpar filtros
+              <X className="w-3 h-3 mr-1" />
+              Limpar
             </Button>
           )}
-          <span className="text-sm text-muted-foreground flex items-center gap-1">
-            <Filter className="w-4 h-4" />
+          <span className="text-xs text-muted-foreground flex items-center gap-1">
+            <Filter className="w-3 h-3" />
             {filters.startDate && filters.endDate && (
-              <>
-                {format(filters.startDate, "dd/MM/yyyy", { locale: ptBR })} -{" "}
-                {format(filters.endDate, "dd/MM/yyyy", { locale: ptBR })}
-              </>
+              <span className="hidden sm:inline">
+                {format(filters.startDate, "dd/MM", { locale: ptBR })} -{" "}
+                {format(filters.endDate, "dd/MM", { locale: ptBR })}
+              </span>
             )}
           </span>
         </div>
 
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={onExportExcel}>
-            <FileSpreadsheet className="w-4 h-4 mr-2" />
-            Exportar Excel
+        <div className="flex gap-1.5">
+          <Button variant="outline" size="sm" className="h-7 px-2 text-xs" onClick={onExportExcel}>
+            <FileSpreadsheet className="w-3 h-3 md:mr-1" />
+            <span className="hidden md:inline">Excel</span>
           </Button>
-          <Button variant="outline" size="sm" onClick={onExportPDF}>
-            <FileText className="w-4 h-4 mr-2" />
-            Exportar PDF
+          <Button variant="outline" size="sm" className="h-7 px-2 text-xs" onClick={onExportPDF}>
+            <FileText className="w-3 h-3 md:mr-1" />
+            <span className="hidden md:inline">PDF</span>
           </Button>
         </div>
       </div>
