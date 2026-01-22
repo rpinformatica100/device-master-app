@@ -25,7 +25,9 @@ import { Plus, Search, Filter, Eye, Edit, Trash2, Loader2, FileText, CheckCircle
 import { cn } from "@/lib/utils";
 import { OrderFormDialog } from "@/components/orders/OrderFormDialog";
 import { OrderViewDialog } from "@/components/orders/OrderViewDialog";
+import { OrderCard } from "@/components/shared/OrderCard";
 import { useOrders } from "@/hooks/useOrders";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Order } from "@/types/database";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
@@ -47,6 +49,7 @@ const priorityConfig: Record<string, { label: string; className: string }> = {
 
 export default function OrdersPage() {
   const { orders, loading, deleteOrder } = useOrders();
+  const isMobile = useIsMobile();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -142,21 +145,21 @@ export default function OrdersPage() {
 
   return (
     <MainLayout>
-      <div className="p-8">
+      <div className="p-4 md:p-8">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="flex items-center justify-between mb-8"
+          className="flex items-center justify-between mb-6"
         >
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Ordens de Serviço</h1>
-            <p className="text-muted-foreground mt-1">Gerencie todas as suas ordens de serviço</p>
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground">Ordens de Serviço</h1>
+            <p className="text-sm text-muted-foreground mt-1 hidden md:block">Gerencie todas as suas ordens de serviço</p>
           </div>
-          <Button className="gap-2" onClick={handleNewOrder}>
+          <Button className="gap-2" size={isMobile ? "sm" : "default"} onClick={handleNewOrder}>
             <Plus className="w-4 h-4" />
-            Nova OS
+            <span className="hidden sm:inline">Nova OS</span>
           </Button>
         </motion.div>
 
@@ -165,19 +168,19 @@ export default function OrdersPage() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.1 }}
-          className="glass rounded-xl p-4 mb-6 flex items-center gap-4"
+          className="glass rounded-xl p-3 md:p-4 mb-4 md:mb-6 flex flex-col sm:flex-row items-stretch sm:items-center gap-3"
         >
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder="Buscar por cliente, OS ou dispositivo..."
+              placeholder="Buscar..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
             />
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-full sm:w-[160px]">
               <Filter className="w-4 h-4 mr-2" />
               <SelectValue placeholder="Status" />
             </SelectTrigger>
@@ -210,8 +213,35 @@ export default function OrdersPage() {
           </motion.div>
         )}
 
-        {/* Orders Table */}
-        {orders.length > 0 && (
+        {/* Mobile Cards View */}
+        {orders.length > 0 && isMobile && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="space-y-3"
+          >
+            {filteredOrders.map((order, index) => (
+              <motion.div
+                key={order.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: 0.1 + index * 0.03 }}
+              >
+                <OrderCard
+                  order={order}
+                  paymentStatus={paymentStatuses[order.id]}
+                  onView={handleView}
+                  onEdit={handleEdit}
+                  onDelete={handleDeleteClick}
+                />
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
+
+        {/* Desktop Table View */}
+        {orders.length > 0 && !isMobile && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
