@@ -28,15 +28,18 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Search, Phone, Mail, MapPin, User, Edit, Trash2, Loader2, Building2 } from "lucide-react";
+import { Plus, Search, User, Loader2 } from "lucide-react";
 import { useClients } from "@/hooks/useClients";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Client } from "@/types/database";
+import { ClientCard } from "@/components/shared/ClientCard";
 import { CpfInput, PhoneInput, CepInput, CnpjInput } from "@/components/ui/masked-input";
 import { fetchAddressByCep } from "@/lib/cep";
 import { toast } from "sonner";
 
 export default function ClientsPage() {
   const { clients, loading, createClient, updateClient, deleteClient } = useClients();
+  const isMobile = useIsMobile();
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -175,18 +178,6 @@ export default function ClientsPage() {
     }
   };
 
-  const formatClientAddress = (client: Client) => {
-    const parts = [];
-    if (client.address) parts.push(client.address);
-    if (client.numero) parts.push(client.numero);
-    if (client.complemento) parts.push(client.complemento);
-    if (client.bairro) parts.push(client.bairro);
-    if (client.city) parts.push(client.city);
-    if (client.state) parts.push(client.state);
-    if (client.cep) parts.push(`CEP: ${client.cep}`);
-    return parts.join(", ");
-  };
-
   if (loading) {
     return (
       <MainLayout>
@@ -199,21 +190,21 @@ export default function ClientsPage() {
 
   return (
     <MainLayout>
-      <div className="p-8">
+      <div className="p-4 md:p-8">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="flex items-center justify-between mb-8"
+          className="flex items-center justify-between mb-6"
         >
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Clientes</h1>
-            <p className="text-muted-foreground mt-1">Gerencie sua base de clientes</p>
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground">Clientes</h1>
+            <p className="text-sm text-muted-foreground mt-1 hidden md:block">Gerencie sua base de clientes</p>
           </div>
-          <Button className="gap-2" onClick={openNewDialog}>
+          <Button className="gap-2" size={isMobile ? "sm" : "default"} onClick={openNewDialog}>
             <Plus className="w-4 h-4" />
-            Novo Cliente
+            <span className="hidden sm:inline">Novo Cliente</span>
           </Button>
         </motion.div>
 
@@ -222,7 +213,7 @@ export default function ClientsPage() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.1 }}
-          className="glass rounded-xl p-4 mb-6"
+          className="glass rounded-xl p-3 md:p-4 mb-4 md:mb-6"
         >
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -252,242 +243,207 @@ export default function ClientsPage() {
           </motion.div>
         )}
 
-        {/* Clients Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredClients.map((client, index) => (
-            <motion.div
-              key={client.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.2 + index * 0.05 }}
-              className="glass rounded-xl p-6 hover:border-primary/30 transition-all duration-300"
-            >
-              <div className="flex items-start justify-between mb-4">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  {client.client_type === "pessoa_juridica" ? (
-                    <Building2 className="w-6 h-6 text-primary" />
-                  ) : (
-                    <User className="w-6 h-6 text-primary" />
-                  )}
-                </div>
-                <div className="flex gap-2">
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-8 w-8"
-                    onClick={() => openEditDialog(client)}
-                  >
-                    <Edit className="w-4 h-4" />
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-8 w-8 text-destructive"
-                    onClick={() => openDeleteDialog(client)}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
+        {/* Mobile: Compact Cards */}
+        {clients.length > 0 && isMobile && (
+          <div className="space-y-2">
+            {filteredClients.map((client, index) => (
+              <motion.div
+                key={client.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: 0.1 + index * 0.02 }}
+              >
+                <ClientCard 
+                  client={client} 
+                  onEdit={openEditDialog} 
+                  onDelete={openDeleteDialog}
+                  compact
+                />
+              </motion.div>
+            ))}
+          </div>
+        )}
 
-              <h3 className="font-semibold text-lg text-foreground mb-3">{client.name}</h3>
-
-              <div className="space-y-2 text-sm">
-                {client.email && (
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Mail className="w-4 h-4" />
-                    <span>{client.email}</span>
-                  </div>
-                )}
-                {client.phone && (
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Phone className="w-4 h-4" />
-                    <span>{client.phone}</span>
-                  </div>
-                )}
-                {(client.address || client.city) && (
-                  <div className="flex items-start gap-2 text-muted-foreground">
-                    <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                    <span className="line-clamp-2">{formatClientAddress(client)}</span>
-                  </div>
-                )}
-              </div>
-
-              {(client.cpf || client.cnpj) && (
-                <div className="mt-4 pt-4 border-t border-border">
-                  {client.client_type === "pessoa_juridica" && client.cnpj ? (
-                    <p className="text-xs text-muted-foreground">CNPJ: {client.cnpj}</p>
-                  ) : client.cpf ? (
-                    <p className="text-xs text-muted-foreground">CPF: {client.cpf}</p>
-                  ) : null}
-                </div>
-              )}
-            </motion.div>
-          ))}
-        </div>
+        {/* Desktop: Grid Cards */}
+        {clients.length > 0 && !isMobile && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredClients.map((client, index) => (
+              <motion.div
+                key={client.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.2 + index * 0.05 }}
+              >
+                <ClientCard 
+                  client={client} 
+                  onEdit={openEditDialog} 
+                  onDelete={openDeleteDialog}
+                />
+              </motion.div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Form Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-md sm:max-w-2xl">
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {selectedClient ? "Editar Cliente" : "Novo Cliente"}
             </DialogTitle>
           </DialogHeader>
-          <div className="max-h-[60vh] overflow-y-auto pr-2 -mr-2">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 py-4">
-              <div className="sm:col-span-2 space-y-1.5">
-                <Label htmlFor="name">Nome Completo *</Label>
-                <Input
-                  id="name"
-                  placeholder="Nome do cliente"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                />
-              </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 py-4">
+            <div className="sm:col-span-2 space-y-1.5">
+              <Label htmlFor="name">Nome Completo *</Label>
+              <Input
+                id="name"
+                placeholder="Nome do cliente"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="email">E-mail</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="email@exemplo.com"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="phone">Telefone</Label>
+              <PhoneInput
+                id="phone"
+                placeholder="(00) 00000-0000"
+                value={formData.phone}
+                onAccept={(masked) => setFormData({ ...formData, phone: masked })}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="client_type">Tipo de Pessoa</Label>
+              <Select
+                value={formData.client_type}
+                onValueChange={(value: "pessoa_fisica" | "pessoa_juridica") => 
+                  setFormData({ ...formData, client_type: value })
+                }
+              >
+                <SelectTrigger id="client_type">
+                  <SelectValue placeholder="Selecione o tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pessoa_fisica">Pessoa Física</SelectItem>
+                  <SelectItem value="pessoa_juridica">Pessoa Jurídica</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {formData.client_type === "pessoa_fisica" ? (
               <div className="space-y-1.5">
-                <Label htmlFor="email">E-mail</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="email@exemplo.com"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                <Label htmlFor="cpf">CPF</Label>
+                <CpfInput
+                  id="cpf"
+                  placeholder="000.000.000-00"
+                  value={formData.cpf}
+                  onAccept={(masked) => setFormData({ ...formData, cpf: masked })}
                 />
               </div>
+            ) : (
               <div className="space-y-1.5">
-                <Label htmlFor="phone">Telefone</Label>
-                <PhoneInput
-                  id="phone"
-                  placeholder="(00) 00000-0000"
-                  value={formData.phone}
-                  onAccept={(masked) => setFormData({ ...formData, phone: masked })}
+                <Label htmlFor="cnpj">CNPJ</Label>
+                <CnpjInput
+                  id="cnpj"
+                  placeholder="00.000.000/0000-00"
+                  value={formData.cnpj}
+                  onAccept={(masked) => setFormData({ ...formData, cnpj: masked })}
                 />
               </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="client_type">Tipo de Pessoa</Label>
-                <Select
-                  value={formData.client_type}
-                  onValueChange={(value: "pessoa_fisica" | "pessoa_juridica") => 
-                    setFormData({ ...formData, client_type: value })
-                  }
-                >
-                  <SelectTrigger id="client_type">
-                    <SelectValue placeholder="Selecione o tipo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pessoa_fisica">Pessoa Física</SelectItem>
-                    <SelectItem value="pessoa_juridica">Pessoa Jurídica</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              {formData.client_type === "pessoa_fisica" ? (
-                <div className="space-y-1.5">
-                  <Label htmlFor="cpf">CPF</Label>
-                  <CpfInput
-                    id="cpf"
-                    placeholder="000.000.000-00"
-                    value={formData.cpf}
-                    onAccept={(masked) => setFormData({ ...formData, cpf: masked })}
-                  />
-                </div>
-              ) : (
-                <div className="space-y-1.5">
-                  <Label htmlFor="cnpj">CNPJ</Label>
-                  <CnpjInput
-                    id="cnpj"
-                    placeholder="00.000.000/0000-00"
-                    value={formData.cnpj}
-                    onAccept={(masked) => setFormData({ ...formData, cnpj: masked })}
-                  />
-                </div>
-              )}
-              <div className="space-y-1.5">
-                <Label htmlFor="cep">CEP</Label>
-                <div className="relative">
-                  <CepInput
-                    id="cep"
-                    placeholder="00000-000"
-                    value={formData.cep}
-                    onAccept={handleCepChange}
-                  />
-                  {isFetchingCep && (
-                    <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground" />
-                  )}
-                </div>
-              </div>
-              
-              {/* Address Fields */}
-              <div className="sm:col-span-2 space-y-1.5">
-                <Label htmlFor="address">Logradouro (Rua/Avenida)</Label>
-                <Input
-                  id="address"
-                  placeholder="Ex: Rua das Flores"
-                  value={formData.address}
-                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+            )}
+            <div className="space-y-1.5">
+              <Label htmlFor="cep">CEP</Label>
+              <div className="relative">
+                <CepInput
+                  id="cep"
+                  placeholder="00000-000"
+                  value={formData.cep}
+                  onAccept={handleCepChange}
                 />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="numero">Número</Label>
-                <Input
-                  id="numero"
-                  placeholder="Ex: 123"
-                  value={formData.numero}
-                  onChange={(e) => setFormData({ ...formData, numero: e.target.value })}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="complemento">Complemento</Label>
-                <Input
-                  id="complemento"
-                  placeholder="Ex: Apto 101, Bloco A"
-                  value={formData.complemento}
-                  onChange={(e) => setFormData({ ...formData, complemento: e.target.value })}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="bairro">Bairro</Label>
-                <Input
-                  id="bairro"
-                  placeholder="Ex: Centro"
-                  value={formData.bairro}
-                  onChange={(e) => setFormData({ ...formData, bairro: e.target.value })}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="city">Cidade</Label>
-                <Input
-                  id="city"
-                  placeholder="Cidade"
-                  value={formData.city}
-                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="state">Estado</Label>
-                <Input
-                  id="state"
-                  placeholder="UF"
-                  maxLength={2}
-                  value={formData.state}
-                  onChange={(e) => setFormData({ ...formData, state: e.target.value.toUpperCase() })}
-                />
-              </div>
-              <div className="sm:col-span-2 space-y-1.5">
-                <Label htmlFor="notes">Observações</Label>
-                <Textarea
-                  id="notes"
-                  placeholder="Observações sobre o cliente..."
-                  value={formData.notes}
-                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  rows={2}
-                />
+                {isFetchingCep && (
+                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground" />
+                )}
               </div>
             </div>
+            
+            {/* Address Fields */}
+            <div className="sm:col-span-2 space-y-1.5">
+              <Label htmlFor="address">Logradouro (Rua/Avenida)</Label>
+              <Input
+                id="address"
+                placeholder="Ex: Rua das Flores"
+                value={formData.address}
+                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="numero">Número</Label>
+              <Input
+                id="numero"
+                placeholder="Ex: 123"
+                value={formData.numero}
+                onChange={(e) => setFormData({ ...formData, numero: e.target.value })}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="complemento">Complemento</Label>
+              <Input
+                id="complemento"
+                placeholder="Ex: Apto 101, Bloco A"
+                value={formData.complemento}
+                onChange={(e) => setFormData({ ...formData, complemento: e.target.value })}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="bairro">Bairro</Label>
+              <Input
+                id="bairro"
+                placeholder="Ex: Centro"
+                value={formData.bairro}
+                onChange={(e) => setFormData({ ...formData, bairro: e.target.value })}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="city">Cidade</Label>
+              <Input
+                id="city"
+                placeholder="Cidade"
+                value={formData.city}
+                onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="state">Estado</Label>
+              <Input
+                id="state"
+                placeholder="UF"
+                maxLength={2}
+                value={formData.state}
+                onChange={(e) => setFormData({ ...formData, state: e.target.value.toUpperCase() })}
+              />
+            </div>
+            <div className="sm:col-span-2 space-y-1.5">
+              <Label htmlFor="notes">Observações</Label>
+              <Textarea
+                id="notes"
+                placeholder="Observações sobre o cliente..."
+                value={formData.notes}
+                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                rows={2}
+              />
+            </div>
           </div>
-          <div className="flex justify-end gap-3 pt-2 border-t border-border">
-            <Button variant="secondary" onClick={() => setIsDialogOpen(false)}>
+          <div className="flex justify-end gap-3 pt-4 border-t">
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
               Cancelar
             </Button>
             <Button onClick={handleSubmit} disabled={isSubmitting || !formData.name.trim()}>
@@ -498,13 +454,13 @@ export default function ClientsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
+      {/* Delete Confirmation */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir cliente?</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja excluir o cliente "{selectedClient?.name}"?
+              Tem certeza que deseja excluir "{selectedClient?.name}"?
               Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>

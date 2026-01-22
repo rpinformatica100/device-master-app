@@ -3,17 +3,8 @@ import { format } from 'date-fns';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import {
   Select,
   SelectContent,
@@ -32,7 +23,9 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { usePersonalFinancial } from '@/hooks/usePersonalFinancial';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { PersonalTransactionDialog } from '@/components/personal/PersonalTransactionDialog';
+import { PersonalTransactionCard } from '@/components/shared/PersonalTransactionCard';
 import { personalCategories, type PersonalTransaction } from '@/types/personal';
 import ProLaborePage from './ProLaborePage';
 import {
@@ -42,8 +35,6 @@ import {
   TrendingUp,
   TrendingDown,
   ArrowUpCircle,
-  Edit,
-  Trash2,
 } from 'lucide-react';
 
 export default function PersonalFinancePage() {
@@ -53,6 +44,8 @@ export default function PersonalFinancePage() {
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
+
+  const isMobile = useIsMobile();
 
   const {
     transactions,
@@ -97,128 +90,99 @@ export default function PersonalFinancePage() {
     setEditingTransaction(null);
   };
 
-  const getTypeBadge = (type: string) => {
-    switch (type) {
-      case 'receita':
-        return <Badge className="bg-green-500/10 text-green-500 hover:bg-green-500/20">Receita</Badge>;
-      case 'despesa':
-        return <Badge className="bg-red-500/10 text-red-500 hover:bg-red-500/20">Despesa</Badge>;
-      case 'prolabore':
-        return <Badge className="bg-primary/10 text-primary hover:bg-primary/20">Pro-labore</Badge>;
-      default:
-        return <Badge variant="outline">{type}</Badge>;
-    }
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'pago':
-        return <Badge variant="secondary">Pago</Badge>;
-      case 'pendente':
-        return <Badge variant="outline">Pendente</Badge>;
-      case 'cancelado':
-        return <Badge variant="destructive">Cancelado</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
-  };
-
-  const getCategoryLabel = (category: string | null) => {
-    if (!category) return '-';
-    return personalCategories.find(c => c.value === category)?.label || category;
-  };
-
   return (
     <MainLayout>
-      <div className="p-8">
-        <Tabs defaultValue="prolabore" className="space-y-6">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">Finanças Pessoais</h1>
-              <p className="text-muted-foreground">
-                Gerencie pro-labore e finanças pessoais
-              </p>
+      <div className="p-4 md:p-8">
+        <Tabs defaultValue="prolabore" className="space-y-4 md:space-y-6">
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-xl md:text-2xl font-bold text-foreground">Finanças Pessoais</h1>
+                <p className="text-sm text-muted-foreground hidden md:block">
+                  Gerencie pro-labore e finanças pessoais
+                </p>
+              </div>
             </div>
-            <TabsList>
-              <TabsTrigger value="prolabore">Pro-labore</TabsTrigger>
-              <TabsTrigger value="transacoes">Transações</TabsTrigger>
+            <TabsList className="w-full sm:w-auto">
+              <TabsTrigger value="prolabore" className="flex-1 sm:flex-none">Pro-labore</TabsTrigger>
+              <TabsTrigger value="transacoes" className="flex-1 sm:flex-none">Transações</TabsTrigger>
             </TabsList>
           </div>
 
-          <TabsContent value="prolabore" className="mt-6">
+          <TabsContent value="prolabore" className="mt-4 md:mt-6">
             <ProLaborePage />
           </TabsContent>
 
-          <TabsContent value="transacoes" className="mt-6 space-y-6">
+          <TabsContent value="transacoes" className="mt-4 md:mt-6 space-y-4 md:space-y-6">
             {/* Header with action */}
             <div className="flex justify-end">
-              <Button onClick={() => setDialogOpen(true)} className="gap-2">
+              <Button onClick={() => setDialogOpen(true)} className="gap-2" size={isMobile ? "sm" : "default"}>
                 <Plus className="h-4 w-4" />
-                Nova Transação
+                <span className="hidden sm:inline">Nova Transação</span>
               </Button>
             </div>
 
             {/* Summary Cards */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
               <Card className="border-primary/50">
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Saldo Pessoal</p>
-                      <p className={`text-2xl font-bold ${summary.balance >= 0 ? 'text-primary' : 'text-destructive'}`}>
+                <CardContent className="p-4 md:pt-6">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="text-xs md:text-sm text-muted-foreground">Saldo</p>
+                      <p className={`text-lg md:text-2xl font-bold truncate ${summary.balance >= 0 ? 'text-primary' : 'text-destructive'}`}>
                         R$ {summary.balance.toFixed(2)}
                       </p>
                     </div>
-                    <div className="p-3 rounded-full bg-primary/10">
-                      <Wallet className="h-5 w-5 text-primary" />
+                    <div className="p-2 md:p-3 rounded-full bg-primary/10 shrink-0">
+                      <Wallet className="h-4 w-4 md:h-5 md:w-5 text-primary" />
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
               <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Receitas do Mês</p>
-                      <p className="text-2xl font-bold text-green-500">
+                <CardContent className="p-4 md:pt-6">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="text-xs md:text-sm text-muted-foreground">Receitas</p>
+                      <p className="text-lg md:text-2xl font-bold text-green-500 truncate">
                         R$ {summary.monthlyIncome.toFixed(2)}
                       </p>
                     </div>
-                    <div className="p-3 rounded-full bg-green-500/10">
-                      <TrendingUp className="h-5 w-5 text-green-500" />
+                    <div className="p-2 md:p-3 rounded-full bg-green-500/10 shrink-0">
+                      <TrendingUp className="h-4 w-4 md:h-5 md:w-5 text-green-500" />
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
               <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Despesas do Mês</p>
-                      <p className="text-2xl font-bold text-red-500">
+                <CardContent className="p-4 md:pt-6">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="text-xs md:text-sm text-muted-foreground">Despesas</p>
+                      <p className="text-lg md:text-2xl font-bold text-red-500 truncate">
                         R$ {summary.monthlyExpenses.toFixed(2)}
                       </p>
                     </div>
-                    <div className="p-3 rounded-full bg-red-500/10">
-                      <TrendingDown className="h-5 w-5 text-red-500" />
+                    <div className="p-2 md:p-3 rounded-full bg-red-500/10 shrink-0">
+                      <TrendingDown className="h-4 w-4 md:h-5 md:w-5 text-red-500" />
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
               <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Total Pro-labore</p>
-                      <p className="text-2xl font-bold text-foreground">
+                <CardContent className="p-4 md:pt-6">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="text-xs md:text-sm text-muted-foreground">Pro-labore</p>
+                      <p className="text-lg md:text-2xl font-bold text-foreground truncate">
                         R$ {summary.totalProlabore.toFixed(2)}
                       </p>
                     </div>
-                    <div className="p-3 rounded-full bg-blue-500/10">
-                      <ArrowUpCircle className="h-5 w-5 text-blue-500" />
+                    <div className="p-2 md:p-3 rounded-full bg-blue-500/10 shrink-0">
+                      <ArrowUpCircle className="h-4 w-4 md:h-5 md:w-5 text-blue-500" />
                     </div>
                   </div>
                 </CardContent>
@@ -227,54 +191,56 @@ export default function PersonalFinancePage() {
 
             {/* Filters */}
             <Card>
-              <CardContent className="py-4">
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <div className="relative flex-1">
+              <CardContent className="py-3 md:py-4">
+                <div className="flex flex-col gap-3">
+                  <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
-                      placeholder="Buscar por descrição..."
+                      placeholder="Buscar..."
                       value={search}
                       onChange={e => setSearch(e.target.value)}
                       className="pl-9"
                     />
                   </div>
-                  <Select value={typeFilter} onValueChange={setTypeFilter}>
-                    <SelectTrigger className="w-full sm:w-40">
-                      <SelectValue placeholder="Tipo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos os tipos</SelectItem>
-                      <SelectItem value="receita">Receitas</SelectItem>
-                      <SelectItem value="despesa">Despesas</SelectItem>
-                      <SelectItem value="prolabore">Pro-labore</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                    <SelectTrigger className="w-full sm:w-40">
-                      <SelectValue placeholder="Categoria" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todas as categorias</SelectItem>
-                      {personalCategories.map(cat => (
-                        <SelectItem key={cat.value} value={cat.value}>
-                          {cat.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="flex gap-2">
+                    <Select value={typeFilter} onValueChange={setTypeFilter}>
+                      <SelectTrigger className="flex-1">
+                        <SelectValue placeholder="Tipo" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todos</SelectItem>
+                        <SelectItem value="receita">Receitas</SelectItem>
+                        <SelectItem value="despesa">Despesas</SelectItem>
+                        <SelectItem value="prolabore">Pro-labore</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                      <SelectTrigger className="flex-1">
+                        <SelectValue placeholder="Categoria" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todas</SelectItem>
+                        {personalCategories.map(cat => (
+                          <SelectItem key={cat.value} value={cat.value}>
+                            {cat.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Transactions Table */}
+            {/* Transactions */}
             <Card>
-              <CardHeader>
-                <CardTitle>Transações</CardTitle>
-                <CardDescription>
-                  {filteredTransactions.length} transação(ões) encontrada(s)
+              <CardHeader className="py-3 md:py-6">
+                <CardTitle className="text-base md:text-lg">Transações</CardTitle>
+                <CardDescription className="text-xs md:text-sm">
+                  {filteredTransactions.length} transação(ões)
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-0">
                 {loading ? (
                   <div className="flex items-center justify-center py-8">
                     <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
@@ -284,57 +250,70 @@ export default function PersonalFinancePage() {
                     <Wallet className="h-12 w-12 mx-auto mb-3 opacity-50" />
                     <p>Nenhuma transação encontrada.</p>
                   </div>
+                ) : isMobile ? (
+                  /* Mobile Cards */
+                  <div className="space-y-3 -mx-2">
+                    {filteredTransactions.map(transaction => (
+                      <PersonalTransactionCard
+                        key={transaction.id}
+                        transaction={transaction}
+                        onEdit={handleEdit}
+                        onDelete={setDeleteId}
+                      />
+                    ))}
+                  </div>
                 ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Data</TableHead>
-                        <TableHead>Descrição</TableHead>
-                        <TableHead>Tipo</TableHead>
-                        <TableHead>Categoria</TableHead>
-                        <TableHead>Valor</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead className="text-right">Ações</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredTransactions.map(transaction => (
-                        <TableRow key={transaction.id}>
-                          <TableCell>
-                            {format(new Date(transaction.date), 'dd/MM/yyyy')}
-                          </TableCell>
-                          <TableCell>{transaction.description}</TableCell>
-                          <TableCell>{getTypeBadge(transaction.type)}</TableCell>
-                          <TableCell>{getCategoryLabel(transaction.category)}</TableCell>
-                          <TableCell className={`font-medium ${transaction.type === 'despesa' ? 'text-red-500' : 'text-green-500'}`}>
-                            {transaction.type === 'despesa' ? '-' : '+'}R$ {Number(transaction.amount).toFixed(2)}
-                          </TableCell>
-                          <TableCell>{getStatusBadge(transaction.status)}</TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex justify-end gap-2">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleEdit(transaction)}
-                                disabled={transaction.type === 'prolabore'}
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => setDeleteId(transaction.id)}
-                                className="text-destructive hover:text-destructive"
-                                disabled={transaction.type === 'prolabore'}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                  /* Desktop Table */
+                  <div className="overflow-x-auto -mx-6">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b border-border">
+                          <th className="text-left p-4 text-sm font-medium text-muted-foreground">Data</th>
+                          <th className="text-left p-4 text-sm font-medium text-muted-foreground">Descrição</th>
+                          <th className="text-left p-4 text-sm font-medium text-muted-foreground">Tipo</th>
+                          <th className="text-left p-4 text-sm font-medium text-muted-foreground">Categoria</th>
+                          <th className="text-right p-4 text-sm font-medium text-muted-foreground">Valor</th>
+                          <th className="text-right p-4 text-sm font-medium text-muted-foreground">Ações</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredTransactions.map(transaction => (
+                          <tr key={transaction.id} className="border-b border-border/50 hover:bg-secondary/30">
+                            <td className="p-4 text-sm">{format(new Date(transaction.date), 'dd/MM/yyyy')}</td>
+                            <td className="p-4 font-medium">{transaction.description}</td>
+                            <td className="p-4 text-sm capitalize">{transaction.type}</td>
+                            <td className="p-4 text-sm">
+                              {personalCategories.find(c => c.value === transaction.category)?.label || '-'}
+                            </td>
+                            <td className={`p-4 text-right font-medium ${transaction.type === 'despesa' ? 'text-red-500' : 'text-green-500'}`}>
+                              {transaction.type === 'despesa' ? '-' : '+'}R$ {Number(transaction.amount).toFixed(2)}
+                            </td>
+                            <td className="p-4 text-right">
+                              <div className="flex justify-end gap-1">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleEdit(transaction)}
+                                  disabled={transaction.type === 'prolabore'}
+                                >
+                                  Editar
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => setDeleteId(transaction.id)}
+                                  className="text-destructive hover:text-destructive"
+                                  disabled={transaction.type === 'prolabore'}
+                                >
+                                  Excluir
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 )}
               </CardContent>
             </Card>

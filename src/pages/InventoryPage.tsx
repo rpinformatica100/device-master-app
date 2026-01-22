@@ -16,7 +16,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -25,7 +24,9 @@ import { Plus, Search, Package, Wrench, AlertTriangle, Edit, Trash2, Loader2 } f
 import { cn } from "@/lib/utils";
 import { useProducts } from "@/hooks/useProducts";
 import { useServices } from "@/hooks/useServices";
-import { toast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { ProductCard } from "@/components/shared/ProductCard";
+import { ServiceCard } from "@/components/shared/ServiceCard";
 
 const productCategoryColors: Record<string, string> = {
   smartphone: "bg-info/20 text-info border-info/30",
@@ -37,6 +38,7 @@ const productCategoryColors: Record<string, string> = {
 export default function InventoryPage() {
   const { products, loading: productsLoading, createProduct, updateProduct, deleteProduct } = useProducts();
   const { services, loading: servicesLoading, createService, updateService, deleteService } = useServices();
+  const isMobile = useIsMobile();
   
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -171,21 +173,25 @@ export default function InventoryPage() {
 
   return (
     <MainLayout>
-      <div className="p-8">
+      <div className="p-4 md:p-8">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="flex items-center justify-between mb-8"
+          className="flex items-center justify-between mb-6"
         >
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Estoque</h1>
-            <p className="text-muted-foreground mt-1">Produtos e serviços do seu negócio</p>
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground">Estoque</h1>
+            <p className="text-sm text-muted-foreground mt-1 hidden md:block">Produtos e serviços do seu negócio</p>
           </div>
-          <Button className="gap-2" onClick={() => openNewDialog(activeTab === "products" ? "product" : "service")}>
+          <Button 
+            className="gap-2" 
+            size={isMobile ? "sm" : "default"}
+            onClick={() => openNewDialog(activeTab === "products" ? "product" : "service")}
+          >
             <Plus className="w-4 h-4" />
-            Novo Item
+            <span className="hidden sm:inline">Novo Item</span>
           </Button>
         </motion.div>
 
@@ -195,36 +201,36 @@ export default function InventoryPage() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
-            className="bg-destructive/10 border border-destructive/30 rounded-xl p-4 mb-6 flex items-center gap-3"
+            className="bg-destructive/10 border border-destructive/30 rounded-xl p-3 md:p-4 mb-4 md:mb-6 flex items-center gap-3"
           >
-            <AlertTriangle className="w-5 h-5 text-destructive" />
+            <AlertTriangle className="w-5 h-5 text-destructive shrink-0" />
             <span className="text-sm text-foreground">
-              <strong>{lowStockItems.length} produtos</strong> estão abaixo do estoque mínimo
+              <strong>{lowStockItems.length} produtos</strong> abaixo do mínimo
             </span>
           </motion.div>
         )}
 
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 md:space-y-6">
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.1 }}
-            className="flex items-center justify-between flex-wrap gap-4"
+            className="flex flex-col gap-3"
           >
-            <TabsList className="glass">
-              <TabsTrigger value="products" className="gap-2">
+            <TabsList className="glass w-full sm:w-auto">
+              <TabsTrigger value="products" className="gap-2 flex-1 sm:flex-none">
                 <Package className="w-4 h-4" />
-                Produtos ({products.length})
+                <span className="hidden sm:inline">Produtos</span> ({products.length})
               </TabsTrigger>
-              <TabsTrigger value="services" className="gap-2">
+              <TabsTrigger value="services" className="gap-2 flex-1 sm:flex-none">
                 <Wrench className="w-4 h-4" />
-                Serviços ({services.length})
+                <span className="hidden sm:inline">Serviços</span> ({services.length})
               </TabsTrigger>
             </TabsList>
 
-            <div className="flex items-center gap-4">
-              <div className="relative w-[300px]">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+              <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   placeholder="Buscar..."
@@ -235,7 +241,7 @@ export default function InventoryPage() {
               </div>
               {activeTab === "products" && (
                 <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                  <SelectTrigger className="w-[180px]">
+                  <SelectTrigger className="w-full sm:w-[160px]">
                     <SelectValue placeholder="Categoria" />
                   </SelectTrigger>
                   <SelectContent>
@@ -256,7 +262,33 @@ export default function InventoryPage() {
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
               </div>
+            ) : isMobile ? (
+              /* Mobile Cards View */
+              <div className="space-y-3">
+                {filteredProducts.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Package className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                    <p>Nenhum produto encontrado</p>
+                  </div>
+                ) : (
+                  filteredProducts.map((item, index) => (
+                    <motion.div
+                      key={item.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3, delay: 0.1 + index * 0.03 }}
+                    >
+                      <ProductCard
+                        product={item}
+                        onEdit={(p) => openEditDialog(p, "product")}
+                        onDelete={(id) => handleDelete(id, "product")}
+                      />
+                    </motion.div>
+                  ))
+                )}
+              </div>
             ) : (
+              /* Desktop Table View */
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -357,7 +389,33 @@ export default function InventoryPage() {
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
               </div>
+            ) : isMobile ? (
+              /* Mobile Cards View */
+              <div className="space-y-3">
+                {filteredServices.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Wrench className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                    <p>Nenhum serviço encontrado</p>
+                  </div>
+                ) : (
+                  filteredServices.map((item, index) => (
+                    <motion.div
+                      key={item.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3, delay: 0.1 + index * 0.03 }}
+                    >
+                      <ServiceCard
+                        service={item}
+                        onEdit={(s) => openEditDialog(s, "service")}
+                        onDelete={(id) => handleDelete(id, "service")}
+                      />
+                    </motion.div>
+                  ))
+                )}
+              </div>
             ) : (
+              /* Desktop Table View */
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -422,52 +480,39 @@ export default function InventoryPage() {
             )}
           </TabsContent>
         </Tabs>
-      </div>
 
-      {/* Unified Item Dialog */}
-      <Dialog open={isItemDialogOpen} onOpenChange={setIsItemDialogOpen}>
-        <DialogContent className="max-w-md sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>{editingItem ? "Editar" : "Novo"} {dialogType === "product" ? "Produto" : "Serviço"}</DialogTitle>
-            <DialogDescription>
-              Preencha os dados do {dialogType === "product" ? "produto" : "serviço"}
-            </DialogDescription>
-          </DialogHeader>
-          
-          <Tabs value={dialogType} onValueChange={(v) => setDialogType(v as "product" | "service")} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-4">
-              <TabsTrigger value="product" className="gap-2" disabled={!!editingItem}>
-                <Package className="w-4 h-4" />
-                Produto
-              </TabsTrigger>
-              <TabsTrigger value="service" className="gap-2" disabled={!!editingItem}>
-                <Wrench className="w-4 h-4" />
-                Serviço
-              </TabsTrigger>
-            </TabsList>
-            
-            <div className="max-h-[50vh] overflow-y-auto pr-2 -mr-2">
-              <TabsContent value="product" className="mt-0">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="sm:col-span-2 space-y-1.5">
-                    <Label htmlFor="name">Nome do Produto *</Label>
-                    <Input 
-                      id="name" 
-                      placeholder="Ex: Tela iPhone 14 Pro" 
-                      value={productName}
-                      onChange={(e) => setProductName(e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-1.5">
+        {/* Item Form Dialog */}
+        <Dialog open={isItemDialogOpen} onOpenChange={setIsItemDialogOpen}>
+          <DialogContent className="max-w-[95vw] sm:max-w-md max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>
+                {editingItem
+                  ? `Editar ${dialogType === "product" ? "Produto" : "Serviço"}`
+                  : `Novo ${dialogType === "product" ? "Produto" : "Serviço"}`}
+              </DialogTitle>
+            </DialogHeader>
+            {dialogType === "product" ? (
+              <div className="grid gap-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Nome *</Label>
+                  <Input
+                    id="name"
+                    placeholder="Nome do produto"
+                    value={productName}
+                    onChange={(e) => setProductName(e.target.value)}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
                     <Label htmlFor="sku">SKU</Label>
-                    <Input 
-                      id="sku" 
-                      placeholder="Código único" 
+                    <Input
+                      id="sku"
+                      placeholder="Código"
                       value={productSku}
                       onChange={(e) => setProductSku(e.target.value)}
                     />
                   </div>
-                  <div className="space-y-1.5">
+                  <div className="space-y-2">
                     <Label htmlFor="category">Categoria</Label>
                     <Select value={productCategory} onValueChange={setProductCategory}>
                       <SelectTrigger>
@@ -481,113 +526,116 @@ export default function InventoryPage() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="quantity">Quantidade</Label>
-                    <Input 
-                      id="quantity" 
-                      type="number" 
-                      placeholder="0" 
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="stock">Estoque</Label>
+                    <Input
+                      id="stock"
+                      type="number"
+                      placeholder="0"
                       value={productStock}
                       onChange={(e) => setProductStock(e.target.value)}
                     />
                   </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="minQuantity">Qtd. Mínima</Label>
-                    <Input 
-                      id="minQuantity" 
-                      type="number" 
-                      placeholder="0" 
+                  <div className="space-y-2">
+                    <Label htmlFor="minStock">Estoque Mínimo</Label>
+                    <Input
+                      id="minStock"
+                      type="number"
+                      placeholder="0"
                       value={productMinStock}
                       onChange={(e) => setProductMinStock(e.target.value)}
                     />
                   </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="costPrice">Preço de Custo (R$)</Label>
-                    <Input 
-                      id="costPrice" 
-                      type="number" 
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="costPrice">Preço de Custo</Label>
+                    <Input
+                      id="costPrice"
+                      type="number"
                       step="0.01"
-                      placeholder="0,00" 
+                      placeholder="0.00"
                       value={productCostPrice}
                       onChange={(e) => setProductCostPrice(e.target.value)}
                     />
                   </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="sellPrice">Preço de Venda (R$)</Label>
-                    <Input 
-                      id="sellPrice" 
-                      type="number" 
+                  <div className="space-y-2">
+                    <Label htmlFor="salePrice">Preço de Venda</Label>
+                    <Input
+                      id="salePrice"
+                      type="number"
                       step="0.01"
-                      placeholder="0,00" 
+                      placeholder="0.00"
                       value={productSalePrice}
                       onChange={(e) => setProductSalePrice(e.target.value)}
                     />
                   </div>
                 </div>
-              </TabsContent>
-              
-              <TabsContent value="service" className="mt-0">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="sm:col-span-2 space-y-1.5">
-                    <Label htmlFor="serviceName">Nome do Serviço *</Label>
-                    <Input 
-                      id="serviceName" 
-                      placeholder="Ex: Mão de Obra - Troca de Tela" 
-                      value={serviceName}
-                      onChange={(e) => setServiceName(e.target.value)}
-                    />
-                  </div>
-                  <div className="sm:col-span-2 space-y-1.5">
-                    <Label htmlFor="description">Descrição</Label>
-                    <Textarea 
-                      id="description" 
-                      placeholder="Descreva o serviço..." 
-                      rows={2} 
-                      value={serviceDescription}
-                      onChange={(e) => setServiceDescription(e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="serviceCostPrice">Preço de Custo (R$)</Label>
-                    <Input 
-                      id="serviceCostPrice" 
-                      type="number" 
+              </div>
+            ) : (
+              <div className="grid gap-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="serviceName">Nome *</Label>
+                  <Input
+                    id="serviceName"
+                    placeholder="Nome do serviço"
+                    value={serviceName}
+                    onChange={(e) => setServiceName(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="serviceDescription">Descrição</Label>
+                  <Textarea
+                    id="serviceDescription"
+                    placeholder="Descrição do serviço..."
+                    value={serviceDescription}
+                    onChange={(e) => setServiceDescription(e.target.value)}
+                    rows={2}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="serviceCostPrice">Preço de Custo</Label>
+                    <Input
+                      id="serviceCostPrice"
+                      type="number"
                       step="0.01"
-                      placeholder="0,00" 
+                      placeholder="0.00"
                       value={serviceCostPrice}
                       onChange={(e) => setServiceCostPrice(e.target.value)}
                     />
                   </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="serviceSellPrice">Preço de Venda (R$)</Label>
-                    <Input 
-                      id="serviceSellPrice" 
-                      type="number" 
+                  <div className="space-y-2">
+                    <Label htmlFor="serviceSalePrice">Preço de Venda</Label>
+                    <Input
+                      id="serviceSalePrice"
+                      type="number"
                       step="0.01"
-                      placeholder="0,00" 
+                      placeholder="0.00"
                       value={serviceSalePrice}
                       onChange={(e) => setServiceSalePrice(e.target.value)}
                     />
                   </div>
                 </div>
-              </TabsContent>
+              </div>
+            )}
+            <div className="flex justify-end gap-3 pt-4 border-t">
+              <Button variant="outline" onClick={() => setIsItemDialogOpen(false)}>
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleSubmit}
+                disabled={isSubmitting || (dialogType === "product" ? !productName : !serviceName)}
+              >
+                {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                {editingItem ? "Salvar" : "Cadastrar"}
+              </Button>
             </div>
-          </Tabs>
-          
-          <div className="flex justify-end gap-3 pt-3 border-t border-border">
-            <Button variant="secondary" onClick={() => setIsItemDialogOpen(false)}>
-              Cancelar
-            </Button>
-            <Button 
-              onClick={handleSubmit} 
-              disabled={isSubmitting || (dialogType === "product" ? !productName : !serviceName)}
-            >
-              {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              {editingItem ? "Salvar" : "Adicionar"}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+          </DialogContent>
+        </Dialog>
+      </div>
     </MainLayout>
   );
 }
