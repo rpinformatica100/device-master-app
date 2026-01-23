@@ -17,48 +17,48 @@ interface ServiceCardProps {
 
 export function ServiceCard({ service, onEdit, onDelete }: ServiceCardProps) {
   return (
-    <div className="glass rounded-xl p-4 space-y-3">
+    <div className="glass rounded-lg p-3 space-y-2">
       {/* Header */}
-      <div className="flex items-start gap-3">
-        <div className="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center shrink-0">
-          <Wrench className="w-5 h-5 text-success" />
+      <div className="flex items-start gap-2">
+        <div className="w-8 h-8 rounded-lg bg-success/10 flex items-center justify-center shrink-0">
+          <Wrench className="w-4 h-4 text-success" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="font-medium text-foreground">{service.name}</p>
+          <p className="text-xs font-medium text-foreground">{service.name}</p>
           {service.description && (
-            <p className="text-xs text-muted-foreground line-clamp-2 mt-1">{service.description}</p>
+            <p className="text-[10px] text-muted-foreground line-clamp-1 mt-0.5">{service.description}</p>
           )}
         </div>
       </div>
 
       {/* Price */}
-      <div className="grid grid-cols-2 gap-2 text-center">
+      <div className="grid grid-cols-2 gap-1.5 text-center">
         <div>
-          <p className="text-xs text-muted-foreground">Custo</p>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-[9px] text-muted-foreground">Custo</p>
+          <p className="text-[10px] text-muted-foreground">
             R$ {Number(service.cost_price).toFixed(2)}
           </p>
         </div>
         <div>
-          <p className="text-xs text-muted-foreground">Venda</p>
-          <p className="text-sm font-medium text-foreground">
+          <p className="text-[9px] text-muted-foreground">Venda</p>
+          <p className="text-[10px] font-medium text-foreground">
             R$ {Number(service.sale_price).toFixed(2)}
           </p>
         </div>
       </div>
 
       {/* Actions */}
-      <div className="flex items-center justify-end gap-1 pt-2 border-t border-border/50">
-        <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => onEdit(service)}>
-          <Edit className="w-4 h-4" />
+      <div className="flex items-center justify-end gap-0.5 pt-1.5 border-t border-border/50">
+        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onEdit(service)}>
+          <Edit className="w-3.5 h-3.5" />
         </Button>
         <Button 
           variant="ghost" 
           size="icon" 
-          className="h-9 w-9 text-destructive" 
+          className="h-7 w-7 text-destructive" 
           onClick={() => onDelete(service.id)}
         >
-          <Trash2 className="w-4 h-4" />
+          <Trash2 className="w-3.5 h-3.5" />
         </Button>
       </div>
     </div>

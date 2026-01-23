@@ -3,10 +3,13 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
 export function FinancialChart() {
+  const isMobile = useIsMobile();
+  
   const { data: chartData, isLoading } = useQuery({
     queryKey: ["financial-chart"],
     queryFn: async () => {
@@ -65,10 +68,10 @@ export function FinancialChart() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.4 }}
-        className="glass rounded-xl p-6"
+        className="glass rounded-lg p-3 sm:p-4 lg:p-6"
       >
-        <h3 className="text-lg font-semibold text-foreground mb-6">Visão Financeira</h3>
-        <Skeleton className="h-[300px] w-full" />
+        <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-foreground mb-3 sm:mb-4 lg:mb-6">Visão Financeira</h3>
+        <Skeleton className="h-[180px] sm:h-[220px] lg:h-[280px] w-full" />
       </motion.div>
     );
   }
@@ -80,13 +83,13 @@ export function FinancialChart() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.4 }}
-      className="glass rounded-xl p-6"
+      className="glass rounded-lg p-3 sm:p-4 lg:p-6"
     >
-      <h3 className="text-lg font-semibold text-foreground mb-6">Visão Financeira</h3>
-      <div className="h-[300px]">
+      <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-foreground mb-3 sm:mb-4 lg:mb-6">Visão Financeira</h3>
+      <div className="h-[180px] sm:h-[220px] lg:h-[280px]">
         {hasData ? (
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+            <AreaChart data={chartData} margin={{ top: 5, right: 5, left: isMobile ? -15 : 0, bottom: 0 }}>
               <defs>
                 <linearGradient id="colorReceita" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="hsl(199, 89%, 48%)" stopOpacity={0.3} />
@@ -101,23 +104,24 @@ export function FinancialChart() {
               <XAxis
                 dataKey="name"
                 stroke="hsl(215, 20%, 55%)"
-                fontSize={12}
+                fontSize={isMobile ? 10 : 12}
                 tickLine={false}
                 axisLine={false}
               />
               <YAxis
                 stroke="hsl(215, 20%, 55%)"
-                fontSize={12}
+                fontSize={isMobile ? 9 : 12}
                 tickLine={false}
                 axisLine={false}
-                tickFormatter={(value) => value >= 1000 ? `R$${(value / 1000).toFixed(1)}k` : `R$${value}`}
+                tickFormatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(0)}k` : `${value}`}
+                width={isMobile ? 35 : 50}
               />
               <Tooltip
                 contentStyle={{
                   backgroundColor: "hsl(222, 47%, 8%)",
                   border: "1px solid hsl(222, 30%, 18%)",
                   borderRadius: "8px",
-                  fontSize: "12px",
+                  fontSize: isMobile ? "10px" : "12px",
                 }}
                 labelStyle={{ color: "hsl(210, 40%, 98%)" }}
                 formatter={(value: number) => [`R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, '']}
@@ -128,7 +132,7 @@ export function FinancialChart() {
                 stroke="hsl(199, 89%, 48%)"
                 fillOpacity={1}
                 fill="url(#colorReceita)"
-                strokeWidth={2}
+                strokeWidth={isMobile ? 1.5 : 2}
                 name="Receita"
               />
               <Area
@@ -137,14 +141,14 @@ export function FinancialChart() {
                 stroke="hsl(0, 84%, 60%)"
                 fillOpacity={1}
                 fill="url(#colorDespesa)"
-                strokeWidth={2}
+                strokeWidth={isMobile ? 1.5 : 2}
                 name="Despesa"
               />
             </AreaChart>
           </ResponsiveContainer>
         ) : (
-          <div className="h-full flex items-center justify-center text-muted-foreground">
-            <p>Nenhum dado financeiro disponível. Complete ordens de serviço para visualizar o gráfico.</p>
+          <div className="h-full flex items-center justify-center text-muted-foreground text-xs sm:text-sm">
+            <p className="text-center px-4">Nenhum dado financeiro disponível. Complete ordens de serviço para visualizar o gráfico.</p>
           </div>
         )}
       </div>

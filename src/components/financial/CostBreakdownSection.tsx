@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronUp, Package, Wrench, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FinancialTransaction } from "@/types/database";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface CostBreakdownSectionProps {
   transactions: FinancialTransaction[];
@@ -26,6 +27,7 @@ interface CostItem {
 
 export function CostBreakdownSection({ transactions }: CostBreakdownSectionProps) {
   const [isExpanded, setIsExpanded] = useState(true);
+  const isMobile = useIsMobile();
 
   const costBreakdown = useMemo(() => {
     const items: CostItem[] = [];
@@ -79,123 +81,192 @@ export function CostBreakdownSection({ transactions }: CostBreakdownSectionProps
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.5 }}
-      className="glass rounded-xl overflow-hidden mb-8"
+      className="glass rounded-lg overflow-hidden mb-4 sm:mb-6"
     >
       <div 
-        className="p-6 border-b border-border flex items-center justify-between cursor-pointer hover:bg-secondary/20 transition-colors"
+        className="p-3 sm:p-4 border-b border-border flex items-center justify-between cursor-pointer hover:bg-secondary/20 transition-colors"
         onClick={() => setIsExpanded(!isExpanded)}
       >
-        <div className="flex items-center gap-3">
-          <FileText className="w-5 h-5 text-primary" />
+        <div className="flex items-center gap-2">
+          <FileText className="w-4 h-4 text-primary" />
           <div>
-            <h3 className="text-lg font-semibold text-foreground">Mapa de Custos Detalhado</h3>
-            <p className="text-sm text-muted-foreground">
+            <h3 className="text-sm sm:text-base font-semibold text-foreground">Mapa de Custos</h3>
+            <p className="text-[10px] sm:text-xs text-muted-foreground">
               Custos por OS, produto e serviço
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="flex gap-4 text-sm">
-            <div className="text-center">
-              <p className="text-muted-foreground">Produtos</p>
-              <p className="font-semibold text-destructive">R$ {totalCosts.productsCost.toFixed(2)}</p>
+        <div className="flex items-center gap-2 sm:gap-4">
+          {!isMobile && (
+            <div className="flex gap-3 text-xs">
+              <div className="text-center">
+                <p className="text-muted-foreground">Produtos</p>
+                <p className="font-semibold text-destructive">R$ {totalCosts.productsCost.toFixed(2)}</p>
+              </div>
+              <div className="text-center">
+                <p className="text-muted-foreground">Serviços</p>
+                <p className="font-semibold text-destructive">R$ {totalCosts.servicesCost.toFixed(2)}</p>
+              </div>
+              <div className="text-center">
+                <p className="text-muted-foreground">Total</p>
+                <p className="font-semibold text-destructive">R$ {totalCosts.totalCost.toFixed(2)}</p>
+              </div>
             </div>
-            <div className="text-center">
-              <p className="text-muted-foreground">Serviços</p>
-              <p className="font-semibold text-destructive">R$ {totalCosts.servicesCost.toFixed(2)}</p>
-            </div>
-            <div className="text-center">
-              <p className="text-muted-foreground">Total Custos</p>
-              <p className="font-semibold text-destructive">R$ {totalCosts.totalCost.toFixed(2)}</p>
-            </div>
-          </div>
-          <Button variant="ghost" size="icon">
-            {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+          )}
+          <Button variant="ghost" size="icon" className="h-7 w-7 sm:h-8 sm:w-8">
+            {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </Button>
         </div>
       </div>
 
-      {isExpanded && (
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-border bg-secondary/20">
-                <th className="text-left p-4 text-sm font-medium text-muted-foreground">OS</th>
-                <th className="text-left p-4 text-sm font-medium text-muted-foreground">Item</th>
-                <th className="text-left p-4 text-sm font-medium text-muted-foreground">Tipo</th>
-                <th className="text-center p-4 text-sm font-medium text-muted-foreground">Qtd</th>
-                <th className="text-right p-4 text-sm font-medium text-muted-foreground">Custo Unit.</th>
-                <th className="text-right p-4 text-sm font-medium text-muted-foreground">Custo Total</th>
-                <th className="text-right p-4 text-sm font-medium text-muted-foreground">Venda</th>
-                <th className="text-right p-4 text-sm font-medium text-muted-foreground">Lucro</th>
-              </tr>
-            </thead>
-            <tbody>
-              {costBreakdown.map((item, index) => (
-                <motion.tr
-                  key={`${item.osNumber}-${item.itemName}-${index}`}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.2, delay: index * 0.03 }}
-                  className="border-b border-border/50 hover:bg-secondary/30 transition-colors"
-                >
-                  <td className="p-4">
-                    <Badge variant="outline" className="font-mono text-xs">
-                      {item.osNumber}
-                    </Badge>
-                  </td>
-                  <td className="p-4 font-medium text-foreground">{item.itemName}</td>
-                  <td className="p-4">
-                    <Badge
-                      variant="outline"
-                      className={cn(
-                        "text-xs",
-                        item.itemType === 'product'
-                          ? "bg-primary/20 text-primary border-primary/30"
-                          : "bg-info/20 text-info border-info/30"
-                      )}
-                    >
-                      {item.itemType === 'product' ? (
-                        <><Package className="w-3 h-3 mr-1" /> Produto</>
-                      ) : (
-                        <><Wrench className="w-3 h-3 mr-1" /> Serviço</>
-                      )}
-                    </Badge>
-                  </td>
-                  <td className="p-4 text-center text-muted-foreground">{item.quantity}</td>
-                  <td className="p-4 text-right text-muted-foreground">
-                    R$ {item.costPerUnit.toFixed(2)}
-                  </td>
-                  <td className="p-4 text-right font-semibold text-destructive">
-                    R$ {item.totalCost.toFixed(2)}
-                  </td>
-                  <td className="p-4 text-right text-success">
-                    R$ {item.salePrice.toFixed(2)}
-                  </td>
-                  <td className="p-4 text-right font-semibold text-primary">
-                    R$ {item.profit.toFixed(2)}
-                  </td>
-                </motion.tr>
-              ))}
-            </tbody>
-            <tfoot>
-              <tr className="bg-secondary/30 border-t-2 border-border">
-                <td colSpan={5} className="p-4 text-right font-semibold text-foreground">
-                  TOTAIS:
-                </td>
-                <td className="p-4 text-right font-bold text-destructive">
-                  R$ {totalCosts.totalCost.toFixed(2)}
-                </td>
-                <td className="p-4 text-right font-bold text-success">
-                  R$ {costBreakdown.reduce((sum, c) => sum + c.salePrice, 0).toFixed(2)}
-                </td>
-                <td className="p-4 text-right font-bold text-primary">
-                  R$ {totalCosts.totalProfit.toFixed(2)}
-                </td>
-              </tr>
-            </tfoot>
-          </table>
+      {/* Mobile Summary */}
+      {isMobile && isExpanded && (
+        <div className="p-3 border-b border-border bg-secondary/10">
+          <div className="grid grid-cols-3 gap-2 text-center text-[10px]">
+            <div>
+              <p className="text-muted-foreground">Produtos</p>
+              <p className="font-semibold text-destructive">R$ {totalCosts.productsCost.toFixed(2)}</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground">Serviços</p>
+              <p className="font-semibold text-destructive">R$ {totalCosts.servicesCost.toFixed(2)}</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground">Total</p>
+              <p className="font-semibold text-destructive">R$ {totalCosts.totalCost.toFixed(2)}</p>
+            </div>
+          </div>
         </div>
+      )}
+
+      {isExpanded && (
+        isMobile ? (
+          // Mobile: Card view
+          <div className="p-2 space-y-2 max-h-[300px] overflow-y-auto">
+            {costBreakdown.map((item, index) => (
+              <div key={`${item.osNumber}-${item.itemName}-${index}`} className="p-2 rounded-lg bg-secondary/20 space-y-1">
+                <div className="flex items-center justify-between gap-2">
+                  <Badge variant="outline" className="font-mono text-[10px] px-1.5 py-0">
+                    {item.osNumber}
+                  </Badge>
+                  <Badge
+                    variant="outline"
+                    className={cn(
+                      "text-[10px] px-1.5 py-0",
+                      item.itemType === 'product'
+                        ? "bg-primary/20 text-primary border-primary/30"
+                        : "bg-info/20 text-info border-info/30"
+                    )}
+                  >
+                    {item.itemType === 'product' ? <Package className="w-2.5 h-2.5 mr-0.5" /> : <Wrench className="w-2.5 h-2.5 mr-0.5" />}
+                    {item.itemType === 'product' ? 'Prod' : 'Serv'}
+                  </Badge>
+                </div>
+                <p className="text-xs font-medium text-foreground truncate">{item.itemName}</p>
+                <div className="grid grid-cols-4 gap-1 text-center text-[9px]">
+                  <div>
+                    <p className="text-muted-foreground">Qtd</p>
+                    <p className="font-medium">{item.quantity}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Custo</p>
+                    <p className="font-medium text-destructive">R${item.totalCost.toFixed(0)}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Venda</p>
+                    <p className="font-medium text-success">R${item.salePrice.toFixed(0)}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Lucro</p>
+                    <p className="font-medium text-primary">R${item.profit.toFixed(0)}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          // Desktop: Table view
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-border bg-secondary/20">
+                  <th className="text-left p-3 text-xs font-medium text-muted-foreground">OS</th>
+                  <th className="text-left p-3 text-xs font-medium text-muted-foreground">Item</th>
+                  <th className="text-left p-3 text-xs font-medium text-muted-foreground">Tipo</th>
+                  <th className="text-center p-3 text-xs font-medium text-muted-foreground">Qtd</th>
+                  <th className="text-right p-3 text-xs font-medium text-muted-foreground">Custo Unit.</th>
+                  <th className="text-right p-3 text-xs font-medium text-muted-foreground">Custo Total</th>
+                  <th className="text-right p-3 text-xs font-medium text-muted-foreground">Venda</th>
+                  <th className="text-right p-3 text-xs font-medium text-muted-foreground">Lucro</th>
+                </tr>
+              </thead>
+              <tbody>
+                {costBreakdown.map((item, index) => (
+                  <motion.tr
+                    key={`${item.osNumber}-${item.itemName}-${index}`}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.2, delay: index * 0.03 }}
+                    className="border-b border-border/50 hover:bg-secondary/30 transition-colors"
+                  >
+                    <td className="p-3">
+                      <Badge variant="outline" className="font-mono text-[10px]">
+                        {item.osNumber}
+                      </Badge>
+                    </td>
+                    <td className="p-3 text-xs font-medium text-foreground">{item.itemName}</td>
+                    <td className="p-3">
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          "text-[10px]",
+                          item.itemType === 'product'
+                            ? "bg-primary/20 text-primary border-primary/30"
+                            : "bg-info/20 text-info border-info/30"
+                        )}
+                      >
+                        {item.itemType === 'product' ? (
+                          <><Package className="w-3 h-3 mr-1" /> Produto</>
+                        ) : (
+                          <><Wrench className="w-3 h-3 mr-1" /> Serviço</>
+                        )}
+                      </Badge>
+                    </td>
+                    <td className="p-3 text-center text-xs text-muted-foreground">{item.quantity}</td>
+                    <td className="p-3 text-right text-xs text-muted-foreground">
+                      R$ {item.costPerUnit.toFixed(2)}
+                    </td>
+                    <td className="p-3 text-right text-xs font-semibold text-destructive">
+                      R$ {item.totalCost.toFixed(2)}
+                    </td>
+                    <td className="p-3 text-right text-xs text-success">
+                      R$ {item.salePrice.toFixed(2)}
+                    </td>
+                    <td className="p-3 text-right text-xs font-semibold text-primary">
+                      R$ {item.profit.toFixed(2)}
+                    </td>
+                  </motion.tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr className="bg-secondary/30 border-t-2 border-border">
+                  <td colSpan={5} className="p-3 text-right text-xs font-semibold text-foreground">
+                    TOTAIS:
+                  </td>
+                  <td className="p-3 text-right text-xs font-bold text-destructive">
+                    R$ {totalCosts.totalCost.toFixed(2)}
+                  </td>
+                  <td className="p-3 text-right text-xs font-bold text-success">
+                    R$ {costBreakdown.reduce((sum, c) => sum + c.salePrice, 0).toFixed(2)}
+                  </td>
+                  <td className="p-3 text-right text-xs font-bold text-primary">
+                    R$ {totalCosts.totalProfit.toFixed(2)}
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        )
       )}
     </motion.div>
   );

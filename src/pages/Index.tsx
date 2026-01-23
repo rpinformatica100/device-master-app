@@ -19,20 +19,20 @@ const Index = () => {
 
   return (
     <MainLayout>
-      <div className="p-8">
+      <div className="p-3 sm:p-4 lg:p-6">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="mb-8"
+          className="mb-4 sm:mb-6"
         >
-          <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
-          <p className="text-muted-foreground mt-1">Bem-vindo de volta! Aqui está o resumo do seu dia.</p>
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">Dashboard</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Bem-vindo de volta! Aqui está o resumo do seu dia.</p>
         </motion.div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4 mb-4 sm:mb-6">
           <StatCard
             title="Ordens Abertas"
             value={isLoading ? "..." : stats?.openOrders || 0}
@@ -68,7 +68,7 @@ const Index = () => {
         </div>
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
           {/* Recent Orders - Spans 2 columns */}
           <div className="lg:col-span-2">
             <RecentOrders />
@@ -81,7 +81,7 @@ const Index = () => {
         </div>
 
         {/* Financial Chart */}
-        <div className="mt-6">
+        <div className="mt-3 sm:mt-4 lg:mt-6">
           <FinancialChart />
         </div>
       </div>

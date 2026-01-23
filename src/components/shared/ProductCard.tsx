@@ -32,33 +32,33 @@ export function ProductCard({ product, onEdit, onDelete }: ProductCardProps) {
 
   return (
     <div className={cn(
-      "glass rounded-xl p-4 space-y-3",
+      "glass rounded-lg p-3 space-y-2",
       isLowStock && "border-destructive/50"
     )}>
       {/* Header */}
       <div className="flex items-start justify-between">
-        <div className="flex items-center gap-3 min-w-0">
+        <div className="flex items-center gap-2 min-w-0">
           <div className={cn(
-            "w-10 h-10 rounded-lg flex items-center justify-center shrink-0",
+            "w-8 h-8 rounded-lg flex items-center justify-center shrink-0",
             isLowStock ? "bg-destructive/10" : "bg-primary/10"
           )}>
             {isLowStock ? (
-              <AlertTriangle className="w-5 h-5 text-destructive" />
+              <AlertTriangle className="w-4 h-4 text-destructive" />
             ) : (
-              <Package className="w-5 h-5 text-primary" />
+              <Package className="w-4 h-4 text-primary" />
             )}
           </div>
           <div className="min-w-0">
-            <p className="font-medium text-foreground truncate">{product.name}</p>
+            <p className="text-xs font-medium text-foreground truncate">{product.name}</p>
             {product.sku && (
-              <p className="text-xs font-mono text-muted-foreground">{product.sku}</p>
+              <p className="text-[10px] font-mono text-muted-foreground">{product.sku}</p>
             )}
           </div>
         </div>
         {product.category && (
           <Badge 
             variant="outline" 
-            className={cn("text-xs shrink-0 capitalize", productCategoryColors[product.category])}
+            className={cn("text-[10px] shrink-0 capitalize px-1.5 py-0", productCategoryColors[product.category])}
           >
             {product.category}
           </Badge>
@@ -66,42 +66,42 @@ export function ProductCard({ product, onEdit, onDelete }: ProductCardProps) {
       </div>
 
       {/* Stock & Price */}
-      <div className="grid grid-cols-3 gap-2 text-center">
+      <div className="grid grid-cols-3 gap-1.5 text-center">
         <div>
-          <p className="text-xs text-muted-foreground">Estoque</p>
+          <p className="text-[9px] text-muted-foreground">Estoque</p>
           <p className={cn(
-            "text-sm font-semibold",
+            "text-[10px] font-semibold",
             isLowStock ? "text-destructive" : "text-foreground"
           )}>
             {product.stock} / {product.min_stock}
           </p>
         </div>
         <div>
-          <p className="text-xs text-muted-foreground">Custo</p>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-[9px] text-muted-foreground">Custo</p>
+          <p className="text-[10px] text-muted-foreground">
             R$ {Number(product.cost_price).toFixed(2)}
           </p>
         </div>
         <div>
-          <p className="text-xs text-muted-foreground">Venda</p>
-          <p className="text-sm font-medium text-foreground">
+          <p className="text-[9px] text-muted-foreground">Venda</p>
+          <p className="text-[10px] font-medium text-foreground">
             R$ {Number(product.sale_price).toFixed(2)}
           </p>
         </div>
       </div>
 
       {/* Actions */}
-      <div className="flex items-center justify-end gap-1 pt-2 border-t border-border/50">
-        <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => onEdit(product)}>
-          <Edit className="w-4 h-4" />
+      <div className="flex items-center justify-end gap-0.5 pt-1.5 border-t border-border/50">
+        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onEdit(product)}>
+          <Edit className="w-3.5 h-3.5" />
         </Button>
         <Button 
           variant="ghost" 
           size="icon" 
-          className="h-9 w-9 text-destructive" 
+          className="h-7 w-7 text-destructive" 
           onClick={() => onDelete(product.id)}
         >
-          <Trash2 className="w-4 h-4" />
+          <Trash2 className="w-3.5 h-3.5" />
         </Button>
       </div>
     </div>
