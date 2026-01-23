@@ -51,25 +51,25 @@ export function Sidebar() {
       initial={false}
       animate={{ width: collapsed ? 80 : 260 }}
       transition={{ duration: 0.3, ease: "easeInOut" }}
-      className="fixed left-0 top-0 h-screen bg-sidebar border-r border-sidebar-border z-50 flex flex-col hidden md:flex"
+      className="fixed left-0 top-0 h-screen bg-sidebar border-r border-sidebar-border z-50 flex flex-col"
     >
       {/* Logo */}
-      <div className="h-16 flex items-center justify-between px-4 border-b border-sidebar-border">
+      <div className="h-14 flex items-center justify-between px-3 border-b border-sidebar-border">
         <motion.div
           initial={false}
           animate={{ opacity: collapsed ? 0 : 1 }}
-          className="flex items-center gap-3"
+          className="flex items-center gap-2"
         >
-          <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-glow">
-            <Wrench className="w-5 h-5 text-primary-foreground" />
+          <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center shadow-glow">
+            <Wrench className="w-4 h-4 text-primary-foreground" />
           </div>
           {!collapsed && (
-            <span className="font-bold text-lg text-foreground">TechOS</span>
+            <span className="font-bold text-base text-foreground">TechOS</span>
           )}
         </motion.div>
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="p-2 rounded-lg hover:bg-sidebar-accent transition-colors"
+          className="p-1.5 rounded-lg hover:bg-sidebar-accent transition-colors"
         >
           {collapsed ? (
             <ChevronRight className="w-4 h-4 text-muted-foreground" />
@@ -80,22 +80,22 @@ export function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 py-4 px-3 overflow-y-auto">
-        <ul className="space-y-1">
+      <nav className="flex-1 py-3 px-2 overflow-y-auto">
+        <ul className="space-y-0.5">
           {menuItems.map((item) => (
             <li key={item.path}>
               <NavLink
                 to={item.path}
                 className={({ isActive }) =>
                   cn(
-                    "flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 group",
+                    "flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition-all duration-200 group",
                     isActive
                       ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-glow"
                       : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                   )
                 }
               >
-                <item.icon className="w-5 h-5 flex-shrink-0" />
+                <item.icon className="w-4 h-4 flex-shrink-0" />
                 {!collapsed && (
                   <motion.span
                     initial={false}
@@ -112,28 +112,28 @@ export function Sidebar() {
       </nav>
 
       {/* Footer with User Info and Logout */}
-      <div className="p-4 border-t border-sidebar-border space-y-3">
-        <div className={cn("flex items-center gap-3", collapsed && "justify-center")}>
-          <div className="w-8 h-8 rounded-full bg-sidebar-accent flex items-center justify-center">
+      <div className="p-3 border-t border-sidebar-border space-y-2">
+        <div className={cn("flex items-center gap-2", collapsed && "justify-center")}>
+          <div className="w-7 h-7 rounded-full bg-sidebar-accent flex items-center justify-center">
             <span className="text-xs font-semibold text-sidebar-accent-foreground">{userInitials}</span>
           </div>
           {!collapsed && (
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground truncate">{userName}</p>
-              <p className="text-xs text-muted-foreground truncate">{userEmail}</p>
+              <p className="text-xs font-medium text-foreground truncate">{userName}</p>
+              <p className="text-[10px] text-muted-foreground truncate">{userEmail}</p>
             </div>
           )}
         </div>
         <button
           onClick={handleLogout}
           className={cn(
-            "flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 w-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive",
+            "flex items-center gap-2 px-2 py-1.5 rounded-lg transition-all duration-200 w-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive",
             collapsed && "justify-center"
           )}
         >
-          <LogOut className="w-4 h-4 flex-shrink-0" />
+          <LogOut className="w-3.5 h-3.5 flex-shrink-0" />
           {!collapsed && (
-            <span className="font-medium text-sm">Sair</span>
+            <span className="font-medium text-xs">Sair</span>
           )}
         </button>
       </div>

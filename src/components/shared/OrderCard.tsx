@@ -43,45 +43,45 @@ export function OrderCard({ order, paymentStatus, onView, onEdit, onDelete }: Or
 
   return (
     <div 
-      className="glass rounded-xl p-4 space-y-3 cursor-pointer active:scale-[0.98] transition-transform"
+      className="glass rounded-lg p-3 space-y-2 cursor-pointer active:scale-[0.98] transition-transform"
       onClick={() => onView(order)}
     >
       {/* Header */}
       <div className="flex items-start justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-            <CategoryIcon className="w-5 h-5 text-primary" />
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+            <CategoryIcon className="w-4 h-4 text-primary" />
           </div>
           <div className="min-w-0">
-            <p className="font-mono text-xs text-primary">{order.os_number}</p>
-            <p className="font-medium text-foreground truncate">{order.client?.name || "Sem cliente"}</p>
+            <p className="font-mono text-[10px] text-primary">{order.os_number}</p>
+            <p className="text-xs font-medium text-foreground truncate max-w-[140px]">{order.client?.name || "Sem cliente"}</p>
           </div>
         </div>
-        <Badge variant="outline" className={cn("text-xs shrink-0", priority.className)}>
+        <Badge variant="outline" className={cn("text-[10px] shrink-0 px-1.5 py-0", priority.className)}>
           {priority.label}
         </Badge>
       </div>
 
       {/* Device & Issue */}
-      <div className="space-y-1">
-        <p className="text-sm text-foreground">{order.device}</p>
-        <p className="text-xs text-muted-foreground line-clamp-2">{order.issue}</p>
+      <div className="space-y-0.5">
+        <p className="text-xs text-foreground truncate">{order.device}</p>
+        <p className="text-[10px] text-muted-foreground line-clamp-1">{order.issue}</p>
       </div>
 
       {/* Status & Payment */}
-      <div className="flex items-center gap-2 flex-wrap">
-        <Badge variant="outline" className={cn("text-xs", status.className)}>
+      <div className="flex items-center gap-1.5 flex-wrap">
+        <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0", status.className)}>
           {status.label}
         </Badge>
         {(order.status === 'concluido' || order.status === 'entregue') && (
           paymentStatus === 'pago' ? (
-            <Badge variant="outline" className="text-xs bg-success/20 text-success border-success/30 gap-1">
-              <CheckCircle className="w-3 h-3" />
+            <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-success/20 text-success border-success/30 gap-0.5">
+              <CheckCircle className="w-2.5 h-2.5" />
               Pago
             </Badge>
           ) : (
-            <Badge variant="outline" className="text-xs bg-warning/20 text-warning border-warning/30 gap-1">
-              <Clock className="w-3 h-3" />
+            <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-warning/20 text-warning border-warning/30 gap-0.5">
+              <Clock className="w-2.5 h-2.5" />
               Pendente
             </Badge>
           )
@@ -89,24 +89,24 @@ export function OrderCard({ order, paymentStatus, onView, onEdit, onDelete }: Or
       </div>
 
       {/* Footer */}
-      <div className="flex items-center justify-between pt-2 border-t border-border/50">
+      <div className="flex items-center justify-between pt-1.5 border-t border-border/50">
         <div className="flex flex-col">
-          <span className="text-xs text-muted-foreground">
+          <span className="text-[10px] text-muted-foreground">
             {format(new Date(order.created_at), "dd/MM/yy", { locale: ptBR })}
           </span>
-          <span className="font-medium text-foreground">
+          <span className="text-xs font-medium text-foreground">
             R$ {Number(order.total_sale).toFixed(2)}
           </span>
         </div>
-        <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-          <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => onView(order)}>
-            <Eye className="w-4 h-4" />
+        <div className="flex items-center gap-0.5" onClick={(e) => e.stopPropagation()}>
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onView(order)}>
+            <Eye className="w-3.5 h-3.5" />
           </Button>
-          <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => onEdit(order)}>
-            <Edit className="w-4 h-4" />
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onEdit(order)}>
+            <Edit className="w-3.5 h-3.5" />
           </Button>
-          <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive" onClick={() => onDelete(order)}>
-            <Trash2 className="w-4 h-4" />
+          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => onDelete(order)}>
+            <Trash2 className="w-3.5 h-3.5" />
           </Button>
         </div>
       </div>

@@ -97,16 +97,16 @@ export default function SettingsPage() {
 
   return (
     <MainLayout>
-      <div className="p-8">
+      <div className="p-3 sm:p-4 lg:p-6">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="mb-8"
+          className="mb-4 sm:mb-6"
         >
-          <h1 className="text-3xl font-bold text-foreground">Configurações</h1>
-          <p className="text-muted-foreground mt-1">Personalize o sistema de acordo com suas necessidades</p>
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">Configurações</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Personalize o sistema de acordo com suas necessidades</p>
         </motion.div>
 
         <motion.div
@@ -114,263 +114,280 @@ export default function SettingsPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
         >
-          <Tabs defaultValue="empresa" className="space-y-6">
-            <TabsList className="glass">
-              <TabsTrigger value="empresa" className="gap-2">
-                <Building2 className="w-4 h-4" />
-                Empresa
+          <Tabs defaultValue="empresa" className="space-y-4">
+            <TabsList className="glass flex-wrap h-auto gap-1 p-1">
+              <TabsTrigger value="empresa" className="gap-1.5 text-xs sm:text-sm px-2 sm:px-3 py-1.5">
+                <Building2 className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Empresa</span>
+                <span className="sm:hidden">Emp.</span>
               </TabsTrigger>
-              <TabsTrigger value="usuario" className="gap-2">
-                <User className="w-4 h-4" />
-                Usuário
+              <TabsTrigger value="usuario" className="gap-1.5 text-xs sm:text-sm px-2 sm:px-3 py-1.5">
+                <User className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Usuário</span>
+                <span className="sm:hidden">User</span>
               </TabsTrigger>
-              <TabsTrigger value="notificacoes" className="gap-2">
-                <Bell className="w-4 h-4" />
-                Notificações
+              <TabsTrigger value="notificacoes" className="gap-1.5 text-xs sm:text-sm px-2 sm:px-3 py-1.5">
+                <Bell className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Notificações</span>
+                <span className="sm:hidden">Notif.</span>
               </TabsTrigger>
-              <TabsTrigger value="aparencia" className="gap-2">
-                <Palette className="w-4 h-4" />
-                Aparência
+              <TabsTrigger value="aparencia" className="gap-1.5 text-xs sm:text-sm px-2 sm:px-3 py-1.5">
+                <Palette className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Aparência</span>
+                <span className="sm:hidden">Tema</span>
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="empresa" className="glass rounded-xl p-6 space-y-6">
-              <h3 className="text-lg font-semibold text-foreground mb-4">Dados da Empresa</h3>
+            <TabsContent value="empresa" className="glass rounded-lg p-3 sm:p-4 lg:p-6 space-y-4">
+              <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-foreground">Dados da Empresa</h3>
               {loading ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                <div className="flex items-center justify-center py-6">
+                  <Loader2 className="w-5 h-5 animate-spin text-primary" />
                 </div>
               ) : (
                 <>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="razao">Razão Social</Label>
+                  <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                    <div className="col-span-2 sm:col-span-1 space-y-1">
+                      <Label htmlFor="razao" className="text-xs">Razão Social</Label>
                       <Input 
                         id="razao" 
-                        placeholder="Razão social da empresa" 
+                        placeholder="Razão social" 
                         value={razaoSocial}
                         onChange={(e) => setRazaoSocial(e.target.value)}
+                        className="h-8 text-sm"
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="fantasia">Nome Fantasia</Label>
+                    <div className="col-span-2 sm:col-span-1 space-y-1">
+                      <Label htmlFor="fantasia" className="text-xs">Nome Fantasia</Label>
                       <Input 
                         id="fantasia" 
                         placeholder="Nome fantasia" 
                         value={nomeFantasia}
                         onChange={(e) => setNomeFantasia(e.target.value)}
+                        className="h-8 text-sm"
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="cnpj">CNPJ</Label>
+                    <div className="space-y-1">
+                      <Label htmlFor="cnpj" className="text-xs">CNPJ</Label>
                       <MaskedInput 
                         id="cnpj" 
                         mask="00.000.000/0000-00"
                         placeholder="00.000.000/0000-00" 
                         value={cnpj}
                         onAccept={(value) => setCnpj(value)}
+                        className="h-8 text-sm"
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="ie">Inscrição Estadual</Label>
+                    <div className="space-y-1">
+                      <Label htmlFor="ie" className="text-xs">Inscr. Estadual</Label>
                       <Input 
                         id="ie" 
                         placeholder="Inscrição estadual" 
                         value={inscricaoEstadual}
                         onChange={(e) => setInscricaoEstadual(e.target.value)}
+                        className="h-8 text-sm"
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="telefone">Telefone</Label>
+                    <div className="space-y-1">
+                      <Label htmlFor="telefone" className="text-xs">Telefone</Label>
                       <MaskedInput 
                         id="telefone" 
                         mask="(00) 00000-0000"
                         placeholder="(00) 00000-0000" 
                         value={telefone}
                         onAccept={(value) => setTelefone(value)}
+                        className="h-8 text-sm"
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="email">E-mail</Label>
+                    <div className="space-y-1">
+                      <Label htmlFor="email" className="text-xs">E-mail</Label>
                       <Input 
                         id="email" 
                         type="email" 
                         placeholder="contato@empresa.com" 
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
+                        className="h-8 text-sm"
                       />
                     </div>
                   </div>
 
                   {/* Address Section */}
-                  <div className="pt-4 border-t border-border">
-                    <h4 className="text-md font-medium text-foreground mb-4">Endereço</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="cep">CEP</Label>
+                  <div className="pt-3 border-t border-border">
+                    <h4 className="text-xs sm:text-sm font-medium text-foreground mb-2">Endereço</h4>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      <div className="space-y-1">
+                        <Label htmlFor="cep" className="text-xs">CEP</Label>
                         <div className="relative">
                           <CepInput
                             id="cep"
                             placeholder="00000-000"
                             value={cep}
                             onAccept={handleCepChange}
+                            className="h-8 text-sm"
                           />
                           {isFetchingCep && (
-                            <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground" />
+                            <Loader2 className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 animate-spin text-muted-foreground" />
                           )}
                         </div>
                       </div>
-                      <div className="md:col-span-2 space-y-2">
-                        <Label htmlFor="rua">Logradouro (Rua/Avenida)</Label>
-                        <Input 
-                          id="rua" 
-                          placeholder="Ex: Rua das Flores" 
-                          value={rua}
-                          onChange={(e) => setRua(e.target.value)}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="numero">Número</Label>
+                      <div className="space-y-1">
+                        <Label htmlFor="numero" className="text-xs">Número</Label>
                         <Input 
                           id="numero" 
-                          placeholder="Ex: 123" 
+                          placeholder="123" 
                           value={numero}
                           onChange={(e) => setNumero(e.target.value)}
+                          className="h-8 text-sm"
                         />
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="complemento">Complemento</Label>
+                      <div className="space-y-1">
+                        <Label htmlFor="complemento" className="text-xs">Complemento</Label>
                         <Input 
                           id="complemento" 
-                          placeholder="Ex: Sala 101" 
+                          placeholder="Sala 101" 
                           value={complemento}
                           onChange={(e) => setComplemento(e.target.value)}
+                          className="h-8 text-sm"
                         />
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="bairro">Bairro</Label>
+                      <div className="col-span-2 sm:col-span-3 space-y-1">
+                        <Label htmlFor="rua" className="text-xs">Logradouro</Label>
+                        <Input 
+                          id="rua" 
+                          placeholder="Rua das Flores" 
+                          value={rua}
+                          onChange={(e) => setRua(e.target.value)}
+                          className="h-8 text-sm"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label htmlFor="bairro" className="text-xs">Bairro</Label>
                         <Input 
                           id="bairro" 
-                          placeholder="Ex: Centro" 
+                          placeholder="Centro" 
                           value={bairro}
                           onChange={(e) => setBairro(e.target.value)}
+                          className="h-8 text-sm"
                         />
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="cidade">Cidade</Label>
+                      <div className="space-y-1">
+                        <Label htmlFor="cidade" className="text-xs">Cidade</Label>
                         <Input 
                           id="cidade" 
                           placeholder="Cidade" 
                           value={cidade}
                           onChange={(e) => setCidade(e.target.value)}
+                          className="h-8 text-sm"
                         />
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="estado">Estado</Label>
+                      <div className="space-y-1">
+                        <Label htmlFor="estado" className="text-xs">UF</Label>
                         <Input 
                           id="estado" 
                           placeholder="UF" 
                           maxLength={2}
                           value={estado}
                           onChange={(e) => setEstado(e.target.value.toUpperCase())}
+                          className="h-8 text-sm"
                         />
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex justify-end pt-4">
-                    <Button onClick={handleSaveCompany} disabled={isSaving}>
-                      {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                      Salvar Alterações
+                  <div className="flex justify-end pt-3">
+                    <Button onClick={handleSaveCompany} disabled={isSaving} size="sm">
+                      {isSaving && <Loader2 className="w-3 h-3 mr-1.5 animate-spin" />}
+                      Salvar
                     </Button>
                   </div>
                 </>
               )}
             </TabsContent>
 
-            <TabsContent value="usuario" className="glass rounded-xl p-6 space-y-6">
-              <h3 className="text-lg font-semibold text-foreground mb-4">Dados do Usuário</h3>
-              <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="nome">Nome Completo</Label>
-                  <Input id="nome" defaultValue="Administrador" />
+            <TabsContent value="usuario" className="glass rounded-lg p-3 sm:p-4 lg:p-6 space-y-4">
+              <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-foreground">Dados do Usuário</h3>
+              <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                <div className="col-span-2 sm:col-span-1 space-y-1">
+                  <Label htmlFor="nome" className="text-xs">Nome Completo</Label>
+                  <Input id="nome" defaultValue="Administrador" className="h-8 text-sm" />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="emailUser">E-mail</Label>
-                  <Input id="emailUser" type="email" value={user?.email || ""} disabled />
+                <div className="col-span-2 sm:col-span-1 space-y-1">
+                  <Label htmlFor="emailUser" className="text-xs">E-mail</Label>
+                  <Input id="emailUser" type="email" value={user?.email || ""} disabled className="h-8 text-sm" />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="senhaAtual">Senha Atual</Label>
-                  <Input id="senhaAtual" type="password" placeholder="••••••••" />
+                <div className="space-y-1">
+                  <Label htmlFor="senhaAtual" className="text-xs">Senha Atual</Label>
+                  <Input id="senhaAtual" type="password" placeholder="••••••••" className="h-8 text-sm" />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="novaSenha">Nova Senha</Label>
-                  <Input id="novaSenha" type="password" placeholder="••••••••" />
+                <div className="space-y-1">
+                  <Label htmlFor="novaSenha" className="text-xs">Nova Senha</Label>
+                  <Input id="novaSenha" type="password" placeholder="••••••••" className="h-8 text-sm" />
                 </div>
               </div>
               <div className="flex justify-end">
-                <Button>Atualizar Perfil</Button>
+                <Button size="sm">Atualizar Perfil</Button>
               </div>
             </TabsContent>
 
-            <TabsContent value="notificacoes" className="glass rounded-xl p-6 space-y-6">
-              <h3 className="text-lg font-semibold text-foreground mb-4">Preferências de Notificação</h3>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 rounded-lg bg-secondary/30">
+            <TabsContent value="notificacoes" className="glass rounded-lg p-3 sm:p-4 lg:p-6 space-y-3">
+              <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-foreground">Preferências de Notificação</h3>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between p-2.5 sm:p-3 rounded-lg bg-secondary/30">
                   <div>
-                    <p className="font-medium text-foreground">Nova OS criada</p>
-                    <p className="text-sm text-muted-foreground">Receber notificação quando uma nova OS for aberta</p>
+                    <p className="text-xs sm:text-sm font-medium text-foreground">Nova OS criada</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground">Notificação quando uma nova OS for aberta</p>
                   </div>
                   <Switch defaultChecked />
                 </div>
-                <div className="flex items-center justify-between p-4 rounded-lg bg-secondary/30">
+                <div className="flex items-center justify-between p-2.5 sm:p-3 rounded-lg bg-secondary/30">
                   <div>
-                    <p className="font-medium text-foreground">Estoque baixo</p>
-                    <p className="text-sm text-muted-foreground">Alertar quando itens estiverem abaixo do mínimo</p>
+                    <p className="text-xs sm:text-sm font-medium text-foreground">Estoque baixo</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground">Alertar itens abaixo do mínimo</p>
                   </div>
                   <Switch defaultChecked />
                 </div>
-                <div className="flex items-center justify-between p-4 rounded-lg bg-secondary/30">
+                <div className="flex items-center justify-between p-2.5 sm:p-3 rounded-lg bg-secondary/30">
                   <div>
-                    <p className="font-medium text-foreground">Pagamentos pendentes</p>
-                    <p className="text-sm text-muted-foreground">Notificar sobre pagamentos em atraso</p>
+                    <p className="text-xs sm:text-sm font-medium text-foreground">Pagamentos pendentes</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground">Notificar pagamentos em atraso</p>
                   </div>
                   <Switch defaultChecked />
                 </div>
-                <div className="flex items-center justify-between p-4 rounded-lg bg-secondary/30">
+                <div className="flex items-center justify-between p-2.5 sm:p-3 rounded-lg bg-secondary/30">
                   <div>
-                    <p className="font-medium text-foreground">Relatórios semanais</p>
-                    <p className="text-sm text-muted-foreground">Receber resumo semanal por e-mail</p>
+                    <p className="text-xs sm:text-sm font-medium text-foreground">Relatórios semanais</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground">Resumo semanal por e-mail</p>
                   </div>
                   <Switch />
                 </div>
               </div>
             </TabsContent>
 
-            <TabsContent value="aparencia" className="glass rounded-xl p-6 space-y-6">
-              <h3 className="text-lg font-semibold text-foreground mb-4">Personalização</h3>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 rounded-lg bg-secondary/30">
+            <TabsContent value="aparencia" className="glass rounded-lg p-3 sm:p-4 lg:p-6 space-y-3">
+              <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-foreground">Personalização</h3>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between p-2.5 sm:p-3 rounded-lg bg-secondary/30">
                   <div>
-                    <p className="font-medium text-foreground">Tema Escuro</p>
-                    <p className="text-sm text-muted-foreground">Ativar modo escuro na interface</p>
+                    <p className="text-xs sm:text-sm font-medium text-foreground">Tema Escuro</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground">Ativar modo escuro</p>
                   </div>
                   <Switch 
                     checked={theme === 'dark'} 
                     onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
                   />
                 </div>
-                <div className="flex items-center justify-between p-4 rounded-lg bg-secondary/30">
+                <div className="flex items-center justify-between p-2.5 sm:p-3 rounded-lg bg-secondary/30">
                   <div>
-                    <p className="font-medium text-foreground">Animações</p>
-                    <p className="text-sm text-muted-foreground">Habilitar animações na interface</p>
+                    <p className="text-xs sm:text-sm font-medium text-foreground">Animações</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground">Habilitar animações</p>
                   </div>
                   <Switch defaultChecked />
                 </div>
-                <div className="flex items-center justify-between p-4 rounded-lg bg-secondary/30">
+                <div className="flex items-center justify-between p-2.5 sm:p-3 rounded-lg bg-secondary/30">
                   <div>
-                    <p className="font-medium text-foreground">Sidebar Compacta</p>
-                    <p className="text-sm text-muted-foreground">Manter sidebar recolhida por padrão</p>
+                    <p className="text-xs sm:text-sm font-medium text-foreground">Sidebar Compacta</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground">Sidebar recolhida por padrão</p>
                   </div>
                   <Switch />
                 </div>

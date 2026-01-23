@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { FinancialChart } from "@/components/dashboard/FinancialChart";
 import { CostBreakdownSection } from "@/components/financial/CostBreakdownSection";
+import { TransactionCard } from "@/components/shared/TransactionCard";
 import { DollarSign, TrendingUp, TrendingDown, Wallet, Loader2, Eye, Receipt, Package, Plus, CreditCard, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -33,9 +34,11 @@ import { PaymentDialog, PaymentData } from "@/components/financial/PaymentDialog
 import { FinancialFilters, FilterState, defaultFilters } from "@/components/financial/FinancialFilters";
 import { exportToExcel, exportToPDF } from "@/lib/exportFinancial";
 import { toast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function FinancialPage() {
   const { transactions, loading, summary, createTransaction, updateTransaction, deleteTransaction } = useFinancial();
+  const isMobile = useIsMobile();
   const [selectedTransaction, setSelectedTransaction] = useState<FinancialTransaction | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -209,26 +212,27 @@ export default function FinancialPage() {
 
   return (
     <MainLayout>
-      <div className="p-8">
+      <div className="p-3 sm:p-4 lg:p-6">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="mb-8 flex items-center justify-between"
+          className="mb-4 flex items-center justify-between"
         >
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Financeiro</h1>
-            <p className="text-muted-foreground mt-1">Acompanhe suas receitas, despesas e lucros</p>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">Financeiro</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Acompanhe receitas, despesas e lucros</p>
           </div>
-          <Button onClick={() => setIsFormOpen(true)}>
-            <Plus className="w-4 h-4 mr-2" />
-            Novo Lançamento
+          <Button onClick={() => setIsFormOpen(true)} size="sm" className="h-8 text-xs sm:text-sm">
+            <Plus className="w-3.5 h-3.5 mr-1" />
+            <span className="hidden sm:inline">Novo Lançamento</span>
+            <span className="sm:hidden">Novo</span>
           </Button>
         </motion.div>
 
-        {/* Stats - Use filtered data for period stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {/* Stats */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 mb-4">
           <StatCard
             title="Saldo (Período)"
             value={`R$ ${filteredSummary.saldo.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
@@ -238,17 +242,17 @@ export default function FinancialPage() {
             delay={0}
           />
           <StatCard
-            title="Receitas (Período)"
+            title="Receitas"
             value={`R$ ${filteredSummary.totalReceitas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
-            change={`${filteredSummary.margemMedia.toFixed(1)}% margem média`}
+            change={`${filteredSummary.margemMedia.toFixed(1)}% margem`}
             changeType="positive"
             icon={TrendingUp}
             delay={0.1}
           />
           <StatCard
-            title="Custos (Período)"
+            title="Custos"
             value={`R$ ${filteredSummary.totalCustos.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
-            change="Custo de produtos/serviços"
+            change="Produtos/serviços"
             changeType="neutral"
             icon={TrendingDown}
             delay={0.2}
@@ -273,7 +277,7 @@ export default function FinancialPage() {
         />
 
         {/* Chart */}
-        <div className="mb-8">
+        <div className="mb-4">
           <FinancialChart />
         </div>
 
@@ -285,38 +289,51 @@ export default function FinancialPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.4 }}
-          className="glass rounded-xl overflow-hidden"
+          className="glass rounded-lg overflow-hidden"
         >
-          <div className="p-6 border-b border-border flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-foreground">Transações</h3>
-            <span className="text-sm text-muted-foreground">
+          <div className="p-3 sm:p-4 border-b border-border flex items-center justify-between">
+            <h3 className="text-sm sm:text-base font-semibold text-foreground">Transações</h3>
+            <span className="text-[10px] sm:text-xs text-muted-foreground">
               {filteredTransactions.length} transação(ões)
             </span>
           </div>
 
           {filteredTransactions.length === 0 ? (
-            <div className="p-8 text-center">
-              <Receipt className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">Nenhuma transação encontrada</p>
-              <p className="text-sm text-muted-foreground mt-1">
+            <div className="p-6 text-center">
+              <Receipt className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+              <p className="text-sm text-muted-foreground">Nenhuma transação encontrada</p>
+              <p className="text-xs text-muted-foreground mt-1">
                 {transactions.length > 0 
-                  ? "Tente ajustar os filtros para ver mais transações" 
-                  : "As transações são criadas automaticamente quando uma OS é concluída"}
+                  ? "Tente ajustar os filtros" 
+                  : "Transações são criadas quando uma OS é concluída"}
               </p>
             </div>
+          ) : isMobile ? (
+            // Mobile: Card view
+            <div className="p-2 space-y-2 max-h-[400px] overflow-y-auto">
+              {filteredTransactions.map((transaction) => (
+                <TransactionCard
+                  key={transaction.id}
+                  transaction={transaction}
+                  onView={handleViewDetails}
+                  onDelete={handleDeleteClick}
+                />
+              ))}
+            </div>
           ) : (
+            // Desktop: Table view
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-border">
-                    <th className="text-left p-4 text-sm font-medium text-muted-foreground">Descrição</th>
-                    <th className="text-left p-4 text-sm font-medium text-muted-foreground">Data</th>
-                    <th className="text-left p-4 text-sm font-medium text-muted-foreground">Tipo</th>
-                    <th className="text-left p-4 text-sm font-medium text-muted-foreground">Status</th>
-                    <th className="text-right p-4 text-sm font-medium text-muted-foreground">Custo</th>
-                    <th className="text-right p-4 text-sm font-medium text-muted-foreground">Receita</th>
-                    <th className="text-right p-4 text-sm font-medium text-muted-foreground">Lucro</th>
-                    <th className="text-left p-4 text-sm font-medium text-muted-foreground">Ações</th>
+                    <th className="text-left p-3 text-xs font-medium text-muted-foreground">Descrição</th>
+                    <th className="text-left p-3 text-xs font-medium text-muted-foreground">Data</th>
+                    <th className="text-left p-3 text-xs font-medium text-muted-foreground">Tipo</th>
+                    <th className="text-left p-3 text-xs font-medium text-muted-foreground">Status</th>
+                    <th className="text-right p-3 text-xs font-medium text-muted-foreground">Custo</th>
+                    <th className="text-right p-3 text-xs font-medium text-muted-foreground">Receita</th>
+                    <th className="text-right p-3 text-xs font-medium text-muted-foreground">Lucro</th>
+                    <th className="text-left p-3 text-xs font-medium text-muted-foreground">Ações</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -328,15 +345,15 @@ export default function FinancialPage() {
                       transition={{ duration: 0.3, delay: 0.5 + index * 0.05 }}
                       className="border-b border-border/50 hover:bg-secondary/30 transition-colors"
                     >
-                      <td className="p-4 font-medium text-foreground">{transaction.description}</td>
-                      <td className="p-4 text-sm text-muted-foreground">
-                        {format(new Date(transaction.created_at), "dd/MM/yyyy", { locale: ptBR })}
+                      <td className="p-3 text-xs font-medium text-foreground">{transaction.description}</td>
+                      <td className="p-3 text-xs text-muted-foreground">
+                        {format(new Date(transaction.created_at), "dd/MM/yy", { locale: ptBR })}
                       </td>
-                      <td className="p-4">
+                      <td className="p-3">
                         <Badge
                           variant="outline"
                           className={cn(
-                            "text-xs capitalize",
+                            "text-[10px] capitalize",
                             transaction.type === "receita"
                               ? "bg-success/20 text-success border-success/30"
                               : "bg-destructive/20 text-destructive border-destructive/30"
@@ -345,11 +362,11 @@ export default function FinancialPage() {
                           {transaction.type}
                         </Badge>
                       </td>
-                      <td className="p-4">
+                      <td className="p-3">
                         <Badge
                           variant="outline"
                           className={cn(
-                            "text-xs capitalize",
+                            "text-[10px] capitalize",
                             transaction.status === "pago"
                               ? "bg-success/20 text-success border-success/30"
                               : transaction.status === "pendente"
@@ -360,37 +377,37 @@ export default function FinancialPage() {
                           {transaction.status}
                         </Badge>
                       </td>
-                      <td className="p-4 text-right text-muted-foreground">
+                      <td className="p-3 text-right text-xs text-muted-foreground">
                         R$ {Number(transaction.cost_amount).toFixed(2)}
                       </td>
                       <td
                         className={cn(
-                          "p-4 text-right font-semibold",
+                          "p-3 text-right text-xs font-semibold",
                           transaction.type === "receita" ? "text-success" : "text-destructive"
                         )}
                       >
                         {transaction.type === "receita" ? "+" : "-"} R$ {Number(transaction.amount).toFixed(2)}
                       </td>
-                      <td className="p-4 text-right font-semibold text-primary">
+                      <td className="p-3 text-right text-xs font-semibold text-primary">
                         R$ {Number(transaction.profit_amount).toFixed(2)}
                       </td>
-                      <td className="p-4">
-                        <div className="flex items-center gap-1">
+                      <td className="p-3">
+                        <div className="flex items-center gap-0.5">
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8"
+                            className="h-7 w-7"
                             onClick={() => handleViewDetails(transaction)}
                           >
-                            <Eye className="w-4 h-4" />
+                            <Eye className="w-3.5 h-3.5" />
                           </Button>
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 text-destructive hover:text-destructive"
+                            className="h-7 w-7 text-destructive hover:text-destructive"
                             onClick={() => handleDeleteClick(transaction)}
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 className="w-3.5 h-3.5" />
                           </Button>
                         </div>
                       </td>
