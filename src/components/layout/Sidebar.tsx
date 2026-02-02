@@ -13,6 +13,7 @@ import {
   Wrench,
   LogOut,
   Wallet,
+  Smartphone,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -24,6 +25,7 @@ const menuItems = [
   { icon: Users, label: "Clientes", path: "/clientes" },
   { icon: Package, label: "Estoque", path: "/estoque" },
   { icon: DollarSign, label: "Financeiro", path: "/financeiro" },
+  { icon: Smartphone, label: "Seminovos", path: "/seminovos" },
   { icon: Wallet, label: "Pessoal", path: "/pessoal" },
   { icon: Settings, label: "Configurações", path: "/configuracoes" },
 ];
