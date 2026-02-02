@@ -8,6 +8,7 @@ import {
   LogOut,
   Settings,
   Wallet,
+  Smartphone,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
@@ -31,6 +32,7 @@ export function MobileHeader() {
   const userName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Usuário";
 
   const menuItems = [
+    { icon: Smartphone, label: "Seminovos", path: "/seminovos" },
     { icon: Wallet, label: "Pessoal", path: "/pessoal" },
     { icon: Settings, label: "Configurações", path: "/configuracoes" },
   ];

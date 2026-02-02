@@ -467,6 +467,264 @@ export type Database = {
         }
         Relationships: []
       }
+      used_equipment: {
+        Row: {
+          brand: string | null
+          category: string
+          code: string
+          condition: string
+          created_at: string
+          id: string
+          imei: string | null
+          model: string | null
+          name: string
+          notes: string | null
+          photos: Json | null
+          profit: number | null
+          purchase_price: number
+          repair_cost: number
+          sale_price: number | null
+          serial_number: string | null
+          sold_at: string | null
+          status: string
+          total_cost: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          brand?: string | null
+          category?: string
+          code: string
+          condition?: string
+          created_at?: string
+          id?: string
+          imei?: string | null
+          model?: string | null
+          name: string
+          notes?: string | null
+          photos?: Json | null
+          profit?: number | null
+          purchase_price?: number
+          repair_cost?: number
+          sale_price?: number | null
+          serial_number?: string | null
+          sold_at?: string | null
+          status?: string
+          total_cost?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          brand?: string | null
+          category?: string
+          code?: string
+          condition?: string
+          created_at?: string
+          id?: string
+          imei?: string | null
+          model?: string | null
+          name?: string
+          notes?: string | null
+          photos?: Json | null
+          profit?: number | null
+          purchase_price?: number
+          repair_cost?: number
+          sale_price?: number | null
+          serial_number?: string | null
+          sold_at?: string | null
+          status?: string
+          total_cost?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      used_equipment_purchases: {
+        Row: {
+          amount: number
+          client_id: string | null
+          created_at: string
+          equipment_id: string
+          financial_transaction_id: string | null
+          id: string
+          notes: string | null
+          source_order_id: string | null
+          source_type: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          client_id?: string | null
+          created_at?: string
+          equipment_id: string
+          financial_transaction_id?: string | null
+          id?: string
+          notes?: string | null
+          source_order_id?: string | null
+          source_type?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          client_id?: string | null
+          created_at?: string
+          equipment_id?: string
+          financial_transaction_id?: string | null
+          id?: string
+          notes?: string | null
+          source_order_id?: string | null
+          source_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "used_equipment_purchases_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "used_equipment_purchases_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "used_equipment"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "used_equipment_purchases_financial_transaction_id_fkey"
+            columns: ["financial_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "financial_transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "used_equipment_purchases_source_order_id_fkey"
+            columns: ["source_order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      used_equipment_repairs: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          description: string
+          equipment_id: string
+          id: string
+          labor_cost: number
+          notes: string | null
+          order_id: string | null
+          parts_cost: number
+          total_cost: number
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          description: string
+          equipment_id: string
+          id?: string
+          labor_cost?: number
+          notes?: string | null
+          order_id?: string | null
+          parts_cost?: number
+          total_cost?: number
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          description?: string
+          equipment_id?: string
+          id?: string
+          labor_cost?: number
+          notes?: string | null
+          order_id?: string | null
+          parts_cost?: number
+          total_cost?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "used_equipment_repairs_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "used_equipment"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "used_equipment_repairs_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      used_equipment_sales: {
+        Row: {
+          amount: number
+          client_id: string | null
+          created_at: string
+          equipment_id: string
+          financial_transaction_id: string | null
+          id: string
+          notes: string | null
+          payment_method: string | null
+          user_id: string
+          warranty_days: number | null
+        }
+        Insert: {
+          amount?: number
+          client_id?: string | null
+          created_at?: string
+          equipment_id: string
+          financial_transaction_id?: string | null
+          id?: string
+          notes?: string | null
+          payment_method?: string | null
+          user_id: string
+          warranty_days?: number | null
+        }
+        Update: {
+          amount?: number
+          client_id?: string | null
+          created_at?: string
+          equipment_id?: string
+          financial_transaction_id?: string | null
+          id?: string
+          notes?: string | null
+          payment_method?: string | null
+          user_id?: string
+          warranty_days?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "used_equipment_sales_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "used_equipment_sales_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "used_equipment"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "used_equipment_sales_financial_transaction_id_fkey"
+            columns: ["financial_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "financial_transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       withdrawals: {
         Row: {
           amount: number
@@ -526,6 +784,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_next_equipment_code: { Args: never; Returns: string }
       generate_next_os_number: { Args: never; Returns: string }
     }
     Enums: {
