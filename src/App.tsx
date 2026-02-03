@@ -13,6 +13,8 @@ import InventoryPage from "./pages/InventoryPage";
 import FinancialPage from "./pages/FinancialPage";
 import PersonalFinancePage from "./pages/PersonalFinancePage";
 import UsedEquipmentPage from "./pages/UsedEquipmentPage";
+import EquipmentDetailPage from "./pages/EquipmentDetailPage";
+import EquipmentReceiptPage from "./pages/EquipmentReceiptPage";
 import SettingsPage from "./pages/SettingsPage";
 import NotFound from "./pages/NotFound";
 
@@ -57,6 +59,8 @@ function AppRoutes() {
       <Route path="/estoque" element={<ProtectedRoute><InventoryPage /></ProtectedRoute>} />
       <Route path="/financeiro" element={<ProtectedRoute><FinancialPage /></ProtectedRoute>} />
       <Route path="/seminovos" element={<ProtectedRoute><UsedEquipmentPage /></ProtectedRoute>} />
+      <Route path="/seminovos/:id" element={<ProtectedRoute><EquipmentDetailPage /></ProtectedRoute>} />
+      <Route path="/seminovos/recibo/:id" element={<ProtectedRoute><EquipmentReceiptPage /></ProtectedRoute>} />
       <Route path="/pessoal" element={<ProtectedRoute><PersonalFinancePage /></ProtectedRoute>} />
       <Route path="/configuracoes" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />

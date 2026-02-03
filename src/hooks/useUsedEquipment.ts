@@ -13,6 +13,7 @@ import {
   RepairFormData,
   SaleFormData,
 } from '@/types/usedEquipment';
+import { RepairItemFormData } from '@/types/repairItem';
 
 export function useUsedEquipment() {
   const { user } = useAuth();
@@ -202,7 +203,7 @@ export function useUsedEquipment() {
     }
   };
 
-  const addRepair = async (equipmentId: string, formData: RepairFormData) => {
+  const addRepair = async (equipmentId: string, formData: RepairFormData & { items?: RepairItemFormData[] }) => {
     if (!user) return null;
 
     try {
@@ -225,6 +226,43 @@ export function useUsedEquipment() {
         .single();
 
       if (repairError) throw repairError;
+
+      // Insert repair items if any
+      if (formData.items && formData.items.length > 0) {
+        const repairItems = formData.items.map(item => ({
+          repair_id: repair.id,
+          item_id: item.item_id || null,
+          item_type: item.item_type,
+          name: item.name,
+          quantity: item.quantity,
+          cost_price: item.cost_price,
+        }));
+
+        const { error: itemsError } = await supabase
+          .from('used_equipment_repair_items')
+          .insert(repairItems);
+
+        if (itemsError) throw itemsError;
+
+        // Update product stock for items from inventory
+        for (const item of formData.items) {
+          if (item.item_type === 'product' && item.item_id) {
+            const { data: product, error: productError } = await supabase
+              .from('products')
+              .select('stock')
+              .eq('id', item.item_id)
+              .single();
+
+            if (!productError && product) {
+              const newStock = Math.max(0, product.stock - item.quantity);
+              await supabase
+                .from('products')
+                .update({ stock: newStock })
+                .eq('id', item.item_id);
+            }
+          }
+        }
+      }
 
       // Update equipment repair_cost and total_cost
       const eq = equipment.find(e => e.id === equipmentId);
