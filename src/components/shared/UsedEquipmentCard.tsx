@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { 
   Smartphone, 
@@ -8,7 +8,7 @@ import {
   Eye,
   Trash2,
   Edit,
-  Tag
+  FileText
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -46,6 +46,8 @@ export function UsedEquipmentCard({
   onSell,
   onDelete,
 }: UsedEquipmentCardProps) {
+  const navigate = useNavigate();
+  
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
@@ -56,13 +58,24 @@ export function UsedEquipmentCard({
   const isAvailable = equipment.status === 'disponivel';
   const isSold = equipment.status === 'vendido';
 
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Navigate to detail page if not clicking on dropdown
+    const target = e.target as HTMLElement;
+    if (!target.closest('[data-dropdown-trigger]')) {
+      navigate(`/seminovos/${equipment.id}`);
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2 }}
     >
-      <Card className="overflow-hidden hover:shadow-md transition-shadow">
+      <Card 
+        className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+        onClick={handleCardClick}
+      >
         <CardContent className="p-3">
           <div className="flex items-start justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -95,36 +108,52 @@ export function UsedEquipmentCard({
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-7 w-7 flex-shrink-0">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-7 w-7 flex-shrink-0"
+                  data-dropdown-trigger
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <MoreVertical className="h-3.5 w-3.5" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-40">
-                <DropdownMenuItem onClick={() => onView(equipment)}>
+              <DropdownMenuContent align="end" className="w-44">
+                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); navigate(`/seminovos/${equipment.id}`); }}>
                   <Eye className="w-3.5 h-3.5 mr-2" />
                   Ver Detalhes
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); navigate(`/seminovos/recibo/${equipment.id}?type=compra`); }}>
+                  <FileText className="w-3.5 h-3.5 mr-2" />
+                  Recibo de Compra
+                </DropdownMenuItem>
                 {!isSold && (
                   <>
-                    <DropdownMenuItem onClick={() => onEdit(equipment)}>
+                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEdit(equipment); }}>
                       <Edit className="w-3.5 h-3.5 mr-2" />
                       Editar
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => onRepair(equipment)}>
+                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onRepair(equipment); }}>
                       <Wrench className="w-3.5 h-3.5 mr-2" />
                       Registrar Reparo
                     </DropdownMenuItem>
                     {isAvailable && (
-                      <DropdownMenuItem onClick={() => onSell(equipment)}>
+                      <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onSell(equipment); }}>
                         <DollarSign className="w-3.5 h-3.5 mr-2" />
                         Vender
                       </DropdownMenuItem>
                     )}
                   </>
                 )}
+                {isSold && (
+                  <DropdownMenuItem onClick={(e) => { e.stopPropagation(); navigate(`/seminovos/recibo/${equipment.id}?type=venda&details=true`); }}>
+                    <FileText className="w-3.5 h-3.5 mr-2" />
+                    Recibo de Venda
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem 
-                  onClick={() => onDelete(equipment)}
+                  onClick={(e) => { e.stopPropagation(); onDelete(equipment); }}
                   className="text-destructive focus:text-destructive"
                 >
                   <Trash2 className="w-3.5 h-3.5 mr-2" />

@@ -607,6 +607,47 @@ export type Database = {
           },
         ]
       }
+      used_equipment_repair_items: {
+        Row: {
+          cost_price: number
+          created_at: string
+          id: string
+          item_id: string | null
+          item_type: string
+          name: string
+          quantity: number
+          repair_id: string
+        }
+        Insert: {
+          cost_price?: number
+          created_at?: string
+          id?: string
+          item_id?: string | null
+          item_type?: string
+          name: string
+          quantity?: number
+          repair_id: string
+        }
+        Update: {
+          cost_price?: number
+          created_at?: string
+          id?: string
+          item_id?: string | null
+          item_type?: string
+          name?: string
+          quantity?: number
+          repair_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "used_equipment_repair_items_repair_id_fkey"
+            columns: ["repair_id"]
+            isOneToOne: false
+            referencedRelation: "used_equipment_repairs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       used_equipment_repairs: {
         Row: {
           completed_at: string | null
