@@ -145,17 +145,17 @@ export default function OrdersPage() {
 
   return (
     <MainLayout>
-      <div className="p-4 md:p-8">
+      <div className="p-4 md:p-6">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="flex items-center justify-between mb-6"
+          className="flex items-center justify-between mb-4"
         >
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-foreground">Ordens de Serviço</h1>
-            <p className="text-sm text-muted-foreground mt-1 hidden md:block">Gerencie todas as suas ordens de serviço</p>
+            <h1 className="text-xl md:text-2xl font-bold text-foreground">Ordens de Serviço</h1>
+            <p className="text-xs text-muted-foreground mt-0.5 hidden md:block">Gerencie todas as suas ordens de serviço</p>
           </div>
           <Button className="gap-2" size={isMobile ? "sm" : "default"} onClick={handleNewOrder}>
             <Plus className="w-4 h-4" />
@@ -252,15 +252,15 @@ export default function OrdersPage() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-border">
-                    <th className="text-left p-4 text-sm font-medium text-muted-foreground">OS</th>
-                    <th className="text-left p-4 text-sm font-medium text-muted-foreground">Cliente</th>
-                    <th className="text-left p-4 text-sm font-medium text-muted-foreground">Dispositivo</th>
-                    <th className="text-left p-4 text-sm font-medium text-muted-foreground">Defeito</th>
-                    <th className="text-left p-4 text-sm font-medium text-muted-foreground">Status</th>
-                    <th className="text-left p-4 text-sm font-medium text-muted-foreground">Prioridade</th>
-                    <th className="text-left p-4 text-sm font-medium text-muted-foreground">Valor</th>
-                    <th className="text-left p-4 text-sm font-medium text-muted-foreground">Lucro</th>
-                    <th className="text-left p-4 text-sm font-medium text-muted-foreground">Ações</th>
+                    <th className="text-left p-2 lg:p-3 text-xs font-medium text-muted-foreground w-[80px]">OS</th>
+                    <th className="text-left p-2 lg:p-3 text-xs font-medium text-muted-foreground min-w-[120px]">Cliente</th>
+                    <th className="text-left p-2 lg:p-3 text-xs font-medium text-muted-foreground min-w-[100px]">Dispositivo</th>
+                    <th className="text-left p-2 lg:p-3 text-xs font-medium text-muted-foreground max-w-[150px] hidden xl:table-cell">Defeito</th>
+                    <th className="text-left p-2 lg:p-3 text-xs font-medium text-muted-foreground w-[100px]">Status</th>
+                    <th className="text-left p-2 lg:p-3 text-xs font-medium text-muted-foreground w-[70px] hidden 2xl:table-cell">Prior.</th>
+                    <th className="text-left p-2 lg:p-3 text-xs font-medium text-muted-foreground w-[80px]">Valor</th>
+                    <th className="text-left p-2 lg:p-3 text-xs font-medium text-muted-foreground w-[80px] hidden xl:table-cell">Lucro</th>
+                    <th className="text-left p-2 lg:p-3 text-xs font-medium text-muted-foreground w-[90px]">Ações</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -273,93 +273,93 @@ export default function OrdersPage() {
                       className="border-b border-border/50 hover:bg-secondary/30 transition-colors cursor-pointer"
                       onClick={() => handleView(order)}
                     >
-                      <td className="p-4">
-                        <span className="font-mono text-sm text-primary">{order.os_number}</span>
+                      <td className="p-2 lg:p-3">
+                        <span className="font-mono text-xs text-primary">{order.os_number}</span>
                       </td>
-                      <td className="p-4">
+                      <td className="p-2 lg:p-3">
                         <div>
-                          <p className="font-medium text-foreground">{order.client?.name || "Cliente não informado"}</p>
-                          <p className="text-xs text-muted-foreground">{order.client?.phone || ""}</p>
+                          <p className="text-xs font-medium text-foreground truncate max-w-[120px]">{order.client?.name || "Não informado"}</p>
+                          <p className="text-[10px] text-muted-foreground truncate">{order.client?.phone || ""}</p>
                         </div>
                       </td>
-                      <td className="p-4">
+                      <td className="p-2 lg:p-3">
                         <div>
-                          <p className="text-foreground">{order.device}</p>
-                          <p className="text-xs text-muted-foreground capitalize">{order.category}</p>
+                          <p className="text-xs text-foreground truncate max-w-[100px]">{order.device}</p>
+                          <p className="text-[10px] text-muted-foreground capitalize">{order.category}</p>
                         </div>
                       </td>
-                      <td className="p-4 text-sm text-muted-foreground max-w-[200px] truncate">
-                        {order.issue}
+                      <td className="p-2 lg:p-3 hidden xl:table-cell">
+                        <span className="text-xs text-muted-foreground line-clamp-2 max-w-[150px]">{order.issue}</span>
                       </td>
-                      <td className="p-4">
-                        <div className="flex items-center gap-2">
+                      <td className="p-2 lg:p-3">
+                        <div className="flex flex-col gap-1">
                           <Badge
                             variant="outline"
-                            className={cn("text-xs", statusConfig[order.status]?.className)}
+                            className={cn("text-[10px] px-1.5 py-0 w-fit", statusConfig[order.status]?.className)}
                           >
                             {statusConfig[order.status]?.label || order.status}
                           </Badge>
                           {(order.status === 'concluido' || order.status === 'entregue') && (
                             paymentStatuses[order.id] === 'pago' ? (
-                              <Badge variant="outline" className="text-xs bg-success/20 text-success border-success/30 gap-1">
-                                <CheckCircle className="w-3 h-3" />
+                              <Badge variant="outline" className="text-[10px] px-1.5 py-0 w-fit bg-success/20 text-success border-success/30 gap-0.5">
+                                <CheckCircle className="w-2.5 h-2.5" />
                                 Pago
                               </Badge>
                             ) : (
-                              <Badge variant="outline" className="text-xs bg-warning/20 text-warning border-warning/30 gap-1">
-                                <Clock className="w-3 h-3" />
-                                Pendente
+                              <Badge variant="outline" className="text-[10px] px-1.5 py-0 w-fit bg-warning/20 text-warning border-warning/30 gap-0.5">
+                                <Clock className="w-2.5 h-2.5" />
+                                Pend.
                               </Badge>
                             )
                           )}
                         </div>
                       </td>
-                      <td className="p-4">
+                      <td className="p-2 lg:p-3 hidden 2xl:table-cell">
                         <Badge
                           variant="outline"
-                          className={cn("text-xs", priorityConfig[order.priority]?.className)}
+                          className={cn("text-[10px] px-1.5 py-0", priorityConfig[order.priority]?.className)}
                         >
                           {priorityConfig[order.priority]?.label || order.priority}
                         </Badge>
                       </td>
-                      <td className="p-4">
-                        <span className="font-medium text-foreground">
+                      <td className="p-2 lg:p-3">
+                        <span className="text-xs font-medium text-foreground">
                           R$ {Number(order.total_sale).toFixed(2)}
                         </span>
                       </td>
-                      <td className="p-4">
+                      <td className="p-2 lg:p-3 hidden xl:table-cell">
                         <span className={cn(
-                          "font-medium",
+                          "text-xs font-medium",
                           Number(order.total_profit) >= 0 ? "text-success" : "text-destructive"
                         )}>
                           R$ {Number(order.total_profit).toFixed(2)}
                         </span>
                       </td>
-                      <td className="p-4">
-                        <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                      <td className="p-2 lg:p-3">
+                        <div className="flex items-center gap-0.5" onClick={(e) => e.stopPropagation()}>
                           <Button 
                             variant="ghost" 
                             size="icon" 
-                            className="h-8 w-8"
+                            className="h-7 w-7"
                             onClick={() => handleView(order)}
                           >
-                            <Eye className="w-4 h-4" />
+                            <Eye className="w-3.5 h-3.5" />
                           </Button>
                           <Button 
                             variant="ghost" 
                             size="icon" 
-                            className="h-8 w-8"
+                            className="h-7 w-7"
                             onClick={() => handleEdit(order)}
                           >
-                            <Edit className="w-4 h-4" />
+                            <Edit className="w-3.5 h-3.5" />
                           </Button>
                           <Button 
                             variant="ghost" 
                             size="icon" 
-                            className="h-8 w-8 text-destructive"
+                            className="h-7 w-7 text-destructive"
                             onClick={() => handleDeleteClick(order)}
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 className="w-3.5 h-3.5" />
                           </Button>
                         </div>
                       </td>

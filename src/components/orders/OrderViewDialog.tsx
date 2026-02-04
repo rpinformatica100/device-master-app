@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -21,9 +21,12 @@ import {
   Clock,
   Cpu,
   HardDrive,
-  Monitor
+  Monitor,
+  CheckCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PaymentDialog, PaymentData } from "@/components/financial/PaymentDialog";
+import { useOrders, PaymentInfo } from "@/hooks/useOrders";
 
 const statusConfig = {
   em_andamento: { label: "Em Andamento", className: "bg-info/20 text-info border-info/30" },
@@ -83,12 +86,19 @@ interface OrderViewDialogProps {
   onOpenChange: (open: boolean) => void;
   order: any;
   onEdit: () => void;
+  onOrderUpdated?: () => void;
 }
 
-export function OrderViewDialog({ open, onOpenChange, order, onEdit }: OrderViewDialogProps) {
+export function OrderViewDialog({ open, onOpenChange, order, onEdit, onOrderUpdated }: OrderViewDialogProps) {
   const printRef = useRef<HTMLDivElement>(null);
+  const { updateOrder } = useOrders();
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!order) return null;
+
+  // Check if order can be finalized (not already completed/entregue/cancelado)
+  const canFinalize = ['em_andamento', 'aguardando', 'aguardando_peca'].includes(order.status);
 
   const items = (order.items || []).map((item: any) => ({
     ...item,
@@ -103,18 +113,20 @@ export function OrderViewDialog({ open, onOpenChange, order, onEdit }: OrderView
   let mobileChecklist: Record<string, boolean | null> = {};
   let checklistObservations = '';
   
-  if (categorySpecificFields.mobile_checklist) {
+  // Only parse checklist if category is mobile device
+  const isMobileDevice = order.category === 'smartphone' || order.category === 'tablet';
+  
+  if (isMobileDevice && categorySpecificFields.mobile_checklist) {
     try {
       mobileChecklist = typeof categorySpecificFields.mobile_checklist === 'string' 
         ? JSON.parse(categorySpecificFields.mobile_checklist) 
         : categorySpecificFields.mobile_checklist;
     } catch { mobileChecklist = {}; }
   }
-  if (categorySpecificFields.checklist_observations) {
+  if (isMobileDevice && categorySpecificFields.checklist_observations) {
     checklistObservations = categorySpecificFields.checklist_observations;
   }
   
-  const isMobileDevice = order.category === 'smartphone' || order.category === 'tablet';
   const hasChecklist = isMobileDevice && Object.keys(mobileChecklist).length > 0;
 
   // Checklist labels mapping
@@ -500,6 +512,30 @@ export function OrderViewDialog({ open, onOpenChange, order, onEdit }: OrderView
     }, 250);
   };
 
+  const handleFinalizeOrder = async (paymentData: PaymentData) => {
+    setIsSubmitting(true);
+    try {
+      const paymentInfo: PaymentInfo = {
+        payment_method: paymentData.payment_method,
+        payment_details: paymentData.payment_details,
+      };
+      
+      await updateOrder(
+        order.id,
+        { status: 'concluido' },
+        undefined,
+        paymentInfo,
+        paymentData.payment_date
+      );
+      
+      setShowPaymentDialog(false);
+      onOrderUpdated?.();
+      onOpenChange(false);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
@@ -702,12 +738,23 @@ export function OrderViewDialog({ open, onOpenChange, order, onEdit }: OrderView
           </div>
         </div>
 
-        <div className="flex justify-between gap-3 pt-4 border-t border-border">
+        <div className="flex flex-col sm:flex-row justify-between gap-3 pt-4 border-t border-border">
           <Button variant="outline" className="gap-2" onClick={handlePrint}>
             <Printer className="w-4 h-4" />
             Imprimir
           </Button>
-          <div className="flex gap-3">
+          <div className="flex gap-2 flex-wrap">
+            {canFinalize && (
+              <Button 
+                variant="default"
+                className="gap-2 bg-success hover:bg-success/90"
+                onClick={() => setShowPaymentDialog(true)}
+                disabled={isSubmitting}
+              >
+                <CheckCircle className="w-4 h-4" />
+                Finalizar OS
+              </Button>
+            )}
             <Button variant="secondary" onClick={() => onOpenChange(false)}>
               Fechar
             </Button>
@@ -718,6 +765,17 @@ export function OrderViewDialog({ open, onOpenChange, order, onEdit }: OrderView
           </div>
         </div>
       </DialogContent>
+
+      {/* Payment Dialog for finalizing order */}
+      <PaymentDialog
+        open={showPaymentDialog}
+        onOpenChange={setShowPaymentDialog}
+        title="Finalizar OS - Registrar Pagamento"
+        amount={total}
+        onConfirm={handleFinalizeOrder}
+        isLoading={isSubmitting}
+        showDateField={true}
+      />
     </Dialog>
   );
 }

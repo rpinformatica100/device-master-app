@@ -471,6 +471,7 @@ export type Database = {
         Row: {
           brand: string | null
           category: string
+          checklist: Json | null
           code: string
           condition: string
           created_at: string
@@ -494,6 +495,7 @@ export type Database = {
         Insert: {
           brand?: string | null
           category?: string
+          checklist?: Json | null
           code: string
           condition?: string
           created_at?: string
@@ -517,6 +519,7 @@ export type Database = {
         Update: {
           brand?: string | null
           category?: string
+          checklist?: Json | null
           code?: string
           condition?: string
           created_at?: string

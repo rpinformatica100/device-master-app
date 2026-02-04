@@ -260,15 +260,21 @@ export default function EquipmentDetailPage() {
                     Editar
                   </DropdownMenuItem>
                 )}
-                <DropdownMenuItem onClick={() => navigate(`/seminovos/recibo/${equipment.id}?type=compra&details=true`)}>
+                <DropdownMenuItem onClick={() => navigate(`/seminovos/recibo/${equipment.id}?type=compra&internal=true`)}>
                   <FileText className="w-4 h-4 mr-2" />
-                  Recibo de Compra
+                  Recibo Compra (Interno)
                 </DropdownMenuItem>
                 {isSold && (
-                  <DropdownMenuItem onClick={() => navigate(`/seminovos/recibo/${equipment.id}?type=venda&details=true&history=true`)}>
-                    <FileText className="w-4 h-4 mr-2" />
-                    Recibo de Venda
-                  </DropdownMenuItem>
+                  <>
+                    <DropdownMenuItem onClick={() => navigate(`/seminovos/recibo/${equipment.id}?type=venda`)}>
+                      <FileText className="w-4 h-4 mr-2" />
+                      Recibo Venda (Cliente)
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate(`/seminovos/recibo/${equipment.id}?type=venda&internal=true&history=true`)}>
+                      <FileText className="w-4 h-4 mr-2" />
+                      Recibo Venda (Interno)
+                    </DropdownMenuItem>
+                  </>
                 )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem

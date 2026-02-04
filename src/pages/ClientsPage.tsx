@@ -33,6 +33,7 @@ import { useClients } from "@/hooks/useClients";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Client } from "@/types/database";
 import { ClientCard } from "@/components/shared/ClientCard";
+import { ClientViewDialog } from "@/components/clients/ClientViewDialog";
 import { CpfInput, PhoneInput, CepInput, CnpjInput } from "@/components/ui/masked-input";
 import { fetchAddressByCep } from "@/lib/cep";
 import { toast } from "sonner";
@@ -42,6 +43,7 @@ export default function ClientsPage() {
   const isMobile = useIsMobile();
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -99,8 +101,14 @@ export default function ClientsPage() {
     setIsDialogOpen(true);
   };
 
+  const openViewDialog = (client: Client) => {
+    setSelectedClient(client);
+    setIsViewDialogOpen(true);
+  };
+
   const openEditDialog = (client: Client) => {
     setSelectedClient(client);
+    setIsViewDialogOpen(false);
     setFormData({
       name: client.name,
       email: client.email || "",
@@ -122,6 +130,7 @@ export default function ClientsPage() {
 
   const openDeleteDialog = (client: Client) => {
     setSelectedClient(client);
+    setIsViewDialogOpen(false);
     setIsDeleteDialogOpen(true);
   };
 
@@ -257,6 +266,7 @@ export default function ClientsPage() {
                   client={client} 
                   onEdit={openEditDialog} 
                   onDelete={openDeleteDialog}
+                  onView={openViewDialog}
                   compact
                 />
               </motion.div>
@@ -278,6 +288,7 @@ export default function ClientsPage() {
                   client={client} 
                   onEdit={openEditDialog} 
                   onDelete={openDeleteDialog}
+                  onView={openViewDialog}
                 />
               </motion.div>
             ))}
@@ -453,6 +464,15 @@ export default function ClientsPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* View Dialog */}
+      <ClientViewDialog
+        open={isViewDialogOpen}
+        onOpenChange={setIsViewDialogOpen}
+        client={selectedClient}
+        onEdit={openEditDialog}
+        onDelete={openDeleteDialog}
+      />
 
       {/* Delete Confirmation */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>

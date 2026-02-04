@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils";
 
 export interface PaymentData {
   payment_method: string;
+  payment_date?: string;
   payment_details: {
     method_label: string;
     installments?: number;
@@ -40,6 +41,7 @@ interface PaymentDialogProps {
   title: string;
   amount: number;
   onConfirm: (paymentData: PaymentData) => void;
+  showDateField?: boolean;
   isLoading?: boolean;
 }
 
@@ -64,8 +66,10 @@ export function PaymentDialog({
   amount,
   onConfirm,
   isLoading = false,
+  showDateField = false,
 }: PaymentDialogProps) {
   const [paymentMethod, setPaymentMethod] = useState("");
+  const [paymentDate, setPaymentDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [installments, setInstallments] = useState("1");
   const [cardBrand, setCardBrand] = useState("");
   const [cardLastDigits, setCardLastDigits] = useState("");
@@ -80,6 +84,7 @@ export function PaymentDialog({
     
     const paymentData: PaymentData = {
       payment_method: paymentMethod,
+      payment_date: showDateField ? paymentDate : undefined,
       payment_details: {
         method_label: methodInfo?.label || paymentMethod,
         notes: notes || undefined,
@@ -119,6 +124,7 @@ export function PaymentDialog({
 
   const resetForm = () => {
     setPaymentMethod("");
+    setPaymentDate(new Date().toISOString().split('T')[0]);
     setInstallments("1");
     setCardBrand("");
     setCardLastDigits("");
@@ -149,6 +155,19 @@ export function PaymentDialog({
               R$ {amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </p>
           </div>
+
+          {/* Data do Pagamento */}
+          {showDateField && (
+            <div className="space-y-1.5">
+              <Label className="text-xs">Data do Pagamento *</Label>
+              <Input
+                type="date"
+                value={paymentDate}
+                onChange={(e) => setPaymentDate(e.target.value)}
+                className="text-sm"
+              />
+            </div>
+          )}
 
           {/* Método de Pagamento */}
           <div className="space-y-2">
