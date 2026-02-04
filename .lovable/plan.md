@@ -1,211 +1,290 @@
 
-# Sistema de Compra e Venda de Equipamentos Seminovos
+# Plano de Correções Urgentes do Sistema
 
-## Visão Geral
+## Resumo Executivo
 
-Criar um módulo completo para gerenciar o ciclo de vida de equipamentos seminovos, desde a aquisição (compra de terceiros ou retirada de uma OS), passando por eventuais reparos, até a venda final. O sistema rastreará todo o histórico, incluindo integração completa com o módulo financeiro.
-
----
-
-## Funcionalidades Principais
-
-### 1. Catálogo de Equipamentos Seminovos
-- Registro detalhado de cada equipamento (marca, modelo, número de série, IMEI, condição)
-- Fotos do equipamento
-- Status do equipamento: Disponível, Em Reparo, Reservado, Vendido
-- Origem: Comprado de terceiros ou Retirado de OS (com referência à OS original)
-
-### 2. Registro de Compra (Aquisição)
-- De quem foi comprado (cliente/fornecedor existente ou novo)
-- Valor de compra
-- Data da aquisição
-- Documentação/notas (opcional)
-- Criação automática de transação financeira (despesa)
-
-### 3. Histórico de Reparos
-- Vinculação com OS de reparo interno (opcional)
-- Registro de custos de reparo (peças, mão de obra)
-- Atualização automática do custo total do equipamento
-
-### 4. Registro de Venda
-- Para quem foi vendido (cliente)
-- Valor de venda
-- Forma de pagamento
-- Criação automática de transação financeira (receita)
-- Cálculo automático de lucro (considerando compra + reparos)
-
-### 5. Dashboard de Equipamentos
-- Visão geral do estoque de seminovos
-- Equipamentos disponíveis vs vendidos
-- Margem de lucro por equipamento
-- Tempo médio em estoque
+Este plano aborda todas as correções urgentes solicitadas, organizadas por menu/seção do sistema. As alterações focam em melhorar a experiência do usuário, padronizar fontes, corrigir bugs e adicionar funcionalidades faltantes.
 
 ---
 
-## Modelagem de Dados (Novas Tabelas)
+## 1. ORDEM DE SERVICO (OS)
 
-### Tabela: `used_equipment`
-| Coluna | Tipo | Descrição |
-|--------|------|-----------|
-| id | uuid | Identificador único |
-| user_id | uuid | Dono do registro (multi-tenant) |
-| code | text | Código interno (EQ-0001) |
-| name | text | Nome/descrição do equipamento |
-| brand | text | Marca |
-| model | text | Modelo |
-| serial_number | text | Número de série |
-| imei | text | IMEI (para celulares) |
-| category | text | Categoria (smartphone, notebook, etc) |
-| condition | text | Estado (excelente, bom, regular, defeito) |
-| status | text | Status (disponivel, em_reparo, reservado, vendido) |
-| purchase_price | numeric | Valor de compra |
-| repair_cost | numeric | Custo total de reparos (atualizado automaticamente) |
-| total_cost | numeric | Custo total (compra + reparos) |
-| sale_price | numeric | Valor de venda (quando vendido) |
-| profit | numeric | Lucro (venda - custo total) |
-| notes | text | Observações |
-| photos | jsonb | URLs das fotos |
-| created_at | timestamp | Data de criação |
-| updated_at | timestamp | Data de atualização |
-| sold_at | timestamp | Data da venda |
+### 1.1 Botao "Finalizar OS" com Cadastro de Pagamento
 
-### Tabela: `used_equipment_purchases`
-| Coluna | Tipo | Descrição |
-|--------|------|-----------|
-| id | uuid | Identificador único |
-| user_id | uuid | Dono do registro |
-| equipment_id | uuid | Referência ao equipamento |
-| client_id | uuid | De quem comprou (cliente/fornecedor) |
-| source_order_id | uuid | OS de origem (se retirado de OS) |
-| source_type | text | Tipo de origem: 'compra' ou 'os' |
-| amount | numeric | Valor pago |
-| financial_transaction_id | uuid | Transação financeira vinculada |
-| notes | text | Observações |
-| created_at | timestamp | Data da compra |
+**Problema:** Nao existe um botao direto para finalizar OS e registrar pagamento, incluindo data real.
 
-### Tabela: `used_equipment_repairs`
-| Coluna | Tipo | Descrição |
-|--------|------|-----------|
-| id | uuid | Identificador único |
-| user_id | uuid | Dono do registro |
-| equipment_id | uuid | Referência ao equipamento |
-| order_id | uuid | OS de reparo (opcional) |
-| description | text | Descrição do reparo |
-| parts_cost | numeric | Custo de peças |
-| labor_cost | numeric | Custo de mão de obra |
-| total_cost | numeric | Custo total do reparo |
-| completed_at | timestamp | Data de conclusão |
-| notes | text | Observações |
-| created_at | timestamp | Data de criação |
+**Solucao:**
+- Adicionar botao "Finalizar OS" no `OrderViewDialog.tsx` para ordens em status "em_andamento", "aguardando" ou "aguardando_peca"
+- Ao clicar, abrir dialog de pagamento (`PaymentDialog`) com campo de data do pagamento
+- Atualizar status para "concluido" e criar transacao financeira com data correta
 
-### Tabela: `used_equipment_sales`
-| Coluna | Tipo | Descrição |
-|--------|------|-----------|
-| id | uuid | Identificador único |
-| user_id | uuid | Dono do registro |
-| equipment_id | uuid | Referência ao equipamento |
-| client_id | uuid | Para quem vendeu |
-| amount | numeric | Valor de venda |
-| payment_method | text | Forma de pagamento |
-| financial_transaction_id | uuid | Transação financeira vinculada |
-| warranty_days | integer | Dias de garantia |
-| notes | text | Observações |
-| created_at | timestamp | Data da venda |
+**Arquivos a modificar:**
+- `src/components/orders/OrderViewDialog.tsx` - Adicionar botao e logica
+- `src/components/financial/PaymentDialog.tsx` - Adicionar campo de data do pagamento
 
----
+### 1.2 OS sem Custo nao Finalizando Corretamente
 
-## Componentes Frontend
+**Problema:** Ordens sem custo (total = 0) nao estao finalizando corretamente no menu e financeiro.
 
-### Nova Página: `/seminovos`
-- Listagem de equipamentos com filtros (status, categoria)
-- Cards responsivos para mobile
-- Tabela para desktop
-- Botões de ação rápida
+**Solucao:**
+- Modificar `useOrders.ts` para permitir criar transacao financeira mesmo com valor 0
+- Ajustar condicao `if (totals.sale > 0)` no `OrderFormDialog.tsx` para permitir finalizar OS sem valor
 
-### Dialogs/Formulários:
-1. **EquipmentFormDialog** - Cadastro/edição de equipamento
-2. **PurchaseFormDialog** - Registro de compra
-3. **RepairFormDialog** - Registro de reparo
-4. **SaleFormDialog** - Registro de venda
-5. **EquipmentViewDialog** - Visualização do histórico completo
+**Arquivos a modificar:**
+- `src/hooks/useOrders.ts` - Remover restricao de valor > 0
+- `src/components/orders/OrderFormDialog.tsx` - Ajustar logica de finalizacao
 
-### Cards:
-- **UsedEquipmentCard** - Card mobile para listar equipamentos
-- **EquipmentTimelineCard** - Timeline do histórico
+### 1.3 Rolagem Horizontal na Tabela (1366x768)
+
+**Problema:** Tabela de OS tem rolagem horizontal em resolucoes como 1366x768.
+
+**Solucao:**
+- Reduzir padding das celulas de `p-4` para `p-2 sm:p-3`
+- Reduzir largura das colunas Defeito e Acoes
+- Usar `text-xs` em todas as celulas
+- Ocultar colunas menos importantes em telas menores (Lucro, Prioridade)
+
+**Arquivos a modificar:**
+- `src/pages/OrdersPage.tsx` - Otimizar tabela desktop
+
+### 1.4 Padronizar Tamanho de Fonte
+
+**Problema:** Fontes inconsistentes entre tabelas e formularios.
+
+**Solucao:**
+- Definir padrao de fontes: `text-xs` para tabelas, `text-sm` para formularios
+- Ajustar todos os componentes relacionados
+
+**Arquivos a modificar:**
+- `src/pages/OrdersPage.tsx`
+- `src/components/orders/OrderFormDialog.tsx`
+- `src/components/orders/OrderViewDialog.tsx`
+
+### 1.5 Melhorar Atualizacao apos CRUD
+
+**Problema:** Atualizacoes lentas apos criar/editar informacoes.
+
+**Solucao:**
+- Ja existe atualizacao imediata no `useOrders.ts`
+- Verificar se `setOrders` esta sendo chamado corretamente
+- Adicionar refresh da lista de pagamentos apos atualizar status
+
+**Arquivos a modificar:**
+- `src/pages/OrdersPage.tsx` - Melhorar refresh do estado de pagamentos
+
+### 1.6 Checklist Persistindo na Impressao
+
+**Problema:** Checklist permanece na impressao mesmo apos excluido/editado.
+
+**Solucao:**
+- Ao mudar categoria para nao-mobile, limpar checklist do `category_specific_fields`
+- Na impressao, verificar se checklist existe E se categoria e mobile
+- Adicionar botao para limpar checklist no form
+
+**Arquivos a modificar:**
+- `src/components/orders/OrderFormDialog.tsx` - Limpar checklist ao mudar categoria
+- `src/components/orders/OrderViewDialog.tsx` - Verificar categoria antes de imprimir checklist
 
 ---
 
-## Integrações
+## 2. CLIENTES
 
-### Com Financeiro
-- Compra: Cria transação tipo "despesa", categoria "compra_seminovo"
-- Reparo: Atualiza custo do equipamento (pode criar OS interna)
-- Venda: Cria transação tipo "receita", categoria "venda_seminovo"
+### 2.1 Clientes Clicaveis com Dialog de Detalhes
 
-### Com Clientes
-- Fornecedor de quem comprou
-- Cliente para quem vendeu
+**Problema:** Clientes nao sao clicaveis para ver dados completos.
 
-### Com Ordens de Serviço
-- Equipamento pode vir de uma OS (cliente abandonou/trocou)
-- Reparo pode gerar uma OS interna
+**Solucao:**
+- Criar `ClientViewDialog.tsx` para exibir dados completos do cliente
+- Adicionar botao "Ver" no `ClientCard.tsx`
+- Tornar card inteiro clicavel para abrir detalhes
 
----
+**Arquivos a criar:**
+- `src/components/clients/ClientViewDialog.tsx`
 
-## Fluxo de Navegação
+**Arquivos a modificar:**
+- `src/components/shared/ClientCard.tsx` - Adicionar onClick e botao Ver
+- `src/pages/ClientsPage.tsx` - Adicionar estado e logica do dialog
 
-Adicionar ao menu lateral e bottom nav:
-- Ícone: `Smartphone` ou `RefreshCcw`
-- Label: "Seminovos"
-- Path: `/seminovos`
+### 2.2 Historico de Compra/Venda de Equipamentos e OS
 
----
+**Problema:** Falta historico de transacoes por cliente.
 
-## Arquivos a Criar
+**Solucao:**
+- No `ClientViewDialog.tsx`, criar tabs:
+  - "Dados" (informacoes do cliente)
+  - "Ordens de Servico" (lista de OS do cliente)
+  - "Seminovos" (equipamentos comprados/vendidos)
+- Cada item clicavel para navegar ao detalhe
 
-| Arquivo | Descrição |
-|---------|-----------|
-| `supabase/migrations/[timestamp]_used_equipment.sql` | Tabelas e RLS policies |
-| `src/pages/UsedEquipmentPage.tsx` | Página principal |
-| `src/hooks/useUsedEquipment.ts` | Hook de gerenciamento |
-| `src/components/used-equipment/EquipmentFormDialog.tsx` | Form de equipamento |
-| `src/components/used-equipment/PurchaseFormDialog.tsx` | Form de compra |
-| `src/components/used-equipment/RepairFormDialog.tsx` | Form de reparo |
-| `src/components/used-equipment/SaleFormDialog.tsx` | Form de venda |
-| `src/components/used-equipment/EquipmentViewDialog.tsx` | View do histórico |
-| `src/components/shared/UsedEquipmentCard.tsx` | Card mobile |
-| `src/types/usedEquipment.ts` | Types TypeScript |
+**Arquivos a modificar:**
+- `src/components/clients/ClientViewDialog.tsx` - Adicionar tabs com historico
 
 ---
 
-## Arquivos a Modificar
+## 3. FINANCEIRO
 
-| Arquivo | Modificação |
-|---------|-------------|
-| `src/App.tsx` | Adicionar rota /seminovos |
-| `src/components/layout/Sidebar.tsx` | Adicionar item no menu |
-| `src/components/layout/MobileBottomNav.tsx` | Avaliar adição ao nav |
-| `src/components/layout/MobileHeader.tsx` | Adicionar ao dropdown |
-| `src/types/database.ts` | Adicionar interfaces |
+### 3.1 Melhorar Detalhes no Mapa de Custo
+
+**Problema:** Mapa de custo com detalhes insuficientes.
+
+**Solucao:**
+- Adicionar mais colunas: OS, Cliente, Data
+- Melhorar formatacao do lucro por item
+- Adicionar link clicavel para a OS
+
+**Arquivos a modificar:**
+- `src/components/financial/CostBreakdownSection.tsx`
+
+### 3.2 Padronizar Fonte nos Formularios
+
+**Problema:** Fonte do formulario de detalhes e Nova Despesa inconsistente.
+
+**Solucao:**
+- Aplicar `text-xs` nos labels e `text-sm` nos inputs
+- Reduzir espacamento dos dialogs
+
+**Arquivos a modificar:**
+- `src/components/financial/TransactionFormDialog.tsx`
+- `src/pages/FinancialPage.tsx` (dialog de detalhes)
+
+### 3.3 Verificar Calculos e Consistencia
+
+**Problema:** Possivel inconsistencia de dados ou calculos.
+
+**Solucao:**
+- Revisar `useFinancial.ts` para garantir calculos corretos
+- Verificar se `cost_amount` e `profit_amount` estao sendo calculados corretamente
+- Garantir que OS concluidas sem pagamento aparecem como "pendente"
+- Sincronizar dados do Dashboard com Financeiro
+
+**Arquivos a verificar/modificar:**
+- `src/hooks/useFinancial.ts`
+- `src/hooks/useDashboardStats.ts`
 
 ---
 
-## Segurança (RLS Policies)
+## 4. SEMINOVOS
 
-Todas as tabelas terão:
-- SELECT: `auth.uid() = user_id`
-- INSERT: `auth.uid() = user_id`
-- UPDATE: `auth.uid() = user_id`
-- DELETE: `auth.uid() = user_id`
+### 4.1 Botoes CRUD no Menu Principal e Detalhes
 
-Garantindo isolamento total de dados por usuário.
+**Problema:** Faltam botoes de acao no menu principal.
+
+**Solucao:**
+- Adicionar botoes "Editar", "Reparo", "Vender", "Excluir" no menu principal alem do card
+- No `UsedEquipmentCard.tsx`, melhorar visibilidade dos botoes de acao
+
+**Arquivos a modificar:**
+- `src/pages/UsedEquipmentPage.tsx` - Melhorar acoes
+- `src/components/shared/UsedEquipmentCard.tsx` - Botoes mais visiveis
+
+### 4.2 Checklist para Compra e Venda de Seminovo
+
+**Problema:** Falta checklist similar ao de OS para compra/venda de seminovo.
+
+**Solucao:**
+- Reutilizar componente `MobileChecklist.tsx`
+- Adicionar campo `checklist` na tabela `used_equipment` (como JSON)
+- Mostrar checklist no recibo de compra/venda quando preenchido
+- Remover do recibo quando excluido
+
+**Arquivos a modificar:**
+- Criar migracao para adicionar campo `checklist` em `used_equipment`
+- `src/components/used-equipment/EquipmentFormDialog.tsx` - Adicionar checklist
+- `src/pages/EquipmentReceiptPage.tsx` - Exibir checklist quando presente
+- `src/pages/EquipmentDetailPage.tsx` - Mostrar/editar checklist
+
+### 4.3 Nao Mostrar Custos no Recibo do Cliente
+
+**Problema:** Recibo mostra custos que nao devem ser vistos pelo cliente.
+
+**Solucao:**
+- Separar parametros `showDetails` para uso interno vs recibo para cliente
+- Por padrao, recibo de venda nao mostra custos, apenas valor de venda
+- Adicionar opcao "Recibo Cliente" vs "Recibo Interno"
+
+**Arquivos a modificar:**
+- `src/pages/EquipmentReceiptPage.tsx` - Separar modos de exibicao
+- `src/pages/EquipmentDetailPage.tsx` - Adicionar opcao de recibo para cliente
+- `src/components/shared/UsedEquipmentCard.tsx` - Diferenciar tipos de recibo
 
 ---
 
-## Benefícios do Sistema
+## 5. PESSOAL
 
-1. **Rastreabilidade Completa** - Saber exatamente de onde veio e para onde foi cada equipamento
-2. **Controle Financeiro** - Custos e lucros calculados automaticamente
-3. **Histórico de Reparos** - Saber quanto foi investido em cada equipamento
-4. **Integração com OS** - Aproveitar a estrutura existente para reparos
-5. **Mobile-First** - Interface otimizada conforme padrões já implementados
+### 5.1 Ajustar Fonte para Padrao Menor
+
+**Problema:** Fonte maior que o padrao do sistema.
+
+**Solucao:**
+- Aplicar `text-xs` e `text-sm` consistentemente
+- Reduzir espacamento dos cards e tabelas
+
+**Arquivos a modificar:**
+- `src/pages/PersonalFinancePage.tsx`
+- `src/pages/ProLaborePage.tsx`
+- `src/components/personal/PersonalTransactionDialog.tsx`
+- `src/components/shared/PersonalTransactionCard.tsx`
+
+---
+
+## Detalhes Tecnicos
+
+### Padrao de Fonte do Sistema
+
+| Elemento | Classe Tailwind |
+|----------|-----------------|
+| Titulos de pagina | `text-xl sm:text-2xl` |
+| Subtitulos | `text-sm` |
+| Labels de form | `text-xs` |
+| Inputs | `text-sm` |
+| Celulas de tabela | `text-xs` |
+| Badges | `text-[10px]` |
+| Cards - titulo | `text-xs font-medium` |
+| Cards - detalhes | `text-[10px]` |
+
+### Prioridade de Implementacao
+
+1. **Critica (Bugs):**
+   - OS sem custo nao finalizando
+   - Checklist persistindo na impressao
+
+2. **Alta (UX):**
+   - Botao Finalizar OS
+   - Clientes clicaveis com historico
+   - Custos nao aparecerem no recibo do cliente
+
+3. **Media (Visual):**
+   - Padronizacao de fontes
+   - Rolagem horizontal da tabela
+   - Detalhes do mapa de custo
+
+4. **Baixa (Melhorias):**
+   - Checklist em Seminovos
+   - Botoes CRUD mais visiveis
+
+### Estimativa de Arquivos
+
+**Novos arquivos:**
+- `src/components/clients/ClientViewDialog.tsx`
+
+**Arquivos principais a modificar:**
+- `src/pages/OrdersPage.tsx`
+- `src/pages/ClientsPage.tsx`
+- `src/pages/FinancialPage.tsx`
+- `src/pages/UsedEquipmentPage.tsx`
+- `src/pages/PersonalFinancePage.tsx`
+- `src/pages/EquipmentReceiptPage.tsx`
+- `src/pages/EquipmentDetailPage.tsx`
+- `src/components/orders/OrderFormDialog.tsx`
+- `src/components/orders/OrderViewDialog.tsx`
+- `src/components/shared/ClientCard.tsx`
+- `src/components/shared/UsedEquipmentCard.tsx`
+- `src/components/financial/TransactionFormDialog.tsx`
+- `src/components/financial/CostBreakdownSection.tsx`
+- `src/components/financial/PaymentDialog.tsx`
+- `src/components/used-equipment/EquipmentFormDialog.tsx`
+- `src/hooks/useOrders.ts`
+
+**Migracao de banco:**
+- Adicionar campo `checklist` (jsonb) em `used_equipment`
+
