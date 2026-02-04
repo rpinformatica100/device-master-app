@@ -192,7 +192,8 @@ export function useOrders() {
     id: string,
     orderData: Partial<Order>,
     items?: OrderItemInput[],
-    paymentInfo?: PaymentInfo
+    paymentInfo?: PaymentInfo,
+    paymentDate?: string
   ) => {
     try {
       let updateData = { ...orderData };
@@ -291,9 +292,9 @@ export function useOrders() {
         }
       }
 
-      // Create financial transaction if completing
+      // Create financial transaction if completing (allow even with 0 value)
       if (isCompleting) {
-        await createFinancialTransactionFromOrder(id, paymentInfo);
+        await createFinancialTransactionFromOrder(id, paymentInfo, paymentDate);
       }
 
       // Update state immediately with the updated order
@@ -332,7 +333,7 @@ export function useOrders() {
     }
   };
 
-  const createFinancialTransactionFromOrder = async (orderId: string, paymentInfo?: PaymentInfo) => {
+  const createFinancialTransactionFromOrder = async (orderId: string, paymentInfo?: PaymentInfo, paymentDate?: string) => {
     try {
       // Fetch full order data
       const { data: order } = await supabase
@@ -400,7 +401,13 @@ export function useOrders() {
         details.payment = paymentInfo.payment_details;
       }
 
-      // Create financial transaction
+      // Determine paid_at date
+      let paidAt: string | null = null;
+      if (paymentInfo) {
+        paidAt = paymentDate ? new Date(paymentDate).toISOString() : new Date().toISOString();
+      }
+
+      // Create financial transaction (always, even if value is 0)
       await supabase
         .from('financial_transactions')
         .insert({
@@ -415,7 +422,7 @@ export function useOrders() {
           profit_amount: order.total_profit,
           status: paymentInfo ? 'pago' : 'pendente',
           payment_method: paymentInfo?.payment_method || null,
-          paid_at: paymentInfo ? new Date().toISOString() : null,
+          paid_at: paidAt,
           details,
         });
 

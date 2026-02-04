@@ -241,11 +241,12 @@ export function TransactionFormDialog({
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {/* Descrição */}
-              <div className="md:col-span-2 space-y-2">
-                <Label>Descrição *</Label>
+              <div className="md:col-span-2 space-y-1.5">
+                <Label className="text-xs">Descrição *</Label>
                 <Input
+                  className="text-sm"
                   placeholder="Ex: Venda de peças, Conta de luz..."
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
@@ -253,10 +254,10 @@ export function TransactionFormDialog({
               </div>
 
               {/* Categoria */}
-              <div className="space-y-2">
-                <Label>Categoria</Label>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Categoria</Label>
                 <Select value={category} onValueChange={setCategory}>
-                  <SelectTrigger>
+                  <SelectTrigger className="text-sm">
                     <SelectValue placeholder="Selecione" />
                   </SelectTrigger>
                   <SelectContent>
@@ -270,10 +271,10 @@ export function TransactionFormDialog({
               </div>
 
               {/* Status */}
-              <div className="space-y-2">
-                <Label>Status *</Label>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Status *</Label>
                 <Select value={status} onValueChange={setStatus}>
-                  <SelectTrigger>
+                  <SelectTrigger className="text-sm">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -285,9 +286,10 @@ export function TransactionFormDialog({
               </div>
 
               {/* Valor */}
-              <div className="space-y-2">
-                <Label>Valor (R$) *</Label>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Valor (R$) *</Label>
                 <Input
+                  className="text-sm"
                   type="number"
                   step="0.01"
                   placeholder="0,00"
@@ -298,9 +300,10 @@ export function TransactionFormDialog({
 
               {/* Custo (apenas para receita) */}
               {type === "receita" && (
-                <div className="space-y-2">
-                  <Label>Custo (R$)</Label>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Custo (R$)</Label>
                   <Input
+                    className="text-sm"
                     type="number"
                     step="0.01"
                     placeholder="0,00"
@@ -312,9 +315,10 @@ export function TransactionFormDialog({
 
               {/* Data de Vencimento */}
               {status === "pendente" && (
-                <div className="space-y-2">
-                  <Label>Data de Vencimento</Label>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Data de Vencimento</Label>
                   <Input
+                    className="text-sm"
                     type="date"
                     value={dueDate}
                     onChange={(e) => setDueDate(e.target.value)}
@@ -323,11 +327,11 @@ export function TransactionFormDialog({
               )}
 
               {/* Cliente */}
-              <div className="md:col-span-2 space-y-2">
-                <Label>Cliente (opcional)</Label>
+              <div className="md:col-span-2 space-y-1.5">
+                <Label className="text-xs">Cliente (opcional)</Label>
                 <Popover open={clientOpen} onOpenChange={setClientOpen}>
                   <PopoverTrigger asChild>
-                    <Button variant="outline" role="combobox" className="w-full justify-between">
+                    <Button variant="outline" role="combobox" className="w-full justify-between text-sm">
                       {selectedClient ? selectedClient.name : "Selecionar cliente..."}
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
@@ -382,9 +386,10 @@ export function TransactionFormDialog({
               </div>
 
               {/* Observações */}
-              <div className="md:col-span-2 space-y-2">
-                <Label>Observações</Label>
+              <div className="md:col-span-2 space-y-1.5">
+                <Label className="text-xs">Observações</Label>
                 <Textarea
+                  className="text-sm"
                   placeholder="Informações adicionais..."
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}

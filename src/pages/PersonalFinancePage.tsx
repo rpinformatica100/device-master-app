@@ -268,31 +268,32 @@ export default function PersonalFinancePage() {
                     <table className="w-full">
                       <thead>
                         <tr className="border-b border-border">
-                          <th className="text-left p-4 text-sm font-medium text-muted-foreground">Data</th>
-                          <th className="text-left p-4 text-sm font-medium text-muted-foreground">Descrição</th>
-                          <th className="text-left p-4 text-sm font-medium text-muted-foreground">Tipo</th>
-                          <th className="text-left p-4 text-sm font-medium text-muted-foreground">Categoria</th>
-                          <th className="text-right p-4 text-sm font-medium text-muted-foreground">Valor</th>
-                          <th className="text-right p-4 text-sm font-medium text-muted-foreground">Ações</th>
+                          <th className="text-left p-3 text-xs font-medium text-muted-foreground">Data</th>
+                          <th className="text-left p-3 text-xs font-medium text-muted-foreground">Descrição</th>
+                          <th className="text-left p-3 text-xs font-medium text-muted-foreground">Tipo</th>
+                          <th className="text-left p-3 text-xs font-medium text-muted-foreground">Categoria</th>
+                          <th className="text-right p-3 text-xs font-medium text-muted-foreground">Valor</th>
+                          <th className="text-right p-3 text-xs font-medium text-muted-foreground">Ações</th>
                         </tr>
                       </thead>
                       <tbody>
                         {filteredTransactions.map(transaction => (
                           <tr key={transaction.id} className="border-b border-border/50 hover:bg-secondary/30">
-                            <td className="p-4 text-sm">{format(new Date(transaction.date), 'dd/MM/yyyy')}</td>
-                            <td className="p-4 font-medium">{transaction.description}</td>
-                            <td className="p-4 text-sm capitalize">{transaction.type}</td>
-                            <td className="p-4 text-sm">
+                            <td className="p-3 text-xs">{format(new Date(transaction.date), 'dd/MM/yyyy')}</td>
+                            <td className="p-3 text-xs font-medium">{transaction.description}</td>
+                            <td className="p-3 text-xs capitalize">{transaction.type}</td>
+                            <td className="p-3 text-xs">
                               {personalCategories.find(c => c.value === transaction.category)?.label || '-'}
                             </td>
-                            <td className={`p-4 text-right font-medium ${transaction.type === 'despesa' ? 'text-red-500' : 'text-green-500'}`}>
+                            <td className={`p-3 text-right text-xs font-medium ${transaction.type === 'despesa' ? 'text-destructive' : 'text-success'}`}>
                               {transaction.type === 'despesa' ? '-' : '+'}R$ {Number(transaction.amount).toFixed(2)}
                             </td>
-                            <td className="p-4 text-right">
+                            <td className="p-3 text-right">
                               <div className="flex justify-end gap-1">
                                 <Button
                                   variant="ghost"
                                   size="sm"
+                                  className="h-7 text-xs"
                                   onClick={() => handleEdit(transaction)}
                                   disabled={transaction.type === 'prolabore'}
                                 >
@@ -301,8 +302,8 @@ export default function PersonalFinancePage() {
                                 <Button
                                   variant="ghost"
                                   size="sm"
+                                  className="h-7 text-xs text-destructive hover:text-destructive"
                                   onClick={() => setDeleteId(transaction.id)}
-                                  className="text-destructive hover:text-destructive"
                                   disabled={transaction.type === 'prolabore'}
                                 >
                                   Excluir

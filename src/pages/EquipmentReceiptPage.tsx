@@ -36,7 +36,10 @@ export default function EquipmentReceiptPage() {
   
   const type = (searchParams.get('type') as ReceiptType) || 'compra';
   const showHistory = searchParams.get('history') === 'true';
+  // showDetails controls whether to show internal costs - default to false for client receipts
   const showDetails = searchParams.get('details') === 'true';
+  // isInternalReceipt explicitly marks this as internal (shows all costs)
+  const isInternalReceipt = searchParams.get('internal') === 'true';
   
   const [data, setData] = useState<ReceiptData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -302,7 +305,8 @@ export default function EquipmentReceiptPage() {
                   </div>
                 ) : (
                   <>
-                    {showDetails && (
+                    {/* Only show costs for internal receipts */}
+                    {isInternalReceipt && (
                       <>
                         <div className="flex justify-between items-center text-sm">
                           <span>Custo de Aquisição:</span>
@@ -322,7 +326,7 @@ export default function EquipmentReceiptPage() {
                       <span>Valor de Venda:</span>
                       <span className="text-green-600">{formatCurrency(sale?.amount || 0)}</span>
                     </div>
-                    {showDetails && equipment.profit !== null && (
+                    {isInternalReceipt && equipment.profit !== null && (
                       <div className="flex justify-between items-center text-sm mt-2 pt-2 border-t">
                         <span>Lucro:</span>
                         <span className={Number(equipment.profit) >= 0 ? 'text-green-600' : 'text-red-600'}>

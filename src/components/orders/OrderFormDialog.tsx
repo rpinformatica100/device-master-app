@@ -261,6 +261,20 @@ export function OrderFormDialog({ open, onOpenChange, mode = "create", orderData
     setCategorySpecificFields(prev => ({ ...prev, [key]: value }));
   };
 
+  // Clear checklist when category changes from mobile to non-mobile
+  const handleCategoryChange = (newCategory: string) => {
+    const wasMobile = category === 'smartphone' || category === 'tablet';
+    const isMobile = newCategory === 'smartphone' || newCategory === 'tablet';
+    
+    // If changing from mobile to non-mobile, clear checklist
+    if (wasMobile && !isMobile) {
+      setMobileChecklist({});
+      setChecklistObservations("");
+    }
+    
+    setCategory(newCategory);
+  };
+
   const currentCategoryFields = categoryFields[category] || [];
 
   // Check if status is changing to completed
@@ -272,11 +286,13 @@ export function OrderFormDialog({ open, onOpenChange, mode = "create", orderData
            oldStatus !== 'concluido' && oldStatus !== 'entregue';
   };
 
+  // Allow completing even with 0 value (removed totals.sale > 0 check)
+
   const handleSubmit = async (paymentInfo?: PaymentInfo) => {
     if (!device.trim() || !category || !issue.trim()) return;
 
-    // If completing without payment info, show payment dialog
-    if (isCompleting() && !paymentInfo && totals.sale > 0) {
+    // If completing without payment info, show payment dialog (even for 0 value)
+    if (isCompleting() && !paymentInfo) {
       setShowPaymentDialog(true);
       return;
     }
@@ -403,10 +419,10 @@ export function OrderFormDialog({ open, onOpenChange, mode = "create", orderData
           </div>
 
           {/* Categoria e Dispositivo */}
-          <div className="space-y-2">
-            <Label>Categoria *</Label>
-            <Select value={category} onValueChange={setCategory}>
-              <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+          <div className="space-y-1.5">
+            <Label className="text-xs">Categoria *</Label>
+            <Select value={category} onValueChange={handleCategoryChange}>
+              <SelectTrigger className="text-sm"><SelectValue placeholder="Selecione" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="smartphone">Smartphone</SelectItem>
                 <SelectItem value="notebook">Notebook</SelectItem>
