@@ -97,12 +97,17 @@ export function useUsedEquipment() {
     return data;
   };
 
-  const createEquipment = async (formData: EquipmentFormData & PurchaseFormData) => {
+  const createEquipment = async (formData: EquipmentFormData & PurchaseFormData & { checklist?: Record<string, boolean | null>; checklist_observations?: string }) => {
     if (!user) return null;
 
     try {
       const code = await generateCode();
       const amount = formData.amount || 0;
+
+      // Build checklist JSON if provided
+      const checklistData = formData.checklist 
+        ? { items: formData.checklist, observations: formData.checklist_observations || '' }
+        : null;
 
       // Create equipment
       const { data: newEquipment, error: eqError } = await supabase
@@ -120,6 +125,7 @@ export function useUsedEquipment() {
           purchase_price: amount,
           total_cost: amount,
           notes: formData.notes || null,
+          checklist: checklistData,
         })
         .select()
         .single();

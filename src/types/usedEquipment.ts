@@ -19,6 +19,7 @@ export interface UsedEquipment {
   profit?: number | null;
   notes?: string | null;
   photos?: string[];
+  checklist?: any;
   created_at: string;
   updated_at: string;
   sold_at?: string | null;

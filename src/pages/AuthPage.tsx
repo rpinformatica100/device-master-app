@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { Wrench, Mail, Lock, User, ArrowLeft, Loader2 } from "lucide-react";
+import { Wrench, Mail, Lock, User, ArrowLeft, Loader2, Phone, Building2 } from "lucide-react";
+import { PhoneInput, CnpjInput } from "@/components/ui/masked-input";
 import { z } from "zod";
 
 const loginSchema = z.object({
@@ -17,14 +18,24 @@ const loginSchema = z.object({
 const signupSchema = z.object({
   name: z.string().min(2, "Nome deve ter no mínimo 2 caracteres"),
   email: z.string().email("Email inválido"),
-  password: z.string().min(6, "Senha deve ter no mínimo 6 caracteres")
+  password: z.string().min(6, "Senha deve ter no mínimo 6 caracteres"),
+  phone: z.string().optional(),
+  company_name: z.string().optional(),
+  cnpj: z.string().optional()
 });
 
 export default function AuthPage() {
   const [searchParams] = useSearchParams();
   const [isSignUp, setIsSignUp] = useState(searchParams.get("mode") === "signup");
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({ name: "", email: "", password: "" });
+  const [formData, setFormData] = useState({ 
+    name: "", 
+    email: "", 
+    password: "",
+    phone: "",
+    company_name: "",
+    cnpj: ""
+  });
   const [errors, setErrors] = useState<Record<string, string>>({});
   
   const { signIn, signUp, user } = useAuth();
@@ -72,7 +83,16 @@ export default function AuthPage() {
 
     try {
       if (isSignUp) {
-        const { error } = await signUp(formData.email, formData.password, formData.name);
+        const { error } = await signUp(
+          formData.email, 
+          formData.password, 
+          formData.name,
+          {
+            phone: formData.phone,
+            company_name: formData.company_name,
+            cnpj: formData.cnpj
+          }
+        );
         if (error) {
           if (error.message.includes("already registered")) {
             toast.error("Este email já está cadastrado. Tente fazer login.");
@@ -80,7 +100,7 @@ export default function AuthPage() {
             toast.error(error.message);
           }
         } else {
-          toast.success("Conta criada com sucesso!");
+          toast.success("Conta criada com sucesso! Verifique seu email.");
           navigate("/dashboard");
         }
       } else {
@@ -135,55 +155,98 @@ export default function AuthPage() {
                 : "Entre com suas credenciais para continuar"}
             </p>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-3">
               {isSignUp && (
-                <div className="space-y-2">
-                  <Label htmlFor="name">Nome</Label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                    <Input
-                      id="name"
-                      type="text"
-                      placeholder="Seu nome completo"
-                      className="pl-10"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    />
+                <>
+                  <div className="space-y-1">
+                    <Label htmlFor="name" className="text-xs">Nome Completo *</Label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="name"
+                        type="text"
+                        placeholder="Seu nome completo"
+                        className="pl-9 text-sm h-9"
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      />
+                    </div>
+                    {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
                   </div>
-                  {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
-                </div>
+
+                  <div className="space-y-1">
+                    <Label htmlFor="phone" className="text-xs">Telefone</Label>
+                    <div className="relative">
+                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <PhoneInput
+                        id="phone"
+                        placeholder="(00) 00000-0000"
+                        className="pl-9 text-sm h-9"
+                        value={formData.phone}
+                        onAccept={(value) => setFormData({ ...formData, phone: value })}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <Label htmlFor="company_name" className="text-xs">Nome da Empresa</Label>
+                      <div className="relative">
+                        <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input
+                          id="company_name"
+                          type="text"
+                          placeholder="Sua empresa"
+                          className="pl-9 text-sm h-9"
+                          value={formData.company_name}
+                          onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <Label htmlFor="cnpj" className="text-xs">CNPJ (opcional)</Label>
+                      <CnpjInput
+                        id="cnpj"
+                        placeholder="00.000.000/0000-00"
+                        className="text-sm h-9"
+                        value={formData.cnpj}
+                        onAccept={(value) => setFormData({ ...formData, cnpj: value })}
+                      />
+                    </div>
+                  </div>
+                </>
               )}
 
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+              <div className="space-y-1">
+                <Label htmlFor="email" className="text-xs">Email *</Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     id="email"
                     type="email"
                     placeholder="seu@email.com"
-                    className="pl-10"
+                    className="pl-9 text-sm h-9"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   />
                 </div>
-                {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
+                {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="password">Senha</Label>
+              <div className="space-y-1">
+                <Label htmlFor="password" className="text-xs">Senha *</Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     id="password"
                     type="password"
                     placeholder="••••••••"
-                    className="pl-10"
+                    className="pl-9 text-sm h-9"
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   />
                 </div>
-                {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
+                {errors.password && <p className="text-xs text-destructive">{errors.password}</p>}
               </div>
 
               <Button type="submit" className="w-full gradient-primary" disabled={loading}>
