@@ -86,50 +86,54 @@ const testimonials = [
 
 const pricingPlans = [
   {
-    name: "Starter",
+    name: "Free",
     price: "Grátis",
     period: "para sempre",
-    description: "Perfeito para começar",
+    description: "Para começar",
     features: [
       "Até 50 OS por mês",
-      "Cadastro de clientes ilimitado",
+      "Cadastro de clientes",
       "Controle de estoque básico",
       "Relatórios simples"
+    ],
+    limitations: [
+      "Sem exportação de dados",
+      "Sem relatórios avançados"
     ],
     popular: false,
     cta: "Começar Grátis"
   },
   {
-    name: "Profissional",
+    name: "Mensal",
     price: "R$ 49",
     period: "/mês",
-    description: "Para negócios em crescimento",
+    description: "Tudo ilimitado",
     features: [
       "OS ilimitadas",
-      "Todos os recursos Starter",
+      "Clientes ilimitados",
       "Financeiro completo",
       "Relatórios avançados",
-      "Suporte prioritário",
-      "Exportação de dados"
+      "Exportação de dados",
+      "Suporte prioritário"
     ],
+    limitations: [],
     popular: true,
-    cta: "Testar 7 dias grátis"
+    cta: "Assinar Mensal"
   },
   {
-    name: "Empresarial",
-    price: "R$ 99",
-    period: "/mês",
-    description: "Para múltiplos técnicos",
+    name: "Anual",
+    price: "R$ 399",
+    period: "/ano",
+    description: "Economize 32%",
     features: [
-      "Tudo do Profissional",
-      "Até 5 usuários",
-      "Gestão de equipe",
-      "API de integração",
-      "Suporte 24/7",
+      "Tudo do plano Mensal",
+      "2 meses grátis",
+      "Prioridade no suporte",
       "Treinamento incluso"
     ],
+    limitations: [],
     popular: false,
-    cta: "Falar com vendas"
+    cta: "Assinar Anual"
   }
 ];
 

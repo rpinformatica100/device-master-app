@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2 } from "lucide-react";
+import { Loader2, ClipboardCheck, X } from "lucide-react";
 import { 
   UsedEquipment,
   EquipmentFormData,
@@ -25,12 +25,13 @@ import {
   EQUIPMENT_CONDITION_LABELS 
 } from "@/types/usedEquipment";
 import { useClients } from "@/hooks/useClients";
+import { MobileChecklist } from "@/components/orders/MobileChecklist";
 
 interface EquipmentFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   equipment?: UsedEquipment | null;
-  onSubmit: (data: EquipmentFormData & PurchaseFormData) => Promise<any>;
+  onSubmit: (data: EquipmentFormData & PurchaseFormData & { checklist?: Record<string, boolean | null>; checklist_observations?: string }) => Promise<any>;
 }
 
 export function EquipmentFormDialog({
@@ -41,6 +42,10 @@ export function EquipmentFormDialog({
 }: EquipmentFormDialogProps) {
   const { clients } = useClients();
   const [loading, setLoading] = useState(false);
+  const [showChecklist, setShowChecklist] = useState(false);
+  const [mobileChecklist, setMobileChecklist] = useState<Record<string, boolean | null>>({});
+  const [checklistObservations, setChecklistObservations] = useState("");
+  
   const [formData, setFormData] = useState<EquipmentFormData & PurchaseFormData>({
     name: "",
     brand: "",
@@ -70,6 +75,18 @@ export function EquipmentFormDialog({
         amount: Number(equipment.purchase_price),
         client_id: "",
       });
+      // Load existing checklist if any
+      if (equipment.checklist) {
+        const checklistData = typeof equipment.checklist === 'string' 
+          ? JSON.parse(equipment.checklist) 
+          : equipment.checklist;
+        if (checklistData.items) {
+          setMobileChecklist(checklistData.items);
+        }
+        if (checklistData.observations) {
+          setChecklistObservations(checklistData.observations);
+        }
+      }
     } else {
       setFormData({
         name: "",
@@ -84,14 +101,29 @@ export function EquipmentFormDialog({
         amount: 0,
         client_id: "",
       });
+      setMobileChecklist({});
+      setChecklistObservations("");
     }
   }, [equipment, open]);
+
+  const handleChecklistSave = (checklist: Record<string, boolean | null>, observations: string) => {
+    setMobileChecklist(checklist);
+    setChecklistObservations(observations);
+  };
+
+  const hasChecklist = Object.values(mobileChecklist).some(v => v !== null);
+  const checklistDefects = Object.values(mobileChecklist).filter(v => v === false).length;
+  const isMobileCategory = formData.category === 'smartphone' || formData.category === 'tablet';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
-      await onSubmit(formData);
+      await onSubmit({
+        ...formData,
+        checklist: hasChecklist ? mobileChecklist : undefined,
+        checklist_observations: hasChecklist ? checklistObservations : undefined,
+      });
       onOpenChange(false);
     } finally {
       setLoading(false);
@@ -262,14 +294,69 @@ export function EquipmentFormDialog({
             </div>
           )}
 
+          {/* Mobile Checklist - Only for mobile categories */}
+          {isMobileCategory && (
+            <div className="space-y-2 pt-3 border-t">
+              <div className="flex items-center justify-between">
+                <Label className="flex items-center gap-2 text-xs">
+                  <ClipboardCheck className="w-4 h-4" />
+                  Checklist de Entrada (Opcional)
+                </Label>
+                <div className="flex gap-2">
+                  {hasChecklist && (
+                    <Button 
+                      type="button"
+                      variant="ghost" 
+                      size="sm" 
+                      className="text-destructive hover:text-destructive h-7 text-xs"
+                      onClick={() => {
+                        setMobileChecklist({});
+                        setChecklistObservations("");
+                      }}
+                    >
+                      <X className="w-3 h-3 mr-1" />
+                      Limpar
+                    </Button>
+                  )}
+                  <Button 
+                    type="button"
+                    variant="outline" 
+                    size="sm"
+                    className="h-7 text-xs"
+                    onClick={() => setShowChecklist(true)}
+                  >
+                    <ClipboardCheck className="w-3 h-3 mr-1" />
+                    {hasChecklist ? "Editar" : "Fazer Checklist"}
+                  </Button>
+                </div>
+              </div>
+              {hasChecklist && (
+                <div className="p-2 bg-muted/50 rounded-lg text-xs">
+                  <div className="flex gap-4">
+                    <span className="text-success">
+                      ✓ {Object.values(mobileChecklist).filter(v => v === true).length} OK
+                    </span>
+                    <span className="text-destructive">
+                      ✗ {checklistDefects} Defeitos
+                    </span>
+                  </div>
+                  {checklistObservations && (
+                    <p className="text-muted-foreground mt-1">{checklistObservations}</p>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
           <div>
-            <Label htmlFor="notes">Observações</Label>
+            <Label htmlFor="notes" className="text-xs">Observações</Label>
             <Textarea
               id="notes"
               value={formData.notes}
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
               placeholder="Informações adicionais..."
               rows={2}
+              className="text-sm"
             />
           </div>
 
@@ -289,6 +376,15 @@ export function EquipmentFormDialog({
           </div>
         </form>
       </DialogContent>
+
+      {/* Mobile Checklist Dialog */}
+      <MobileChecklist
+        open={showChecklist}
+        onOpenChange={setShowChecklist}
+        onSave={handleChecklistSave}
+        initialChecklist={mobileChecklist}
+        initialObservations={checklistObservations}
+      />
     </Dialog>
   );
 }
