@@ -1,290 +1,377 @@
 
-# Plano de Correções Urgentes do Sistema
+# Plano de Melhorias do Sistema - Fase 2
 
 ## Resumo Executivo
 
-Este plano aborda todas as correções urgentes solicitadas, organizadas por menu/seção do sistema. As alterações focam em melhorar a experiência do usuário, padronizar fontes, corrigir bugs e adicionar funcionalidades faltantes.
+Este plano aborda as novas solicitacoes, incluindo checklist nos Seminovos, novos planos de precos, dados adicionais no cadastro de usuarios, melhorias na OS e padronizacao de impressoes.
 
 ---
 
-## 1. ORDEM DE SERVICO (OS)
+## 1. SEMINOVOS - Checklist no Formulario e Impressao
 
-### 1.1 Botao "Finalizar OS" com Cadastro de Pagamento
+### 1.1 Adicionar Checklist ao Formulario de Cadastro
 
-**Problema:** Nao existe um botao direto para finalizar OS e registrar pagamento, incluindo data real.
-
-**Solucao:**
-- Adicionar botao "Finalizar OS" no `OrderViewDialog.tsx` para ordens em status "em_andamento", "aguardando" ou "aguardando_peca"
-- Ao clicar, abrir dialog de pagamento (`PaymentDialog`) com campo de data do pagamento
-- Atualizar status para "concluido" e criar transacao financeira com data correta
-
-**Arquivos a modificar:**
-- `src/components/orders/OrderViewDialog.tsx` - Adicionar botao e logica
-- `src/components/financial/PaymentDialog.tsx` - Adicionar campo de data do pagamento
-
-### 1.2 OS sem Custo nao Finalizando Corretamente
-
-**Problema:** Ordens sem custo (total = 0) nao estao finalizando corretamente no menu e financeiro.
+**Objetivo:** Reutilizar o componente `MobileChecklist.tsx` existente no cadastro de equipamentos seminovos.
 
 **Solucao:**
-- Modificar `useOrders.ts` para permitir criar transacao financeira mesmo com valor 0
-- Ajustar condicao `if (totals.sale > 0)` no `OrderFormDialog.tsx` para permitir finalizar OS sem valor
+- Adicionar botao "Checklist de Entrada" no `EquipmentFormDialog.tsx` (apenas para categorias smartphone/tablet)
+- Armazenar checklist no campo `checklist` (jsonb) ja existente na tabela `used_equipment`
+- Exibir resumo do checklist no formulario quando preenchido
 
 **Arquivos a modificar:**
-- `src/hooks/useOrders.ts` - Remover restricao de valor > 0
-- `src/components/orders/OrderFormDialog.tsx` - Ajustar logica de finalizacao
+- `src/components/used-equipment/EquipmentFormDialog.tsx`
+- `src/hooks/useUsedEquipment.ts` (salvar checklist)
 
-### 1.3 Rolagem Horizontal na Tabela (1366x768)
+### 1.2 Adicionar Checklist ao Formulario de Venda
 
-**Problema:** Tabela de OS tem rolagem horizontal em resolucoes como 1366x768.
+**Objetivo:** Permitir atualizar checklist de saida no momento da venda.
 
 **Solucao:**
-- Reduzir padding das celulas de `p-4` para `p-2 sm:p-3`
-- Reduzir largura das colunas Defeito e Acoes
-- Usar `text-xs` em todas as celulas
-- Ocultar colunas menos importantes em telas menores (Lucro, Prioridade)
+- Adicionar botao "Checklist de Saida" no `SaleFormDialog.tsx`
+- Opcionalmente criar campo separado `sale_checklist` ou reutilizar o existente
 
 **Arquivos a modificar:**
-- `src/pages/OrdersPage.tsx` - Otimizar tabela desktop
+- `src/components/used-equipment/SaleFormDialog.tsx`
 
-### 1.4 Padronizar Tamanho de Fonte
+### 1.3 Exibir Checklist na Impressao
 
-**Problema:** Fontes inconsistentes entre tabelas e formularios.
+**Objetivo:** Mostrar checklist no recibo quando preenchido.
 
 **Solucao:**
-- Definir padrao de fontes: `text-xs` para tabelas, `text-sm` para formularios
-- Ajustar todos os componentes relacionados
+- No `EquipmentReceiptPage.tsx`, buscar dados do checklist do equipamento
+- Renderizar grid de checklist similar ao da OS
+- Somente exibir se checklist tiver dados
 
 **Arquivos a modificar:**
-- `src/pages/OrdersPage.tsx`
+- `src/pages/EquipmentReceiptPage.tsx`
+- `src/pages/EquipmentDetailPage.tsx` (exibir/editar checklist)
+
+---
+
+## 2. LANDING PAGE - Novos Planos de Precos
+
+### 2.1 Reestruturar Planos
+
+**De:**
+- Starter (Gratis - 50 OS/mes)
+- Profissional (R$ 49/mes)
+- Empresarial (R$ 99/mes)
+
+**Para:**
+- Free (Gratis - COM restricoes: max 50 OS/mes, sem exportacao, sem relatorios avancados)
+- Mensal (R$ X/mes - TUDO ilimitado)
+- Anual (R$ Y/ano - TUDO ilimitado + desconto)
+
+**Solucao:**
+- Atualizar array `pricingPlans` em `LandingPage.tsx`
+- Manter mesmas features para Mensal e Anual, diferenciando apenas o preco
+- Free com restricoes claras listadas
+
+**Arquivo a modificar:**
+- `src/pages/LandingPage.tsx`
+
+---
+
+## 3. CADASTRO DE USUARIO - Mais Dados Pessoais e Empresa
+
+### 3.1 Expandir Formulario de Cadastro
+
+**Objetivo:** Coletar mais dados no signup para usar nas impressoes.
+
+**Novos campos no signup:**
+- Nome Completo (ja existe)
+- Telefone (novo)
+- Nome da Empresa (novo)
+- CNPJ (opcional, novo)
+
+**Solucao:**
+- Expandir `AuthPage.tsx` com campos adicionais
+- Salvar dados no `user_metadata` do Supabase Auth
+- Criar/atualizar automaticamente `company_settings` apos cadastro
+
+**Arquivos a modificar:**
+- `src/pages/AuthPage.tsx`
+- `src/hooks/useAuth.tsx` (passar metadata no signup)
+
+### 3.2 Sincronizar com Company Settings
+
+**Objetivo:** Ao cadastrar, criar registro em `company_settings` com dados iniciais.
+
+**Solucao:**
+- Apos signup bem-sucedido, criar registro em `company_settings`
+- Usar trigger ou logica no frontend
+
+**Arquivos a modificar:**
+- `src/hooks/useAuth.tsx` ou criar migracao com trigger
+
+### 3.3 Usar Dados em TODAS Impressoes
+
+**Objetivo:** Garantir que OS e recibos usem dados de `company_settings`.
+
+**Verificar:**
+- `OrderViewDialog.tsx` (impressao de OS) - Adicionar cabecalho da empresa
+- `EquipmentReceiptPage.tsx` (ja usa company settings)
+- Qualquer outra impressao
+
+**Arquivos a modificar:**
+- `src/components/orders/OrderViewDialog.tsx` (adicionar useCompanySettings)
+
+---
+
+## 4. ORDEM DE SERVICO - Melhorias
+
+### 4.1 Diminuir Fonte do Formulario
+
+**Objetivo:** Padronizar fontes menores no formulario de OS.
+
+**Solucao:**
+- Aplicar `text-xs` em Labels
+- Aplicar `text-sm` em Inputs
+- Reduzir padding de campos
+
+**Arquivo a modificar:**
 - `src/components/orders/OrderFormDialog.tsx`
-- `src/components/orders/OrderViewDialog.tsx`
 
-### 1.5 Melhorar Atualizacao apos CRUD
+### 4.2 Menu Recolhivel para Caracteristicas do Equipamento
 
-**Problema:** Atualizacoes lentas apos criar/editar informacoes.
-
-**Solucao:**
-- Ja existe atualizacao imediata no `useOrders.ts`
-- Verificar se `setOrders` esta sendo chamado corretamente
-- Adicionar refresh da lista de pagamentos apos atualizar status
-
-**Arquivos a modificar:**
-- `src/pages/OrdersPage.tsx` - Melhorar refresh do estado de pagamentos
-
-### 1.6 Checklist Persistindo na Impressao
-
-**Problema:** Checklist permanece na impressao mesmo apos excluido/editado.
+**Objetivo:** Organizar melhor os campos especificos de categoria.
 
 **Solucao:**
-- Ao mudar categoria para nao-mobile, limpar checklist do `category_specific_fields`
-- Na impressao, verificar se checklist existe E se categoria e mobile
-- Adicionar botao para limpar checklist no form
+- Usar componente `Collapsible` do Radix UI
+- Adicionar campos Marca e Modelo fixos (nao apenas por categoria)
+- Agrupar campos especificos (IMEI, cor, capacidade, etc) em secao recolhivel
 
-**Arquivos a modificar:**
-- `src/components/orders/OrderFormDialog.tsx` - Limpar checklist ao mudar categoria
-- `src/components/orders/OrderViewDialog.tsx` - Verificar categoria antes de imprimir checklist
+**Arquivo a modificar:**
+- `src/components/orders/OrderFormDialog.tsx`
+
+### 4.3 Melhorar Atualizacao apos CRUD
+
+**Problema:** Demora para aparecer nova OS na tabela.
+
+**Solucao:**
+- Ja existe atualizacao otimista no `useOrders.ts`
+- Verificar se o `setOrders` esta sendo chamado corretamente
+- Adicionar refresh forcado ou usar React Query com invalidation
+
+**Arquivo a verificar:**
+- `src/hooks/useOrders.ts`
+- `src/pages/OrdersPage.tsx`
+
+### 4.4 Melhorar Numeracao da OS com Ano
+
+**De:** `OS-0009`
+**Para:** `OS-0009-2026`
+
+**Regra:** Nao zerar numero ao mudar de ano, apenas atualizar o ano.
+
+**Solucao:**
+- Criar nova migracao para alterar funcao `generate_next_os_number()`
+- Formato: `OS-{numero_sequencial_global}-{ano_atual}`
+
+**Nova logica:**
+```sql
+-- Pegar maior numero global (ignorando ano)
+-- Incrementar
+-- Adicionar ano atual
+-- Resultado: OS-0042-2026
+```
+
+**Arquivo a criar:**
+- Nova migracao SQL
 
 ---
 
-## 2. CLIENTES
+## 5. PADRONIZACAO DE IMPRESSAO - OS e RECIBOS
 
-### 2.1 Clientes Clicaveis com Dialog de Detalhes
+### 5.1 Problema Atual
 
-**Problema:** Clientes nao sao clicaveis para ver dados completos.
+A impressao atual parece um "print do sistema" e nao um documento profissional.
 
-**Solucao:**
-- Criar `ClientViewDialog.tsx` para exibir dados completos do cliente
-- Adicionar botao "Ver" no `ClientCard.tsx`
-- Tornar card inteiro clicavel para abrir detalhes
+### 5.2 Solucao: Criar Pagina de Impressao Dedicada para OS
 
-**Arquivos a criar:**
-- `src/components/clients/ClientViewDialog.tsx`
+**Objetivo:** Criar `/ordem-servico/{id}/imprimir` similar a `/seminovos/{id}/recibo`.
 
-**Arquivos a modificar:**
-- `src/components/shared/ClientCard.tsx` - Adicionar onClick e botao Ver
-- `src/pages/ClientsPage.tsx` - Adicionar estado e logica do dialog
+**Nova pagina:** `src/pages/OrderReceiptPage.tsx`
 
-### 2.2 Historico de Compra/Venda de Equipamentos e OS
+**Caracteristicas:**
+- Layout A4 profissional
+- Cabecalho com dados da empresa (de company_settings)
+- Secoes bem definidas com bordas
+- Tabela de itens/servicos formatada
+- Checklist quando aplicavel
+- Assinaturas
+- Termos e condicoes
+- Rodape com data de geracao
 
-**Problema:** Falta historico de transacoes por cliente.
+### 5.3 Melhorar Impressao de Seminovos
 
-**Solucao:**
-- No `ClientViewDialog.tsx`, criar tabs:
-  - "Dados" (informacoes do cliente)
-  - "Ordens de Servico" (lista de OS do cliente)
-  - "Seminovos" (equipamentos comprados/vendidos)
-- Cada item clicavel para navegar ao detalhe
+**Ajustes no `EquipmentReceiptPage.tsx`:**
+- Adicionar checklist quando preenchido
+- Melhorar layout para parecer mais profissional
+- Verificar consistencia com OS
 
-**Arquivos a modificar:**
-- `src/components/clients/ClientViewDialog.tsx` - Adicionar tabs com historico
+### 5.4 Padrao Visual de Impressao
 
----
-
-## 3. FINANCEIRO
-
-### 3.1 Melhorar Detalhes no Mapa de Custo
-
-**Problema:** Mapa de custo com detalhes insuficientes.
-
-**Solucao:**
-- Adicionar mais colunas: OS, Cliente, Data
-- Melhorar formatacao do lucro por item
-- Adicionar link clicavel para a OS
-
-**Arquivos a modificar:**
-- `src/components/financial/CostBreakdownSection.tsx`
-
-### 3.2 Padronizar Fonte nos Formularios
-
-**Problema:** Fonte do formulario de detalhes e Nova Despesa inconsistente.
-
-**Solucao:**
-- Aplicar `text-xs` nos labels e `text-sm` nos inputs
-- Reduzir espacamento dos dialogs
-
-**Arquivos a modificar:**
-- `src/components/financial/TransactionFormDialog.tsx`
-- `src/pages/FinancialPage.tsx` (dialog de detalhes)
-
-### 3.3 Verificar Calculos e Consistencia
-
-**Problema:** Possivel inconsistencia de dados ou calculos.
-
-**Solucao:**
-- Revisar `useFinancial.ts` para garantir calculos corretos
-- Verificar se `cost_amount` e `profit_amount` estao sendo calculados corretamente
-- Garantir que OS concluidas sem pagamento aparecem como "pendente"
-- Sincronizar dados do Dashboard com Financeiro
-
-**Arquivos a verificar/modificar:**
-- `src/hooks/useFinancial.ts`
-- `src/hooks/useDashboardStats.ts`
-
----
-
-## 4. SEMINOVOS
-
-### 4.1 Botoes CRUD no Menu Principal e Detalhes
-
-**Problema:** Faltam botoes de acao no menu principal.
-
-**Solucao:**
-- Adicionar botoes "Editar", "Reparo", "Vender", "Excluir" no menu principal alem do card
-- No `UsedEquipmentCard.tsx`, melhorar visibilidade dos botoes de acao
-
-**Arquivos a modificar:**
-- `src/pages/UsedEquipmentPage.tsx` - Melhorar acoes
-- `src/components/shared/UsedEquipmentCard.tsx` - Botoes mais visiveis
-
-### 4.2 Checklist para Compra e Venda de Seminovo
-
-**Problema:** Falta checklist similar ao de OS para compra/venda de seminovo.
-
-**Solucao:**
-- Reutilizar componente `MobileChecklist.tsx`
-- Adicionar campo `checklist` na tabela `used_equipment` (como JSON)
-- Mostrar checklist no recibo de compra/venda quando preenchido
-- Remover do recibo quando excluido
-
-**Arquivos a modificar:**
-- Criar migracao para adicionar campo `checklist` em `used_equipment`
-- `src/components/used-equipment/EquipmentFormDialog.tsx` - Adicionar checklist
-- `src/pages/EquipmentReceiptPage.tsx` - Exibir checklist quando presente
-- `src/pages/EquipmentDetailPage.tsx` - Mostrar/editar checklist
-
-### 4.3 Nao Mostrar Custos no Recibo do Cliente
-
-**Problema:** Recibo mostra custos que nao devem ser vistos pelo cliente.
-
-**Solucao:**
-- Separar parametros `showDetails` para uso interno vs recibo para cliente
-- Por padrao, recibo de venda nao mostra custos, apenas valor de venda
-- Adicionar opcao "Recibo Cliente" vs "Recibo Interno"
-
-**Arquivos a modificar:**
-- `src/pages/EquipmentReceiptPage.tsx` - Separar modos de exibicao
-- `src/pages/EquipmentDetailPage.tsx` - Adicionar opcao de recibo para cliente
-- `src/components/shared/UsedEquipmentCard.tsx` - Diferenciar tipos de recibo
-
----
-
-## 5. PESSOAL
-
-### 5.1 Ajustar Fonte para Padrao Menor
-
-**Problema:** Fonte maior que o padrao do sistema.
-
-**Solucao:**
-- Aplicar `text-xs` e `text-sm` consistentemente
-- Reduzir espacamento dos cards e tabelas
-
-**Arquivos a modificar:**
-- `src/pages/PersonalFinancePage.tsx`
-- `src/pages/ProLaborePage.tsx`
-- `src/components/personal/PersonalTransactionDialog.tsx`
-- `src/components/shared/PersonalTransactionCard.tsx`
+| Elemento | Especificacao |
+|----------|---------------|
+| Tamanho | A4 (210mm x 297mm) |
+| Margens | 10-15mm |
+| Fonte base | 11px |
+| Cabecalho | Logo/Nome empresa, CNPJ, endereco, telefone |
+| Titulo | Tipo de documento centralizado |
+| Secoes | Bordas, titulos em maiusculo |
+| Tabelas | Bordas, cabecalho destacado |
+| Assinaturas | Duas colunas no final |
+| Rodape | Data de geracao |
 
 ---
 
 ## Detalhes Tecnicos
 
-### Padrao de Fonte do Sistema
+### Campos Adicionais no Signup
 
-| Elemento | Classe Tailwind |
-|----------|-----------------|
-| Titulos de pagina | `text-xl sm:text-2xl` |
-| Subtitulos | `text-sm` |
-| Labels de form | `text-xs` |
-| Inputs | `text-sm` |
-| Celulas de tabela | `text-xs` |
-| Badges | `text-[10px]` |
-| Cards - titulo | `text-xs font-medium` |
-| Cards - detalhes | `text-[10px]` |
+```typescript
+interface SignupData {
+  name: string;       // Ja existe
+  email: string;      // Ja existe
+  password: string;   // Ja existe
+  phone?: string;     // Novo
+  company_name?: string; // Novo
+  cnpj?: string;      // Novo
+}
+```
 
-### Prioridade de Implementacao
+### Nova Funcao SQL para OS Number
 
-1. **Critica (Bugs):**
-   - OS sem custo nao finalizando
-   - Checklist persistindo na impressao
+```sql
+CREATE OR REPLACE FUNCTION public.generate_next_os_number()
+RETURNS TEXT
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  max_num INTEGER;
+  next_num INTEGER;
+  current_year TEXT;
+  new_os TEXT;
+BEGIN
+  -- Lock table
+  LOCK TABLE orders IN SHARE UPDATE EXCLUSIVE MODE;
+  
+  -- Get max number (extract just the number part, ignoring year suffix)
+  SELECT COALESCE(
+    MAX(CAST(
+      SPLIT_PART(REGEXP_REPLACE(os_number, '^OS-', ''), '-', 1) 
+      AS INTEGER
+    )), 0
+  ) INTO max_num
+  FROM orders
+  WHERE os_number ~ '^OS-[0-9]+';
+  
+  next_num := max_num + 1;
+  current_year := EXTRACT(YEAR FROM CURRENT_DATE)::TEXT;
+  
+  -- Format: OS-0042-2026
+  new_os := 'OS-' || LPAD(next_num::TEXT, 4, '0') || '-' || current_year;
+  
+  RETURN new_os;
+END;
+$$;
+```
 
-2. **Alta (UX):**
-   - Botao Finalizar OS
-   - Clientes clicaveis com historico
-   - Custos nao aparecerem no recibo do cliente
+### Novos Planos de Precos
 
-3. **Media (Visual):**
-   - Padronizacao de fontes
-   - Rolagem horizontal da tabela
-   - Detalhes do mapa de custo
+```typescript
+const pricingPlans = [
+  {
+    name: "Free",
+    price: "Gratis",
+    period: "para sempre",
+    description: "Para comecar",
+    features: [
+      "Ate 50 OS por mes",
+      "Cadastro de clientes",
+      "Controle de estoque basico",
+      "Sem exportacao de dados",
+    ],
+    restrictions: true,
+    popular: false,
+    cta: "Comecar Gratis"
+  },
+  {
+    name: "Mensal",
+    price: "R$ 49",
+    period: "/mes",
+    description: "Tudo ilimitado",
+    features: [
+      "OS ilimitadas",
+      "Clientes ilimitados",
+      "Financeiro completo",
+      "Relatorios avancados",
+      "Exportacao de dados",
+      "Suporte prioritario"
+    ],
+    restrictions: false,
+    popular: true,
+    cta: "Assinar Mensal"
+  },
+  {
+    name: "Anual",
+    price: "R$ 399",
+    period: "/ano",
+    description: "Economize 32%",
+    features: [
+      "Tudo do plano Mensal",
+      "2 meses gratis",
+      "Prioridade no suporte",
+      "Treinamento incluso"
+    ],
+    restrictions: false,
+    popular: false,
+    cta: "Assinar Anual"
+  }
+];
+```
 
-4. **Baixa (Melhorias):**
+---
+
+## Arquivos a Criar
+
+| Arquivo | Descricao |
+|---------|-----------|
+| `src/pages/OrderReceiptPage.tsx` | Pagina de impressao profissional de OS |
+| Nova migracao SQL | Atualizar funcao de geracao de OS number |
+
+## Arquivos a Modificar
+
+| Arquivo | Modificacao |
+|---------|-------------|
+| `src/pages/LandingPage.tsx` | Novos planos de precos |
+| `src/pages/AuthPage.tsx` | Campos adicionais no signup |
+| `src/hooks/useAuth.tsx` | Passar metadata e criar company_settings |
+| `src/components/orders/OrderFormDialog.tsx` | Fontes menores, menu recolhivel, campos Marca/Modelo |
+| `src/components/orders/OrderViewDialog.tsx` | Usar company_settings na impressao |
+| `src/components/used-equipment/EquipmentFormDialog.tsx` | Adicionar checklist |
+| `src/components/used-equipment/SaleFormDialog.tsx` | Adicionar checklist de saida |
+| `src/pages/EquipmentReceiptPage.tsx` | Exibir checklist na impressao |
+| `src/pages/EquipmentDetailPage.tsx` | Exibir/editar checklist |
+| `src/App.tsx` | Nova rota /ordem-servico/:id/imprimir |
+
+---
+
+## Ordem de Implementacao
+
+1. **Prioridade Alta:**
+   - Padronizacao de impressao (cria nova pagina OrderReceiptPage)
+   - OS number com ano (migracao SQL)
+   - Dados empresa nas impressoes
+
+2. **Prioridade Media:**
    - Checklist em Seminovos
-   - Botoes CRUD mais visiveis
+   - Formulario OS (fontes, campos, menu recolhivel)
+   - Novos planos na Landing Page
 
-### Estimativa de Arquivos
-
-**Novos arquivos:**
-- `src/components/clients/ClientViewDialog.tsx`
-
-**Arquivos principais a modificar:**
-- `src/pages/OrdersPage.tsx`
-- `src/pages/ClientsPage.tsx`
-- `src/pages/FinancialPage.tsx`
-- `src/pages/UsedEquipmentPage.tsx`
-- `src/pages/PersonalFinancePage.tsx`
-- `src/pages/EquipmentReceiptPage.tsx`
-- `src/pages/EquipmentDetailPage.tsx`
-- `src/components/orders/OrderFormDialog.tsx`
-- `src/components/orders/OrderViewDialog.tsx`
-- `src/components/shared/ClientCard.tsx`
-- `src/components/shared/UsedEquipmentCard.tsx`
-- `src/components/financial/TransactionFormDialog.tsx`
-- `src/components/financial/CostBreakdownSection.tsx`
-- `src/components/financial/PaymentDialog.tsx`
-- `src/components/used-equipment/EquipmentFormDialog.tsx`
-- `src/hooks/useOrders.ts`
-
-**Migracao de banco:**
-- Adicionar campo `checklist` (jsonb) em `used_equipment`
+3. **Prioridade Baixa:**
+   - Dados adicionais no signup
+   - Melhorias de atualizacao CRUD
 
