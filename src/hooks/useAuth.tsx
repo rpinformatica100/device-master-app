@@ -43,7 +43,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signUp = async (email: string, password: string, name?: string, metadata?: { phone?: string; company_name?: string; cnpj?: string }) => {
     const redirectUrl = `${window.location.origin}/`;
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -56,6 +56,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
     });
+
+    // After successful signup, create company_settings with initial data
+    if (!error && data.user) {
+      try {
+        await supabase.from('company_settings').insert({
+          user_id: data.user.id,
+          nome_fantasia: metadata?.company_name || null,
+          cnpj: metadata?.cnpj || null,
+          telefone: metadata?.phone || null,
+          email: email,
+        });
+      } catch (e) {
+        console.error('Error creating initial company settings:', e);
+      }
+    }
+
     return { error: error as Error | null };
   };
 
