@@ -23,10 +23,13 @@ import {
   HardDrive,
   Monitor,
   CheckCircle,
+  FileBarChart,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PaymentDialog, PaymentData } from "@/components/financial/PaymentDialog";
 import { useOrders, PaymentInfo } from "@/hooks/useOrders";
+import { useCompanySettings } from "@/hooks/useCompanySettings";
+import { useNavigate } from "react-router-dom";
 
 const statusConfig = {
   em_andamento: { label: "Em Andamento", className: "bg-info/20 text-info border-info/30" },
@@ -92,6 +95,8 @@ interface OrderViewDialogProps {
 export function OrderViewDialog({ open, onOpenChange, order, onEdit, onOrderUpdated }: OrderViewDialogProps) {
   const printRef = useRef<HTMLDivElement>(null);
   const { updateOrder } = useOrders();
+  const { settings: company } = useCompanySettings();
+  const navigate = useNavigate();
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -352,6 +357,10 @@ export function OrderViewDialog({ open, onOpenChange, order, onEdit, onOrderUpda
 
     const priorityClass = `badge-priority-${escapeHtml(order.priority)}`;
 
+    // Build company info
+    const companyName = company?.nome_fantasia || company?.razao_social || 'Assistência Técnica';
+    const companyAddress = company ? [company.rua, company.numero, company.bairro, company.cidade, company.estado].filter(Boolean).join(', ') : '';
+
     printWindow.document.write(`
       <!DOCTYPE html>
       <html>
@@ -361,8 +370,11 @@ export function OrderViewDialog({ open, onOpenChange, order, onEdit, onOrderUpda
         </head>
         <body>
           <div class="print-header">
-            <h1>ORDEM DE SERVIÇO</h1>
-            <p>Assistência Técnica</p>
+            <h1>${escapeHtml(companyName)}</h1>
+            ${company?.cnpj ? `<p>CNPJ: ${escapeHtml(company.cnpj)}</p>` : ''}
+            ${company?.telefone ? `<p>Tel: ${escapeHtml(company.telefone)}</p>` : ''}
+            ${company?.email ? `<p>Email: ${escapeHtml(company.email)}</p>` : ''}
+            ${companyAddress ? `<p>${escapeHtml(companyAddress)}</p>` : ''}
             <div class="os-number">
               ${escapeHtml(order.os_number || order.id)}
               <span class="badge badge-status">${escapeHtml(statusConfig[order.status as keyof typeof statusConfig]?.label || order.status)}</span>
@@ -739,10 +751,20 @@ export function OrderViewDialog({ open, onOpenChange, order, onEdit, onOrderUpda
         </div>
 
         <div className="flex flex-col sm:flex-row justify-between gap-3 pt-4 border-t border-border">
-          <Button variant="outline" className="gap-2" onClick={handlePrint}>
-            <Printer className="w-4 h-4" />
-            Imprimir
-          </Button>
+          <div className="flex gap-2 flex-wrap">
+            <Button variant="outline" className="gap-2" onClick={handlePrint}>
+              <Printer className="w-4 h-4" />
+              Imprimir
+            </Button>
+            <Button variant="outline" className="gap-2" onClick={() => navigate(`/ordens/${order.id}/imprimir`)}>
+              <FileText className="w-4 h-4" />
+              Impressão Profissional
+            </Button>
+            <Button variant="outline" className="gap-2" onClick={() => navigate(`/ordens/${order.id}/orcamento`)}>
+              <FileBarChart className="w-4 h-4" />
+              Orçamento
+            </Button>
+          </div>
           <div className="flex gap-2 flex-wrap">
             {canFinalize && (
               <Button 

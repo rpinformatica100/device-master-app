@@ -29,7 +29,12 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Check, ChevronsUpDown, Plus, X, Package, Wrench, User, Loader2, ClipboardCheck, PenLine, UserPlus } from "lucide-react";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { Check, ChevronsUpDown, Plus, X, Package, Wrench, User, Loader2, ClipboardCheck, PenLine, UserPlus, ChevronDown, Settings2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useClients } from "@/hooks/useClients";
 import { useProducts } from "@/hooks/useProducts";
@@ -112,9 +117,12 @@ export function OrderFormDialog({ open, onOpenChange, mode = "create", orderData
   const [showChecklist, setShowChecklist] = useState(false);
   const [showManualItem, setShowManualItem] = useState(false);
   const [showQuickClient, setShowQuickClient] = useState(false);
+  const [specsOpen, setSpecsOpen] = useState(false);
 
   const [device, setDevice] = useState("");
   const [category, setCategory] = useState("");
+  const [brand, setBrand] = useState("");
+  const [model, setModel] = useState("");
   const [serialNumber, setSerialNumber] = useState("");
   const [password, setPassword] = useState("");
   const [accessories, setAccessories] = useState("");
@@ -153,8 +161,9 @@ export function OrderFormDialog({ open, onOpenChange, mode = "create", orderData
 
         const csf = orderData.category_specific_fields as Record<string, string> || {};
         setCategorySpecificFields(csf);
+        setBrand(csf.brand || "");
+        setModel(csf.model || "");
         
-        // Load checklist if exists
         if (csf.mobile_checklist) {
           try {
             setMobileChecklist(JSON.parse(csf.mobile_checklist));
@@ -167,6 +176,8 @@ export function OrderFormDialog({ open, onOpenChange, mode = "create", orderData
         setSelectedClient(null);
         setDevice("");
         setCategory("");
+        setBrand("");
+        setModel("");
         setSerialNumber("");
         setPassword("");
         setAccessories("");
@@ -178,24 +189,19 @@ export function OrderFormDialog({ open, onOpenChange, mode = "create", orderData
         setCategorySpecificFields({});
         setMobileChecklist({});
         setChecklistObservations("");
+        setSpecsOpen(false);
       }
     }
   }, [open, mode, orderData, clients]);
 
   const allItems = useMemo(() => [
     ...products.map(p => ({ 
-      id: p.id, 
-      name: p.name, 
-      type: "product" as const, 
-      cost_price: Number(p.cost_price), 
-      sale_price: Number(p.sale_price) 
+      id: p.id, name: p.name, type: "product" as const, 
+      cost_price: Number(p.cost_price), sale_price: Number(p.sale_price) 
     })),
     ...services.map(s => ({ 
-      id: s.id, 
-      name: s.name, 
-      type: "service" as const, 
-      cost_price: Number(s.cost_price), 
-      sale_price: Number(s.sale_price) 
+      id: s.id, name: s.name, type: "service" as const, 
+      cost_price: Number(s.cost_price), sale_price: Number(s.sale_price) 
     })),
   ], [products, services]);
 
@@ -261,23 +267,18 @@ export function OrderFormDialog({ open, onOpenChange, mode = "create", orderData
     setCategorySpecificFields(prev => ({ ...prev, [key]: value }));
   };
 
-  // Clear checklist when category changes from mobile to non-mobile
   const handleCategoryChange = (newCategory: string) => {
     const wasMobile = category === 'smartphone' || category === 'tablet';
     const isMobile = newCategory === 'smartphone' || newCategory === 'tablet';
-    
-    // If changing from mobile to non-mobile, clear checklist
     if (wasMobile && !isMobile) {
       setMobileChecklist({});
       setChecklistObservations("");
     }
-    
     setCategory(newCategory);
   };
 
   const currentCategoryFields = categoryFields[category] || [];
 
-  // Check if status is changing to completed
   const isCompleting = () => {
     if (mode !== "edit" || !orderData) return false;
     const newStatus = status;
@@ -286,12 +287,9 @@ export function OrderFormDialog({ open, onOpenChange, mode = "create", orderData
            oldStatus !== 'concluido' && oldStatus !== 'entregue';
   };
 
-  // Allow completing even with 0 value (removed totals.sale > 0 check)
-
   const handleSubmit = async (paymentInfo?: PaymentInfo) => {
     if (!device.trim() || !category || !issue.trim()) return;
 
-    // If completing without payment info, show payment dialog (even for 0 value)
     if (isCompleting() && !paymentInfo) {
       setShowPaymentDialog(true);
       return;
@@ -299,11 +297,11 @@ export function OrderFormDialog({ open, onOpenChange, mode = "create", orderData
 
     setIsSubmitting(true);
     try {
-      // Merge checklist into category_specific_fields only for mobile devices
       const isMobileDevice = category === 'smartphone' || category === 'tablet';
       const finalCategoryFields = {
         ...categorySpecificFields,
-        // Only include checklist for mobile devices, clear otherwise
+        brand: brand || undefined,
+        model: model || undefined,
         mobile_checklist: isMobileDevice && hasChecklist ? JSON.stringify(mobileChecklist) : undefined,
         checklist_observations: isMobileDevice && hasChecklist ? checklistObservations : undefined,
       };
@@ -359,36 +357,36 @@ export function OrderFormDialog({ open, onOpenChange, mode = "create", orderData
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{mode === "create" ? "Nova Ordem de Serviço" : "Editar Ordem de Serviço"}</DialogTitle>
+          <DialogTitle className="text-base">{mode === "create" ? "Nova Ordem de Serviço" : "Editar Ordem de Serviço"}</DialogTitle>
         </DialogHeader>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-3">
           {/* Cliente */}
-          <div className="md:col-span-2 space-y-3">
+          <div className="md:col-span-2 space-y-2">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-                <User className="w-4 h-4" />
+              <div className="flex items-center gap-2 text-xs font-medium text-foreground">
+                <User className="w-3.5 h-3.5" />
                 Cliente
               </div>
-              <Button variant="outline" size="sm" onClick={() => setShowQuickClient(true)}>
-                <UserPlus className="w-4 h-4 mr-1" />
-                Novo Cliente
+              <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setShowQuickClient(true)}>
+                <UserPlus className="w-3.5 h-3.5 mr-1" />
+                Novo
               </Button>
             </div>
             <Popover open={clientOpen} onOpenChange={setClientOpen}>
               <PopoverTrigger asChild>
-                <Button variant="outline" role="combobox" className="w-full justify-between h-auto py-3">
+                <Button variant="outline" role="combobox" className="w-full justify-between h-auto py-2 text-sm">
                   {selectedClient ? (
                     <div className="flex flex-col items-start">
-                      <span className="font-medium">{selectedClient.name}</span>
-                      <span className="text-xs text-muted-foreground">
+                      <span className="font-medium text-sm">{selectedClient.name}</span>
+                      <span className="text-[10px] text-muted-foreground">
                         {selectedClient.phone} {selectedClient.cpf && `• ${selectedClient.cpf}`}
                       </span>
                     </div>
                   ) : (
-                    <span className="text-muted-foreground">Buscar cliente...</span>
+                    <span className="text-muted-foreground text-sm">Buscar cliente...</span>
                   )}
-                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  <ChevronsUpDown className="ml-2 h-3.5 w-3.5 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-[400px] p-0" align="start">
@@ -402,13 +400,13 @@ export function OrderFormDialog({ open, onOpenChange, mode = "create", orderData
                           key={client.id}
                           value={client.name}
                           onSelect={() => { setSelectedClient(client); setClientOpen(false); setClientSearch(""); }}
-                          className="flex items-center justify-between py-3"
+                          className="flex items-center justify-between py-2"
                         >
                           <div>
-                            <p className="font-medium">{client.name}</p>
-                            <p className="text-xs text-muted-foreground">{client.phone} {client.cpf && `• ${client.cpf}`}</p>
+                            <p className="font-medium text-sm">{client.name}</p>
+                            <p className="text-[10px] text-muted-foreground">{client.phone} {client.cpf && `• ${client.cpf}`}</p>
                           </div>
-                          <Check className={cn("h-4 w-4", selectedClient?.id === client.id ? "opacity-100" : "opacity-0")} />
+                          <Check className={cn("h-3.5 w-3.5", selectedClient?.id === client.id ? "opacity-100" : "opacity-0")} />
                         </CommandItem>
                       ))}
                     </CommandGroup>
@@ -419,10 +417,10 @@ export function OrderFormDialog({ open, onOpenChange, mode = "create", orderData
           </div>
 
           {/* Categoria e Dispositivo */}
-          <div className="space-y-1.5">
+          <div className="space-y-1">
             <Label className="text-xs">Categoria *</Label>
             <Select value={category} onValueChange={handleCategoryChange}>
-              <SelectTrigger className="text-sm"><SelectValue placeholder="Selecione" /></SelectTrigger>
+              <SelectTrigger className="text-sm h-9"><SelectValue placeholder="Selecione" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="smartphone">Smartphone</SelectItem>
                 <SelectItem value="notebook">Notebook</SelectItem>
@@ -435,37 +433,68 @@ export function OrderFormDialog({ open, onOpenChange, mode = "create", orderData
             </Select>
           </div>
 
-          <div className="space-y-2">
-            <Label>Dispositivo *</Label>
-            <Input placeholder="Ex: iPhone 14 Pro" value={device} onChange={(e) => setDevice(e.target.value)} />
+          <div className="space-y-1">
+            <Label className="text-xs">Dispositivo *</Label>
+            <Input className="text-sm h-9" placeholder="Ex: iPhone 14 Pro" value={device} onChange={(e) => setDevice(e.target.value)} />
           </div>
 
-          <div className="space-y-2">
-            <Label>Número de Série</Label>
-            <Input placeholder="Ex: C02XG8J7JK78" value={serialNumber} onChange={(e) => setSerialNumber(e.target.value)} />
+          {/* Marca e Modelo - always visible */}
+          <div className="space-y-1">
+            <Label className="text-xs">Marca</Label>
+            <Input className="text-sm h-9" placeholder="Ex: Apple, Samsung" value={brand} onChange={(e) => setBrand(e.target.value)} />
           </div>
 
-          <div className="space-y-2">
-            <Label>Senha do Dispositivo</Label>
-            <Input placeholder="Senha para acesso" value={password} onChange={(e) => setPassword(e.target.value)} />
+          <div className="space-y-1">
+            <Label className="text-xs">Modelo</Label>
+            <Input className="text-sm h-9" placeholder="Ex: A54, iPhone 15" value={model} onChange={(e) => setModel(e.target.value)} />
           </div>
 
-          {currentCategoryFields.map((field) => (
-            <div key={field.key} className="space-y-2">
-              <Label>{field.label}</Label>
-              <Input placeholder={field.placeholder} value={categorySpecificFields[field.key] || ""} onChange={(e) => handleCategoryFieldChange(field.key, e.target.value)} />
+          <div className="space-y-1">
+            <Label className="text-xs">Número de Série</Label>
+            <Input className="text-sm h-9" placeholder="Ex: C02XG8J7JK78" value={serialNumber} onChange={(e) => setSerialNumber(e.target.value)} />
+          </div>
+
+          <div className="space-y-1">
+            <Label className="text-xs">Senha do Dispositivo</Label>
+            <Input className="text-sm h-9" placeholder="Senha para acesso" value={password} onChange={(e) => setPassword(e.target.value)} />
+          </div>
+
+          {/* Collapsible Equipment Characteristics */}
+          {currentCategoryFields.length > 0 && (
+            <div className="md:col-span-2">
+              <Collapsible open={specsOpen} onOpenChange={setSpecsOpen}>
+                <CollapsibleTrigger asChild>
+                  <Button variant="outline" className="w-full justify-between h-8 text-xs" type="button">
+                    <span className="flex items-center gap-2">
+                      <Settings2 className="w-3.5 h-3.5" />
+                      Características do Equipamento ({currentCategoryFields.length} campos)
+                    </span>
+                    <ChevronDown className={cn("w-3.5 h-3.5 transition-transform", specsOpen && "rotate-180")} />
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3 pt-3">
+                    {currentCategoryFields.map((field) => (
+                      <div key={field.key} className="space-y-1">
+                        <Label className="text-xs">{field.label}</Label>
+                        <Input className="text-sm h-9" placeholder={field.placeholder} value={categorySpecificFields[field.key] || ""} onChange={(e) => handleCategoryFieldChange(field.key, e.target.value)} />
+                      </div>
+                    ))}
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
             </div>
-          ))}
+          )}
 
-          <div className="space-y-2">
-            <Label>Acessórios Entregues</Label>
-            <Input placeholder="Ex: Carregador, case" value={accessories} onChange={(e) => setAccessories(e.target.value)} />
+          <div className="space-y-1">
+            <Label className="text-xs">Acessórios Entregues</Label>
+            <Input className="text-sm h-9" placeholder="Ex: Carregador, case" value={accessories} onChange={(e) => setAccessories(e.target.value)} />
           </div>
 
-          <div className="space-y-2">
-            <Label>Prioridade</Label>
+          <div className="space-y-1">
+            <Label className="text-xs">Prioridade</Label>
             <Select value={priority} onValueChange={setPriority}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger className="text-sm h-9"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="alta">Alta</SelectItem>
                 <SelectItem value="media">Média</SelectItem>
@@ -475,10 +504,10 @@ export function OrderFormDialog({ open, onOpenChange, mode = "create", orderData
           </div>
 
           {mode === "edit" && (
-            <div className="space-y-2">
-              <Label>Status</Label>
+            <div className="space-y-1">
+              <Label className="text-xs">Status</Label>
               <Select value={status} onValueChange={setStatus}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger className="text-sm h-9"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="aguardando">Aguardando</SelectItem>
                   <SelectItem value="em_andamento">Em Andamento</SelectItem>
@@ -491,57 +520,47 @@ export function OrderFormDialog({ open, onOpenChange, mode = "create", orderData
             </div>
           )}
 
-          <div className="md:col-span-2 space-y-2">
-            <Label>Defeito Relatado *</Label>
-            <Textarea placeholder="Descreva o problema..." value={issue} onChange={(e) => setIssue(e.target.value)} rows={3} />
+          <div className="md:col-span-2 space-y-1">
+            <Label className="text-xs">Defeito Relatado *</Label>
+            <Textarea className="text-sm" placeholder="Descreva o problema..." value={issue} onChange={(e) => setIssue(e.target.value)} rows={2} />
           </div>
 
-          <div className="md:col-span-2 space-y-2">
-            <Label>Observações Internas</Label>
-            <Textarea placeholder="Notas internas..." value={internalNotes} onChange={(e) => setInternalNotes(e.target.value)} rows={2} />
+          <div className="md:col-span-2 space-y-1">
+            <Label className="text-xs">Observações Internas</Label>
+            <Textarea className="text-sm" placeholder="Notas internas..." value={internalNotes} onChange={(e) => setInternalNotes(e.target.value)} rows={2} />
           </div>
 
-          {/* Checklist para dispositivos mobile - opcional */}
+          {/* Checklist para dispositivos mobile */}
           {(category === "smartphone" || category === "tablet") && (
-            <div className="md:col-span-2 space-y-2">
+            <div className="md:col-span-2 space-y-1.5">
               <div className="flex items-center justify-between">
-                <Label className="flex items-center gap-2">
-                  <ClipboardCheck className="w-4 h-4" />
+                <Label className="text-xs flex items-center gap-1.5">
+                  <ClipboardCheck className="w-3.5 h-3.5" />
                   Checklist de Entrada (Opcional)
                 </Label>
-                <div className="flex gap-2">
+                <div className="flex gap-1.5">
                   {hasChecklist && (
                     <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="text-destructive hover:text-destructive"
-                      onClick={() => {
-                        setMobileChecklist({});
-                        setChecklistObservations("");
-                      }}
+                      variant="ghost" size="sm" className="h-7 text-xs text-destructive hover:text-destructive"
+                      onClick={() => { setMobileChecklist({}); setChecklistObservations(""); }}
                     >
-                      <X className="w-4 h-4 mr-1" />
-                      Limpar
+                      <X className="w-3.5 h-3.5 mr-1" />Limpar
                     </Button>
                   )}
-                  <Button variant="outline" size="sm" onClick={() => setShowChecklist(true)}>
-                    <ClipboardCheck className="w-4 h-4 mr-1" />
-                    {hasChecklist ? "Editar Checklist" : "Fazer Checklist"}
+                  <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setShowChecklist(true)}>
+                    <ClipboardCheck className="w-3.5 h-3.5 mr-1" />
+                    {hasChecklist ? "Editar" : "Fazer Checklist"}
                   </Button>
                 </div>
               </div>
               {hasChecklist && (
-                <div className="p-3 bg-muted/50 rounded-lg text-sm">
-                  <div className="flex gap-4">
-                    <span className="text-green-600">
-                      ✓ {Object.values(mobileChecklist).filter(v => v === true).length} OK
-                    </span>
-                    <span className="text-red-600">
-                      ✗ {checklistDefects} Defeitos
-                    </span>
+                <div className="p-2 bg-muted/50 rounded-lg text-xs">
+                  <div className="flex gap-3">
+                    <span className="text-green-600">✓ {Object.values(mobileChecklist).filter(v => v === true).length} OK</span>
+                    <span className="text-red-600">✗ {checklistDefects} Defeitos</span>
                   </div>
                   {checklistObservations && (
-                    <p className="text-muted-foreground mt-1 text-xs">{checklistObservations}</p>
+                    <p className="text-muted-foreground mt-1 text-[10px]">{checklistObservations}</p>
                   )}
                 </div>
               )}
@@ -549,16 +568,16 @@ export function OrderFormDialog({ open, onOpenChange, mode = "create", orderData
           )}
 
           {/* Produtos e Serviços */}
-          <div className="md:col-span-2 space-y-4">
+          <div className="md:col-span-2 space-y-3">
             <div className="flex items-center justify-between flex-wrap gap-2">
-              <Label className="flex items-center gap-2"><Package className="w-4 h-4" />Produtos e Serviços</Label>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={() => setShowManualItem(true)}>
-                  <PenLine className="w-4 h-4 mr-1" />Manual
+              <Label className="text-xs flex items-center gap-1.5"><Package className="w-3.5 h-3.5" />Produtos e Serviços</Label>
+              <div className="flex gap-1.5">
+                <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setShowManualItem(true)}>
+                  <PenLine className="w-3.5 h-3.5 mr-1" />Manual
                 </Button>
                 <Popover open={itemOpen} onOpenChange={setItemOpen}>
                   <PopoverTrigger asChild>
-                    <Button variant="outline" size="sm"><Plus className="w-4 h-4 mr-1" />Do Estoque</Button>
+                    <Button variant="outline" size="sm" className="h-7 text-xs"><Plus className="w-3.5 h-3.5 mr-1" />Do Estoque</Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-[350px] p-0">
                     <Command>
@@ -568,16 +587,16 @@ export function OrderFormDialog({ open, onOpenChange, mode = "create", orderData
                         <CommandGroup heading="Produtos">
                           {filteredItems.filter(i => i.type === "product").map((item) => (
                             <CommandItem key={item.id} onSelect={() => addItem(item)} className="flex justify-between">
-                              <span>{item.name}</span>
-                              <span className="text-sm text-muted-foreground">R$ {item.sale_price.toFixed(2)}</span>
+                              <span className="text-sm">{item.name}</span>
+                              <span className="text-xs text-muted-foreground">R$ {item.sale_price.toFixed(2)}</span>
                             </CommandItem>
                           ))}
                         </CommandGroup>
                         <CommandGroup heading="Serviços">
                           {filteredItems.filter(i => i.type === "service").map((item) => (
                             <CommandItem key={item.id} onSelect={() => addItem(item)} className="flex justify-between">
-                              <span>{item.name}</span>
-                              <span className="text-sm text-muted-foreground">R$ {item.sale_price.toFixed(2)}</span>
+                              <span className="text-sm">{item.name}</span>
+                              <span className="text-xs text-muted-foreground">R$ {item.sale_price.toFixed(2)}</span>
                             </CommandItem>
                           ))}
                         </CommandGroup>
@@ -590,16 +609,16 @@ export function OrderFormDialog({ open, onOpenChange, mode = "create", orderData
 
             {orderItems.length > 0 && (
               <div className="glass rounded-lg overflow-hidden">
-                <table className="w-full text-sm">
+                <table className="w-full text-xs">
                   <thead>
                     <tr className="border-b border-border bg-muted/50">
-                      <th className="text-left p-3">Item</th>
-                      <th className="text-right p-3">Custo</th>
-                      <th className="text-right p-3">Venda</th>
-                      <th className="text-right p-3">Margem</th>
-                      <th className="text-center p-3">Qtd</th>
-                      <th className="text-right p-3">Total</th>
-                      <th className="p-3"></th>
+                      <th className="text-left p-2">Item</th>
+                      <th className="text-right p-2">Custo</th>
+                      <th className="text-right p-2">Venda</th>
+                      <th className="text-right p-2">Margem</th>
+                      <th className="text-center p-2">Qtd</th>
+                      <th className="text-right p-2">Total</th>
+                      <th className="p-2"></th>
                     </tr>
                   </thead>
                   <tbody>
@@ -608,30 +627,30 @@ export function OrderFormDialog({ open, onOpenChange, mode = "create", orderData
                       const itemTotal = item.sale_price * item.quantity;
                       return (
                         <tr key={item.id} className="border-b border-border/50">
-                          <td className="p-3">
-                            <div className="flex items-center gap-2">
-                              {item.type === "product" ? <Package className="w-4 h-4 text-primary" /> : <Wrench className="w-4 h-4 text-success" />}
-                              {item.name}
+                          <td className="p-2">
+                            <div className="flex items-center gap-1.5">
+                              {item.type === "product" ? <Package className="w-3.5 h-3.5 text-primary" /> : <Wrench className="w-3.5 h-3.5 text-success" />}
+                              <span className="text-xs">{item.name}</span>
                             </div>
                           </td>
-                          <td className="p-3 text-right text-muted-foreground">R$ {item.cost_price.toFixed(2)}</td>
-                          <td className="p-3 text-right">R$ {item.sale_price.toFixed(2)}</td>
-                          <td className="p-3 text-right text-success">R$ {itemMargin.toFixed(2)}</td>
-                          <td className="p-3">
-                            <div className="flex items-center justify-center gap-1">
-                              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => updateItemQuantity(item.id, item.quantity - 1)}>-</Button>
-                              <span className="w-8 text-center">{item.quantity}</span>
-                              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => updateItemQuantity(item.id, item.quantity + 1)}>+</Button>
+                          <td className="p-2 text-right text-muted-foreground">R$ {item.cost_price.toFixed(2)}</td>
+                          <td className="p-2 text-right">R$ {item.sale_price.toFixed(2)}</td>
+                          <td className="p-2 text-right text-success">R$ {itemMargin.toFixed(2)}</td>
+                          <td className="p-2">
+                            <div className="flex items-center justify-center gap-0.5">
+                              <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => updateItemQuantity(item.id, item.quantity - 1)}>-</Button>
+                              <span className="w-6 text-center text-xs">{item.quantity}</span>
+                              <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => updateItemQuantity(item.id, item.quantity + 1)}>+</Button>
                             </div>
                           </td>
-                          <td className="p-3 text-right font-medium">R$ {itemTotal.toFixed(2)}</td>
-                          <td className="p-3"><Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => removeItem(item.id)}><X className="w-4 h-4" /></Button></td>
+                          <td className="p-2 text-right font-medium">R$ {itemTotal.toFixed(2)}</td>
+                          <td className="p-2"><Button variant="ghost" size="icon" className="h-5 w-5 text-destructive" onClick={() => removeItem(item.id)}><X className="w-3.5 h-3.5" /></Button></td>
                         </tr>
                       );
                     })}
                   </tbody>
                 </table>
-                <div className="p-4 bg-muted/30 grid grid-cols-4 gap-4 text-sm">
+                <div className="p-3 bg-muted/30 grid grid-cols-4 gap-3 text-xs">
                   <div className="text-center">
                     <p className="text-muted-foreground">Total Custo</p>
                     <p className="font-bold text-destructive">R$ {totals.cost.toFixed(2)}</p>
@@ -654,17 +673,16 @@ export function OrderFormDialog({ open, onOpenChange, mode = "create", orderData
           </div>
         </div>
 
-        <div className="flex justify-end gap-3 pt-4 border-t border-border">
-          <Button variant="secondary" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={() => handleSubmit()} disabled={isSubmitting || !device.trim() || !category || !issue.trim()}>
-            {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+        <div className="flex justify-end gap-2 pt-3 border-t border-border">
+          <Button variant="secondary" size="sm" onClick={() => onOpenChange(false)}>Cancelar</Button>
+          <Button size="sm" onClick={() => handleSubmit()} disabled={isSubmitting || !device.trim() || !category || !issue.trim()}>
+            {isSubmitting && <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />}
             {mode === "create" ? "Criar OS" : "Salvar"}
           </Button>
         </div>
       </DialogContent>
     </Dialog>
 
-    {/* Payment Dialog for completing orders */}
     <PaymentDialog
       open={showPaymentDialog}
       onOpenChange={setShowPaymentDialog}
@@ -674,7 +692,6 @@ export function OrderFormDialog({ open, onOpenChange, mode = "create", orderData
       isLoading={isSubmitting}
     />
 
-    {/* Mobile Checklist Dialog */}
     <MobileChecklist
       open={showChecklist}
       onOpenChange={setShowChecklist}
@@ -683,14 +700,12 @@ export function OrderFormDialog({ open, onOpenChange, mode = "create", orderData
       initialObservations={checklistObservations}
     />
 
-    {/* Manual Item Dialog */}
     <ManualItemDialog
       open={showManualItem}
       onOpenChange={setShowManualItem}
       onAdd={addManualItem}
     />
 
-    {/* Quick Client Dialog */}
     <QuickClientDialog
       open={showQuickClient}
       onOpenChange={setShowQuickClient}

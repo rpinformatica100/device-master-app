@@ -263,6 +263,33 @@ export default function EquipmentReceiptPage() {
               </div>
             </div>
 
+            {/* Checklist */}
+            {equipment.checklist && typeof equipment.checklist === 'object' && Object.keys(equipment.checklist as Record<string, any>).length > 0 && (
+              <div className="mb-6">
+                <h2 className="font-semibold text-sm text-muted-foreground mb-2">CHECKLIST DE ENTRADA</h2>
+                <div className="bg-muted/30 rounded-lg p-4">
+                  <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                    {Object.entries(equipment.checklist as Record<string, boolean | null>).map(([key, value]) => {
+                      const labels: Record<string, string> = {
+                        display: 'Tela', touchscreen: 'Touch', camera_frontal: 'Câm. Frontal',
+                        camera_traseira: 'Câm. Traseira', microfone: 'Microfone', alto_falante: 'Alto-falante',
+                        auricular: 'Auricular', wifi: 'Wi-Fi', bluetooth: 'Bluetooth', bateria: 'Bateria',
+                        biometria: 'Biometria', vibracao: 'Vibração', botoes: 'Botões', chip: 'Chip', sensores: 'Sensores',
+                      };
+                      const label = labels[key] || key;
+                      const icon = value === true ? '✓' : value === false ? '✗' : '-';
+                      const colorClass = value === true ? 'text-green-600 bg-green-50' : value === false ? 'text-red-600 bg-red-50' : 'text-gray-500 bg-gray-50';
+                      return (
+                        <div key={key} className={`text-xs px-2 py-1 rounded text-center ${colorClass}`}>
+                          {icon} {label}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Repair History (optional) */}
             {showHistory && repairs && repairs.length > 0 && (
               <div className="mb-6">
