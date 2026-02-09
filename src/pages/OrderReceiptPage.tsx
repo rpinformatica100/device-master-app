@@ -64,8 +64,8 @@ const priorityLabels: Record<string, string> = {
 const checklistLabels: Record<string, string> = {
   display: "Tela/Display",
   touchscreen: "Touchscreen",
-  camera_frontal: "Câmera Frontal",
-  camera_traseira: "Câmera Traseira",
+  camera_frontal: "Câm. Frontal",
+  camera_traseira: "Câm. Traseira",
   microfone: "Microfone",
   alto_falante: "Alto-falante",
   auricular: "Auricular",
@@ -83,386 +83,205 @@ export default function OrderReceiptPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { settings: company } = useCompanySettings();
-  
   const [order, setOrder] = useState<OrderData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchOrder = async () => {
       if (!id) return;
-      
       try {
-        const { data: orderData, error: orderError } = await supabase
+        const { data, error } = await supabase
           .from('orders')
-          .select(`
-            *,
-            clients(*),
-            order_items(*)
-          `)
+          .select('*, clients(*), order_items(*)')
           .eq('id', id)
           .single();
-
-        if (orderError) throw orderError;
-
-        setOrder({
-          ...orderData,
-          client: orderData.clients,
-          items: orderData.order_items,
-        } as OrderData);
+        if (error) throw error;
+        setOrder({ ...data, client: data.clients, items: data.order_items } as OrderData);
       } catch (error) {
         console.error('Error fetching order:', error);
       } finally {
         setLoading(false);
       }
     };
-
     fetchOrder();
   }, [id]);
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(value);
-  };
+  const fmt = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
 
-  const handlePrint = () => {
-    window.print();
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  if (!order) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-muted-foreground">Ordem de serviço não encontrada</p>
-      </div>
-    );
-  }
+  if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>;
+  if (!order) return <div className="min-h-screen flex items-center justify-center"><p className="text-muted-foreground">OS não encontrada</p></div>;
 
   const items = order.items || [];
-  const total = items.reduce((sum, item) => sum + (Number(item.sale_price) || 0) * item.quantity, 0);
-  
-  // Parse checklist
-  const categorySpecificFields = order.category_specific_fields || {};
-  const isMobileDevice = order.category === 'smartphone' || order.category === 'tablet';
-  let mobileChecklist: Record<string, boolean | null> = {};
-  let checklistObservations = '';
-  
-  if (isMobileDevice && categorySpecificFields.mobile_checklist) {
-    try {
-      mobileChecklist = typeof categorySpecificFields.mobile_checklist === 'string' 
-        ? JSON.parse(categorySpecificFields.mobile_checklist) 
-        : categorySpecificFields.mobile_checklist;
-    } catch { mobileChecklist = {}; }
+  const total = items.reduce((s, i) => s + (Number(i.sale_price) || 0) * i.quantity, 0);
+  const csf = order.category_specific_fields || {};
+  const isMobile = order.category === 'smartphone' || order.category === 'tablet';
+  let checklist: Record<string, boolean | null> = {};
+  if (isMobile && csf.mobile_checklist) {
+    try { checklist = typeof csf.mobile_checklist === 'string' ? JSON.parse(csf.mobile_checklist) : csf.mobile_checklist; } catch { checklist = {}; }
   }
-  if (isMobileDevice && categorySpecificFields.checklist_observations) {
-    checklistObservations = categorySpecificFields.checklist_observations;
-  }
-  
-  const hasChecklist = isMobileDevice && Object.keys(mobileChecklist).length > 0;
-
-  // Build full company address
-  const companyAddress = company ? [
-    company.rua,
-    company.numero,
-    company.bairro,
-    company.cidade,
-    company.estado,
-    company.cep
-  ].filter(Boolean).join(', ') : '';
-
-  // Build full client address
-  const clientAddress = order.client ? [
-    order.client.address,
-    order.client.numero,
-    order.client.bairro,
-    order.client.city,
-    order.client.state
-  ].filter(Boolean).join(', ') : '';
+  const hasChecklist = isMobile && Object.keys(checklist).length > 0;
+  const companyAddr = company ? [company.rua, company.numero, company.bairro, company.cidade, company.estado, company.cep].filter(Boolean).join(', ') : '';
+  const clientAddr = order.client ? [order.client.address, order.client.numero, order.client.bairro, order.client.city, order.client.state].filter(Boolean).join(', ') : '';
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Action Bar - Hidden on print */}
+    <div className="min-h-screen bg-white print:bg-white">
+      {/* Action Bar */}
       <div className="print:hidden sticky top-0 z-10 bg-card border-b p-3 flex items-center justify-between">
-        <Button variant="ghost" size="sm" onClick={() => navigate('/ordens')}>
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Voltar
-        </Button>
-        <Button variant="outline" size="sm" onClick={handlePrint}>
-          <Printer className="w-4 h-4 mr-2" />
-          Imprimir
-        </Button>
+        <Button variant="ghost" size="sm" onClick={() => navigate('/ordens')}><ArrowLeft className="w-4 h-4 mr-2" />Voltar</Button>
+        <Button variant="outline" size="sm" onClick={() => window.print()}><Printer className="w-4 h-4 mr-2" />Imprimir</Button>
       </div>
 
-      {/* Receipt Content - A4 Professional Layout */}
-      <div className="max-w-[210mm] mx-auto p-6 print:p-[15mm] text-black bg-white">
+      {/* A4 Content */}
+      <div className="max-w-[210mm] mx-auto px-[15mm] py-[10mm] text-black bg-white print:px-0 print:py-0" style={{ fontSize: '11px', lineHeight: '1.5' }}>
         {/* Header */}
-        <div className="text-center border-b-2 border-black pb-4 mb-4">
-          <h1 className="text-2xl font-bold uppercase tracking-wider">
+        <div style={{ textAlign: 'center', borderBottom: '2px solid #000', paddingBottom: '10px', marginBottom: '14px' }}>
+          <h1 style={{ fontSize: '20px', fontWeight: 'bold', letterSpacing: '1px', textTransform: 'uppercase', margin: 0 }}>
             {company?.nome_fantasia || company?.razao_social || 'Assistência Técnica'}
           </h1>
-          {company?.cnpj && (
-            <p className="text-sm text-gray-600">CNPJ: {company.cnpj}</p>
-          )}
-          {company?.inscricao_estadual && (
-            <p className="text-sm text-gray-600">IE: {company.inscricao_estadual}</p>
-          )}
-          {company?.telefone && (
-            <p className="text-sm text-gray-600">Tel: {company.telefone}</p>
-          )}
-          {company?.email && (
-            <p className="text-sm text-gray-600">Email: {company.email}</p>
-          )}
-          {companyAddress && (
-            <p className="text-sm text-gray-600">{companyAddress}</p>
-          )}
+          {company?.cnpj && <p style={{ fontSize: '10px', color: '#555', margin: '2px 0' }}>CNPJ: {company.cnpj}</p>}
+          {company?.telefone && <p style={{ fontSize: '10px', color: '#555', margin: '2px 0' }}>Tel: {company.telefone}</p>}
+          {company?.email && <p style={{ fontSize: '10px', color: '#555', margin: '2px 0' }}>Email: {company.email}</p>}
+          {companyAddr && <p style={{ fontSize: '10px', color: '#555', margin: '2px 0' }}>{companyAddr}</p>}
         </div>
 
-        {/* Document Title */}
-        <div className="text-center mb-6">
-          <h2 className="text-xl font-bold border-2 border-black inline-block px-8 py-2">
-            ORDEM DE SERVIÇO
-          </h2>
-          <div className="mt-2 flex justify-center gap-4 text-sm">
-            <span className="font-bold text-lg">{order.os_number}</span>
-            <span className="px-2 py-0.5 border rounded">{statusLabels[order.status] || order.status}</span>
-            <span className="px-2 py-0.5 border rounded">Prioridade: {priorityLabels[order.priority] || order.priority}</span>
+        {/* Title */}
+        <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+          <h2 style={{ fontSize: '16px', fontWeight: 'bold', border: '2px solid #000', display: 'inline-block', padding: '4px 24px' }}>ORDEM DE SERVIÇO</h2>
+          <div style={{ marginTop: '6px' }}>
+            <span style={{ fontSize: '14px', fontWeight: 'bold' }}>{order.os_number}</span>
+            <span style={{ marginLeft: '12px', fontSize: '10px', border: '1px solid #999', borderRadius: '3px', padding: '1px 6px' }}>{statusLabels[order.status] || order.status}</span>
+            <span style={{ marginLeft: '8px', fontSize: '10px', border: '1px solid #999', borderRadius: '3px', padding: '1px 6px' }}>Prior: {priorityLabels[order.priority] || order.priority}</span>
           </div>
-          <p className="text-sm text-gray-600 mt-1">
+          <p style={{ fontSize: '10px', color: '#555', marginTop: '4px' }}>
             Abertura: {format(new Date(order.created_at), "dd 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR })}
           </p>
         </div>
 
-        {/* Client Section */}
-        <div className="border border-black rounded mb-4 p-3">
-          <h3 className="font-bold text-sm uppercase border-b border-gray-300 pb-1 mb-2">
-            DADOS DO CLIENTE
-          </h3>
-          <div className="grid grid-cols-3 gap-2 text-sm">
-            <div>
-              <span className="text-gray-500 text-xs">Nome:</span>
-              <p className="font-medium">{order.client?.name || 'Não informado'}</p>
-            </div>
-            <div>
-              <span className="text-gray-500 text-xs">Telefone:</span>
-              <p className="font-medium">{order.client?.phone || 'Não informado'}</p>
-            </div>
-            <div>
-              <span className="text-gray-500 text-xs">Email:</span>
-              <p className="font-medium">{order.client?.email || 'Não informado'}</p>
-            </div>
-            {order.client?.cpf && (
-              <div>
-                <span className="text-gray-500 text-xs">CPF:</span>
-                <p className="font-medium">{order.client.cpf}</p>
-              </div>
-            )}
-            {order.client?.cnpj && (
-              <div>
-                <span className="text-gray-500 text-xs">CNPJ:</span>
-                <p className="font-medium">{order.client.cnpj}</p>
-              </div>
-            )}
-            {clientAddress && (
-              <div className="col-span-2">
-                <span className="text-gray-500 text-xs">Endereço:</span>
-                <p className="font-medium">{clientAddress}</p>
-              </div>
-            )}
+        {/* Client */}
+        <div style={{ border: '1px solid #000', borderRadius: '4px', padding: '8px 10px', marginBottom: '10px' }}>
+          <h3 style={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', borderBottom: '1px solid #ccc', paddingBottom: '4px', marginBottom: '6px' }}>DADOS DO CLIENTE</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px', fontSize: '10px' }}>
+            <div><span style={{ color: '#777', fontSize: '9px' }}>Nome:</span><br/><strong>{order.client?.name || '—'}</strong></div>
+            <div><span style={{ color: '#777', fontSize: '9px' }}>Telefone:</span><br/><strong>{order.client?.phone || '—'}</strong></div>
+            <div><span style={{ color: '#777', fontSize: '9px' }}>Email:</span><br/><strong>{order.client?.email || '—'}</strong></div>
+            {order.client?.cpf && <div><span style={{ color: '#777', fontSize: '9px' }}>CPF:</span><br/><strong>{order.client.cpf}</strong></div>}
+            {order.client?.cnpj && <div><span style={{ color: '#777', fontSize: '9px' }}>CNPJ:</span><br/><strong>{order.client.cnpj}</strong></div>}
+            {clientAddr && <div style={{ gridColumn: 'span 2' }}><span style={{ color: '#777', fontSize: '9px' }}>Endereço:</span><br/><strong>{clientAddr}</strong></div>}
           </div>
         </div>
 
-        {/* Equipment Section */}
-        <div className="border border-black rounded mb-4 p-3">
-          <h3 className="font-bold text-sm uppercase border-b border-gray-300 pb-1 mb-2">
-            DADOS DO EQUIPAMENTO
-          </h3>
-          <div className="grid grid-cols-3 gap-2 text-sm">
-            <div>
-              <span className="text-gray-500 text-xs">Dispositivo:</span>
-              <p className="font-medium">{order.device}</p>
-            </div>
-            <div>
-              <span className="text-gray-500 text-xs">Categoria:</span>
-              <p className="font-medium capitalize">{order.category}</p>
-            </div>
-            <div>
-              <span className="text-gray-500 text-xs">Nº Série:</span>
-              <p className="font-medium font-mono">{order.serial_number || '-'}</p>
-            </div>
-            {categorySpecificFields.imei && (
-              <div>
-                <span className="text-gray-500 text-xs">IMEI:</span>
-                <p className="font-medium font-mono">{categorySpecificFields.imei}</p>
-              </div>
-            )}
-            {categorySpecificFields.color && (
-              <div>
-                <span className="text-gray-500 text-xs">Cor:</span>
-                <p className="font-medium">{categorySpecificFields.color}</p>
-              </div>
-            )}
-            {categorySpecificFields.storage && (
-              <div>
-                <span className="text-gray-500 text-xs">Capacidade:</span>
-                <p className="font-medium">{categorySpecificFields.storage}</p>
-              </div>
-            )}
-            {order.password && (
-              <div>
-                <span className="text-gray-500 text-xs">Senha:</span>
-                <p className="font-medium">{order.password}</p>
-              </div>
-            )}
-            {order.accessories && (
-              <div className="col-span-2">
-                <span className="text-gray-500 text-xs">Acessórios:</span>
-                <p className="font-medium">{order.accessories}</p>
-              </div>
-            )}
+        {/* Equipment */}
+        <div style={{ border: '1px solid #000', borderRadius: '4px', padding: '8px 10px', marginBottom: '10px' }}>
+          <h3 style={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', borderBottom: '1px solid #ccc', paddingBottom: '4px', marginBottom: '6px' }}>DADOS DO EQUIPAMENTO</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px', fontSize: '10px' }}>
+            <div><span style={{ color: '#777', fontSize: '9px' }}>Dispositivo:</span><br/><strong>{order.device}</strong></div>
+            <div><span style={{ color: '#777', fontSize: '9px' }}>Categoria:</span><br/><strong style={{ textTransform: 'capitalize' }}>{order.category}</strong></div>
+            <div><span style={{ color: '#777', fontSize: '9px' }}>Nº Série:</span><br/><strong style={{ fontFamily: 'monospace' }}>{order.serial_number || '—'}</strong></div>
+            {csf.brand && <div><span style={{ color: '#777', fontSize: '9px' }}>Marca:</span><br/><strong>{csf.brand}</strong></div>}
+            {csf.model && <div><span style={{ color: '#777', fontSize: '9px' }}>Modelo:</span><br/><strong>{csf.model}</strong></div>}
+            {csf.imei && <div><span style={{ color: '#777', fontSize: '9px' }}>IMEI:</span><br/><strong style={{ fontFamily: 'monospace' }}>{csf.imei}</strong></div>}
+            {csf.color && <div><span style={{ color: '#777', fontSize: '9px' }}>Cor:</span><br/><strong>{csf.color}</strong></div>}
+            {csf.storage && <div><span style={{ color: '#777', fontSize: '9px' }}>Capacidade:</span><br/><strong>{csf.storage}</strong></div>}
+            {order.password && <div><span style={{ color: '#777', fontSize: '9px' }}>Senha:</span><br/><strong>{order.password}</strong></div>}
+            {order.accessories && <div style={{ gridColumn: 'span 2' }}><span style={{ color: '#777', fontSize: '9px' }}>Acessórios:</span><br/><strong>{order.accessories}</strong></div>}
           </div>
         </div>
 
-        {/* Defect Section */}
-        <div className="border border-black rounded mb-4 p-3">
-          <h3 className="font-bold text-sm uppercase border-b border-gray-300 pb-1 mb-2">
-            DEFEITO RELATADO
-          </h3>
-          <p className="text-sm">{order.issue}</p>
+        {/* Defect */}
+        <div style={{ border: '1px solid #000', borderRadius: '4px', padding: '8px 10px', marginBottom: '10px' }}>
+          <h3 style={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', borderBottom: '1px solid #ccc', paddingBottom: '4px', marginBottom: '6px' }}>DEFEITO RELATADO</h3>
+          <p style={{ fontSize: '11px' }}>{order.issue}</p>
         </div>
 
-        {/* Checklist Section */}
+        {/* Checklist */}
         {hasChecklist && (
-          <div className="border border-black rounded mb-4 p-3">
-            <h3 className="font-bold text-sm uppercase border-b border-gray-300 pb-1 mb-2">
-              CHECKLIST DE ENTRADA
-            </h3>
-            <div className="grid grid-cols-5 gap-1 text-xs">
-              {Object.entries(mobileChecklist).map(([key, value]) => {
-                const label = checklistLabels[key] || key;
-                const bgClass = value === true 
-                  ? 'bg-green-100 text-green-800' 
-                  : value === false 
-                    ? 'bg-red-100 text-red-800' 
-                    : 'bg-gray-100 text-gray-600';
-                const icon = value === true ? '✓' : value === false ? '✗' : '-';
-                return (
-                  <div key={key} className={`px-2 py-1 rounded text-center ${bgClass}`}>
-                    {icon} {label}
-                  </div>
-                );
-              })}
+          <div style={{ border: '1px solid #000', borderRadius: '4px', padding: '8px 10px', marginBottom: '10px' }}>
+            <h3 style={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', borderBottom: '1px solid #ccc', paddingBottom: '4px', marginBottom: '6px' }}>CHECKLIST DE ENTRADA</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '3px', fontSize: '9px' }}>
+              {Object.entries(checklist).map(([key, value]) => (
+                <div key={key} style={{
+                  padding: '3px 5px', borderRadius: '3px', textAlign: 'center',
+                  background: value === true ? '#e8f5e9' : value === false ? '#ffebee' : '#f5f5f5',
+                  color: value === true ? '#2e7d32' : value === false ? '#c62828' : '#666',
+                }}>
+                  {value === true ? '✓' : value === false ? '✗' : '—'} {checklistLabels[key] || key}
+                </div>
+              ))}
             </div>
-            {checklistObservations && (
-              <div className="mt-2 p-2 bg-yellow-50 rounded text-xs">
-                <strong>Observações:</strong> {checklistObservations}
+            {csf.checklist_observations && (
+              <div style={{ marginTop: '6px', padding: '6px', background: '#fffde7', borderRadius: '3px', fontSize: '10px' }}>
+                <strong>Obs:</strong> {csf.checklist_observations}
               </div>
             )}
           </div>
         )}
 
-        {/* Items Table */}
-        <div className="border border-black rounded mb-4 overflow-hidden">
-          <h3 className="font-bold text-sm uppercase bg-gray-100 px-3 py-2 border-b border-black">
-            PRODUTOS E SERVIÇOS
-          </h3>
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50">
-              <tr className="border-b border-black">
-                <th className="text-left p-2 border-r">Item</th>
-                <th className="text-center p-2 border-r w-20">Tipo</th>
-                <th className="text-center p-2 border-r w-16">Qtd</th>
-                <th className="text-right p-2 border-r w-24">Valor Unit.</th>
-                <th className="text-right p-2 w-24">Total</th>
+        {/* Items */}
+        <div style={{ border: '1px solid #000', borderRadius: '4px', overflow: 'hidden', marginBottom: '10px' }}>
+          <h3 style={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', background: '#f0f0f0', padding: '6px 10px', borderBottom: '1px solid #000' }}>PRODUTOS E SERVIÇOS</h3>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10px' }}>
+            <thead>
+              <tr style={{ background: '#f9f9f9', borderBottom: '1px solid #000' }}>
+                <th style={{ textAlign: 'left', padding: '5px 8px', borderRight: '1px solid #ddd' }}>Item</th>
+                <th style={{ textAlign: 'center', padding: '5px', borderRight: '1px solid #ddd', width: '60px' }}>Tipo</th>
+                <th style={{ textAlign: 'center', padding: '5px', borderRight: '1px solid #ddd', width: '40px' }}>Qtd</th>
+                <th style={{ textAlign: 'right', padding: '5px', borderRight: '1px solid #ddd', width: '80px' }}>Vlr Unit.</th>
+                <th style={{ textAlign: 'right', padding: '5px 8px', width: '80px' }}>Total</th>
               </tr>
             </thead>
             <tbody>
               {items.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="p-3 text-center text-gray-500">
-                    Nenhum item registrado
-                  </td>
+                <tr><td colSpan={5} style={{ padding: '10px', textAlign: 'center', color: '#999' }}>Nenhum item</td></tr>
+              ) : items.map((item, i) => (
+                <tr key={item.id} style={{ borderBottom: i < items.length - 1 ? '1px solid #eee' : 'none' }}>
+                  <td style={{ padding: '5px 8px', borderRight: '1px solid #eee' }}>{item.name}</td>
+                  <td style={{ padding: '5px', textAlign: 'center', borderRight: '1px solid #eee' }}>{item.item_type === 'product' ? 'Produto' : 'Serviço'}</td>
+                  <td style={{ padding: '5px', textAlign: 'center', borderRight: '1px solid #eee' }}>{item.quantity}</td>
+                  <td style={{ padding: '5px', textAlign: 'right', borderRight: '1px solid #eee' }}>{fmt(Number(item.sale_price))}</td>
+                  <td style={{ padding: '5px 8px', textAlign: 'right' }}>{fmt(Number(item.sale_price) * item.quantity)}</td>
                 </tr>
-              ) : (
-                items.map((item, index) => (
-                  <tr key={item.id} className={index < items.length - 1 ? 'border-b' : ''}>
-                    <td className="p-2 border-r">{item.name}</td>
-                    <td className="p-2 border-r text-center">
-                      {item.item_type === 'product' ? 'Produto' : 'Serviço'}
-                    </td>
-                    <td className="p-2 border-r text-center">{item.quantity}</td>
-                    <td className="p-2 border-r text-right">{formatCurrency(Number(item.sale_price))}</td>
-                    <td className="p-2 text-right">{formatCurrency(Number(item.sale_price) * item.quantity)}</td>
-                  </tr>
-                ))
-              )}
-              <tr className="border-t-2 border-black bg-gray-100 font-bold">
-                <td colSpan={4} className="p-2 text-right">TOTAL:</td>
-                <td className="p-2 text-right">{formatCurrency(total)}</td>
+              ))}
+              <tr style={{ borderTop: '2px solid #000', background: '#f0f0f0', fontWeight: 'bold' }}>
+                <td colSpan={4} style={{ padding: '6px 8px', textAlign: 'right' }}>TOTAL:</td>
+                <td style={{ padding: '6px 8px', textAlign: 'right' }}>{fmt(total)}</td>
               </tr>
             </tbody>
           </table>
         </div>
 
-        {/* Terms Section */}
-        <div className="border border-black rounded mb-6 p-3">
-          <h3 className="font-bold text-sm uppercase border-b border-gray-300 pb-1 mb-2">
-            TERMOS E CONDIÇÕES
-          </h3>
-          <ol className="text-xs text-gray-600 space-y-1 list-decimal list-inside">
-            <li>O prazo para retirada do equipamento é de 90 dias após a conclusão do serviço.</li>
-            <li>Equipamentos não retirados dentro do prazo serão descartados conforme legislação vigente.</li>
-            <li>A garantia do serviço é de 90 dias para peças e mão de obra, exceto danos causados por mau uso.</li>
-            <li>Não nos responsabilizamos por dados armazenados no equipamento. Faça backup antes da entrega.</li>
-            <li>O orçamento apresentado tem validade de 7 dias.</li>
+        {/* Terms */}
+        <div style={{ border: '1px solid #000', borderRadius: '4px', padding: '8px 10px', marginBottom: '14px' }}>
+          <h3 style={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', borderBottom: '1px solid #ccc', paddingBottom: '4px', marginBottom: '6px' }}>TERMOS E CONDIÇÕES</h3>
+          <ol style={{ fontSize: '9px', color: '#555', paddingLeft: '14px', margin: 0 }}>
+            <li>Prazo para retirada: 90 dias após conclusão do serviço.</li>
+            <li>Equipamentos não retirados serão descartados conforme legislação.</li>
+            <li>Garantia de 90 dias para peças e mão de obra, exceto mau uso.</li>
+            <li>Não nos responsabilizamos por dados armazenados no equipamento.</li>
+            <li>Orçamento com validade de 7 dias.</li>
           </ol>
         </div>
 
         {/* Signatures */}
-        <div className="grid grid-cols-2 gap-12 mt-8">
-          <div className="text-center">
-            <div className="border-t border-black pt-2 mt-16">
-              <p className="text-sm font-medium">{company?.nome_fantasia || 'Responsável Técnico'}</p>
-              <p className="text-xs text-gray-500">Assinatura</p>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px', marginTop: '30px' }}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ borderTop: '1px solid #000', paddingTop: '6px', marginTop: '50px' }}>
+              <p style={{ fontSize: '10px', fontWeight: '500' }}>{company?.nome_fantasia || 'Responsável Técnico'}</p>
+              <p style={{ fontSize: '9px', color: '#777' }}>Assinatura</p>
             </div>
           </div>
-          <div className="text-center">
-            <div className="border-t border-black pt-2 mt-16">
-              <p className="text-sm font-medium">{order.client?.name || 'Cliente'}</p>
-              <p className="text-xs text-gray-500">Assinatura</p>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ borderTop: '1px solid #000', paddingTop: '6px', marginTop: '50px' }}>
+              <p style={{ fontSize: '10px', fontWeight: '500' }}>{order.client?.name || 'Cliente'}</p>
+              <p style={{ fontSize: '9px', color: '#777' }}>Assinatura</p>
             </div>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="text-center mt-8 pt-4 border-t text-xs text-gray-400">
-          <p>Documento gerado em {format(new Date(), "dd/MM/yyyy 'às' HH:mm")}</p>
+        <div style={{ textAlign: 'center', marginTop: '20px', paddingTop: '8px', borderTop: '1px solid #ddd', fontSize: '9px', color: '#aaa' }}>
+          Documento gerado em {format(new Date(), "dd/MM/yyyy 'às' HH:mm")}
         </div>
       </div>
-
-      {/* Print Styles */}
-      <style>{`
-        @media print {
-          @page {
-            size: A4;
-            margin: 0;
-          }
-          body {
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-          }
-          .print\\:hidden {
-            display: none !important;
-          }
-        }
-      `}</style>
     </div>
   );
 }
