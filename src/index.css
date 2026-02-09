@@ -188,3 +188,18 @@
 ::-webkit-scrollbar-thumb:hover {
   @apply bg-muted-foreground/50;
 }
+
+/* Global Print Styles - Remove browser headers/footers/URLs */
+@media print {
+  @page {
+    size: A4;
+    margin: 10mm 15mm;
+  }
+  html, body {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .print\:hidden {
+    display: none !important;
+  }
+}

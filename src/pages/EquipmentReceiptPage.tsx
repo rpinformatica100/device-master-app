@@ -2,16 +2,13 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ArrowLeft, Printer, FileText, ShoppingCart, DollarSign } from "lucide-react";
+import { ArrowLeft, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
-import { 
-  UsedEquipment, 
-  UsedEquipmentPurchase, 
+import {
+  UsedEquipment,
+  UsedEquipmentPurchase,
   UsedEquipmentSale,
   UsedEquipmentRepair,
   EQUIPMENT_CONDITION_LABELS,
@@ -33,48 +30,31 @@ export default function EquipmentReceiptPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { settings: company } = useCompanySettings();
-  
+
   const type = (searchParams.get('type') as ReceiptType) || 'compra';
   const showHistory = searchParams.get('history') === 'true';
-  // showDetails controls whether to show internal costs - default to false for client receipts
-  const showDetails = searchParams.get('details') === 'true';
-  // isInternalReceipt explicitly marks this as internal (shows all costs)
   const isInternalReceipt = searchParams.get('internal') === 'true';
-  
+
   const [data, setData] = useState<ReceiptData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       if (!id) return;
-      
       try {
-        const [equipmentRes, purchaseRes, saleRes, repairsRes] = await Promise.all([
+        const [eqRes, purchRes, saleRes, repRes] = await Promise.all([
           supabase.from('used_equipment').select('*').eq('id', id).single(),
           supabase.from('used_equipment_purchases').select('*, clients(*)').eq('equipment_id', id).maybeSingle(),
           supabase.from('used_equipment_sales').select('*, clients(*)').eq('equipment_id', id).maybeSingle(),
           supabase.from('used_equipment_repairs').select('*').eq('equipment_id', id).order('created_at', { ascending: true }),
         ]);
-
-        if (equipmentRes.error) throw equipmentRes.error;
-
-        const equipment: UsedEquipment = {
-          ...equipmentRes.data,
-          photos: Array.isArray(equipmentRes.data.photos) ? equipmentRes.data.photos as string[] : [],
-        };
-
+        if (eqRes.error) throw eqRes.error;
+        const equipment: UsedEquipment = { ...eqRes.data, photos: Array.isArray(eqRes.data.photos) ? eqRes.data.photos as string[] : [] };
         setData({
           equipment,
-          purchase: purchaseRes.data ? {
-            ...purchaseRes.data,
-            source_type: purchaseRes.data.source_type as 'compra' | 'os',
-            client: purchaseRes.data.clients as Client | null,
-          } : undefined,
-          sale: saleRes.data ? {
-            ...saleRes.data,
-            client: saleRes.data.clients as Client | null,
-          } : undefined,
-          repairs: repairsRes.data || [],
+          purchase: purchRes.data ? { ...purchRes.data, source_type: purchRes.data.source_type as 'compra' | 'os', client: purchRes.data.clients as Client | null } : undefined,
+          sale: saleRes.data ? { ...saleRes.data, client: saleRes.data.clients as Client | null } : undefined,
+          repairs: repRes.data || [],
         });
       } catch (error) {
         console.error('Error fetching receipt data:', error);
@@ -82,356 +62,219 @@ export default function EquipmentReceiptPage() {
         setLoading(false);
       }
     };
-
     fetchData();
   }, [id]);
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(value);
-  };
+  const fmt = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
+  const fmtDate = (d: string) => format(new Date(d), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
 
-  const formatDate = (date: string) => {
-    return format(new Date(date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
-  };
-
-  const handlePrint = () => {
-    window.print();
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  if (!data) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-muted-foreground">Recibo não encontrado</p>
-      </div>
-    );
-  }
+  if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>;
+  if (!data) return <div className="min-h-screen flex items-center justify-center"><p className="text-muted-foreground">Recibo não encontrado</p></div>;
 
   const { equipment, purchase, sale, repairs } = data;
   const isPurchase = type === 'compra';
   const transaction = isPurchase ? purchase : sale;
   const transactionClient = transaction?.client;
   const transactionDate = transaction?.created_at || equipment.created_at;
+  const companyAddr = company ? [company.rua, company.numero, company.bairro, company.cidade, company.estado, company.cep].filter(Boolean).join(', ') : '';
+  const clientAddr = transactionClient ? [transactionClient.address, transactionClient.numero, transactionClient.bairro, transactionClient.city, transactionClient.state].filter(Boolean).join(', ') : '';
+
+  const checklistLabels: Record<string, string> = {
+    display: 'Tela', touchscreen: 'Touch', camera_frontal: 'Câm. Frontal', camera_traseira: 'Câm. Traseira',
+    microfone: 'Microfone', alto_falante: 'Alto-falante', auricular: 'Auricular', wifi: 'Wi-Fi',
+    bluetooth: 'Bluetooth', bateria: 'Bateria', biometria: 'Biometria', vibracao: 'Vibração',
+    botoes: 'Botões', chip: 'Chip', sensores: 'Sensores',
+  };
+  const hasChecklist = equipment.checklist && typeof equipment.checklist === 'object' && Object.keys(equipment.checklist as Record<string, any>).length > 0;
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Action Bar - Hidden on print */}
+    <div className="min-h-screen bg-white print:bg-white">
+      {/* Action Bar */}
       <div className="print:hidden sticky top-0 z-10 bg-card border-b p-3 flex items-center justify-between">
-        <Button variant="ghost" size="sm" onClick={() => navigate('/seminovos')}>
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Voltar
-        </Button>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={handlePrint}>
-            <Printer className="w-4 h-4 mr-2" />
-            Imprimir
-          </Button>
+        <Button variant="ghost" size="sm" onClick={() => navigate('/seminovos')}><ArrowLeft className="w-4 h-4 mr-2" />Voltar</Button>
+        <Button variant="outline" size="sm" onClick={() => window.print()}><Printer className="w-4 h-4 mr-2" />Imprimir</Button>
+      </div>
+
+      {/* A4 Content */}
+      <div className="max-w-[210mm] mx-auto px-[15mm] py-[10mm] text-black bg-white print:px-0 print:py-0" style={{ fontSize: '11px', lineHeight: '1.5' }}>
+        {/* Header */}
+        <div style={{ textAlign: 'center', borderBottom: '2px solid #000', paddingBottom: '10px', marginBottom: '14px' }}>
+          <h1 style={{ fontSize: '20px', fontWeight: 'bold', letterSpacing: '1px', textTransform: 'uppercase', margin: 0 }}>
+            {company?.nome_fantasia || company?.razao_social || 'Empresa'}
+          </h1>
+          {company?.cnpj && <p style={{ fontSize: '10px', color: '#555', margin: '2px 0' }}>CNPJ: {company.cnpj}</p>}
+          {company?.telefone && <p style={{ fontSize: '10px', color: '#555', margin: '2px 0' }}>Tel: {company.telefone}</p>}
+          {company?.email && <p style={{ fontSize: '10px', color: '#555', margin: '2px 0' }}>Email: {company.email}</p>}
+          {companyAddr && <p style={{ fontSize: '10px', color: '#555', margin: '2px 0' }}>{companyAddr}</p>}
+        </div>
+
+        {/* Title */}
+        <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+          <h2 style={{ fontSize: '16px', fontWeight: 'bold', border: '2px solid #000', display: 'inline-block', padding: '4px 24px' }}>
+            {isPurchase ? 'RECIBO DE COMPRA' : 'RECIBO DE VENDA'}
+          </h2>
+          <div style={{ marginTop: '6px' }}>
+            <span style={{ fontSize: '14px', fontWeight: 'bold' }}>Nº {equipment.code}</span>
+          </div>
+          <p style={{ fontSize: '10px', color: '#555', marginTop: '4px' }}>{fmtDate(transactionDate)}</p>
+        </div>
+
+        {/* Client */}
+        <div style={{ border: '1px solid #000', borderRadius: '4px', padding: '8px 10px', marginBottom: '10px' }}>
+          <h3 style={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', borderBottom: '1px solid #ccc', paddingBottom: '4px', marginBottom: '6px' }}>
+            {isPurchase ? 'VENDEDOR / FORNECEDOR' : 'COMPRADOR'}
+          </h3>
+          {transactionClient ? (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px', fontSize: '10px' }}>
+              <div><span style={{ color: '#777', fontSize: '9px' }}>Nome:</span><br/><strong>{transactionClient.name}</strong></div>
+              {transactionClient.cpf && <div><span style={{ color: '#777', fontSize: '9px' }}>CPF:</span><br/><strong>{transactionClient.cpf}</strong></div>}
+              {transactionClient.cnpj && <div><span style={{ color: '#777', fontSize: '9px' }}>CNPJ:</span><br/><strong>{transactionClient.cnpj}</strong></div>}
+              {transactionClient.phone && <div><span style={{ color: '#777', fontSize: '9px' }}>Telefone:</span><br/><strong>{transactionClient.phone}</strong></div>}
+              {transactionClient.email && <div><span style={{ color: '#777', fontSize: '9px' }}>Email:</span><br/><strong>{transactionClient.email}</strong></div>}
+              {clientAddr && <div style={{ gridColumn: 'span 2' }}><span style={{ color: '#777', fontSize: '9px' }}>Endereço:</span><br/><strong>{clientAddr}</strong></div>}
+            </div>
+          ) : (
+            <p style={{ fontSize: '10px', color: '#888' }}>Não identificado</p>
+          )}
+        </div>
+
+        {/* Equipment */}
+        <div style={{ border: '1px solid #000', borderRadius: '4px', padding: '8px 10px', marginBottom: '10px' }}>
+          <h3 style={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', borderBottom: '1px solid #ccc', paddingBottom: '4px', marginBottom: '6px' }}>DADOS DO EQUIPAMENTO</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px', fontSize: '10px' }}>
+            <div><span style={{ color: '#777', fontSize: '9px' }}>Código:</span><br/><strong style={{ fontFamily: 'monospace' }}>{equipment.code}</strong></div>
+            <div><span style={{ color: '#777', fontSize: '9px' }}>Equipamento:</span><br/><strong>{equipment.name}</strong></div>
+            {equipment.brand && <div><span style={{ color: '#777', fontSize: '9px' }}>Marca:</span><br/><strong>{equipment.brand}</strong></div>}
+            {equipment.model && <div><span style={{ color: '#777', fontSize: '9px' }}>Modelo:</span><br/><strong>{equipment.model}</strong></div>}
+            {equipment.serial_number && <div><span style={{ color: '#777', fontSize: '9px' }}>Nº Série:</span><br/><strong style={{ fontFamily: 'monospace' }}>{equipment.serial_number}</strong></div>}
+            {equipment.imei && <div><span style={{ color: '#777', fontSize: '9px' }}>IMEI:</span><br/><strong style={{ fontFamily: 'monospace' }}>{equipment.imei}</strong></div>}
+            <div><span style={{ color: '#777', fontSize: '9px' }}>Condição:</span><br/><strong>{EQUIPMENT_CONDITION_LABELS[equipment.condition as EquipmentCondition] || equipment.condition}</strong></div>
+          </div>
+        </div>
+
+        {/* Checklist */}
+        {hasChecklist && (
+          <div style={{ border: '1px solid #000', borderRadius: '4px', padding: '8px 10px', marginBottom: '10px' }}>
+            <h3 style={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', borderBottom: '1px solid #ccc', paddingBottom: '4px', marginBottom: '6px' }}>CHECKLIST</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '3px', fontSize: '9px' }}>
+              {Object.entries(equipment.checklist as Record<string, boolean | null>).map(([key, value]) => (
+                <div key={key} style={{
+                  padding: '3px 5px', borderRadius: '3px', textAlign: 'center',
+                  background: value === true ? '#e8f5e9' : value === false ? '#ffebee' : '#f5f5f5',
+                  color: value === true ? '#2e7d32' : value === false ? '#c62828' : '#666',
+                }}>
+                  {value === true ? '✓' : value === false ? '✗' : '—'} {checklistLabels[key] || key}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Repair History */}
+        {showHistory && repairs && repairs.length > 0 && (
+          <div style={{ border: '1px solid #000', borderRadius: '4px', overflow: 'hidden', marginBottom: '10px' }}>
+            <h3 style={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', background: '#f0f0f0', padding: '6px 10px', borderBottom: '1px solid #000' }}>HISTÓRICO DE REPAROS</h3>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10px' }}>
+              <thead>
+                <tr style={{ background: '#f9f9f9', borderBottom: '1px solid #000' }}>
+                  <th style={{ textAlign: 'left', padding: '5px 8px' }}>Data</th>
+                  <th style={{ textAlign: 'left', padding: '5px 8px' }}>Descrição</th>
+                  <th style={{ textAlign: 'right', padding: '5px 8px' }}>Custo</th>
+                </tr>
+              </thead>
+              <tbody>
+                {repairs.map((r, i) => (
+                  <tr key={r.id} style={{ borderBottom: i < repairs.length - 1 ? '1px solid #eee' : 'none' }}>
+                    <td style={{ padding: '5px 8px' }}>{format(new Date(r.created_at), 'dd/MM/yyyy')}</td>
+                    <td style={{ padding: '5px 8px' }}>{r.description}</td>
+                    <td style={{ padding: '5px 8px', textAlign: 'right' }}>{fmt(Number(r.total_cost))}</td>
+                  </tr>
+                ))}
+                <tr style={{ borderTop: '2px solid #000', background: '#f0f0f0', fontWeight: 'bold' }}>
+                  <td colSpan={2} style={{ padding: '5px 8px' }}>Total em Reparos</td>
+                  <td style={{ padding: '5px 8px', textAlign: 'right' }}>{fmt(Number(equipment.repair_cost))}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Financial */}
+        <div style={{ border: '1px solid #000', borderRadius: '4px', padding: '8px 10px', marginBottom: '10px' }}>
+          <h3 style={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', borderBottom: '1px solid #ccc', paddingBottom: '4px', marginBottom: '6px' }}>RESUMO FINANCEIRO</h3>
+          {isPurchase ? (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '14px', fontWeight: 'bold' }}>
+              <span>Valor de Compra:</span>
+              <span style={{ color: '#e65100' }}>{fmt(purchase?.amount || 0)}</span>
+            </div>
+          ) : (
+            <>
+              {isInternalReceipt && (
+                <>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', marginBottom: '2px' }}>
+                    <span>Custo de Aquisição:</span><span>{fmt(Number(equipment.purchase_price))}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', marginBottom: '2px' }}>
+                    <span>Custo de Reparos:</span><span>{fmt(Number(equipment.repair_cost))}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', marginBottom: '6px', paddingBottom: '6px', borderBottom: '1px solid #ddd' }}>
+                    <span>Custo Total:</span><span>{fmt(Number(equipment.total_cost))}</span>
+                  </div>
+                </>
+              )}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '14px', fontWeight: 'bold' }}>
+                <span>Valor de Venda:</span>
+                <span style={{ color: '#2e7d32' }}>{fmt(sale?.amount || 0)}</span>
+              </div>
+              {isInternalReceipt && equipment.profit !== null && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #ddd' }}>
+                  <span>Lucro:</span>
+                  <span style={{ color: Number(equipment.profit) >= 0 ? '#2e7d32' : '#c62828' }}>{fmt(Number(equipment.profit))}</span>
+                </div>
+              )}
+            </>
+          )}
+          {!isPurchase && sale?.payment_method && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', marginTop: '4px', paddingTop: '4px', borderTop: '1px solid #eee' }}>
+              <span>Forma de Pagamento:</span><span style={{ textTransform: 'capitalize' }}>{sale.payment_method}</span>
+            </div>
+          )}
+          {!isPurchase && sale?.warranty_days && sale.warranty_days > 0 && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', marginTop: '2px' }}>
+              <span>Garantia:</span><span>{sale.warranty_days} dias</span>
+            </div>
+          )}
+        </div>
+
+        {/* Notes */}
+        {transaction?.notes && (
+          <div style={{ border: '1px solid #000', borderRadius: '4px', padding: '8px 10px', marginBottom: '10px' }}>
+            <h3 style={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', borderBottom: '1px solid #ccc', paddingBottom: '4px', marginBottom: '6px' }}>OBSERVAÇÕES</h3>
+            <p style={{ fontSize: '10px' }}>{transaction.notes}</p>
+          </div>
+        )}
+
+        {/* Signatures */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px', marginTop: '30px' }}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ borderTop: '1px solid #000', paddingTop: '6px', marginTop: '50px' }}>
+              <p style={{ fontSize: '10px', fontWeight: '500' }}>{company?.nome_fantasia || 'Empresa'}</p>
+              <p style={{ fontSize: '9px', color: '#777' }}>Responsável</p>
+            </div>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ borderTop: '1px solid #000', paddingTop: '6px', marginTop: '50px' }}>
+              <p style={{ fontSize: '10px', fontWeight: '500' }}>{transactionClient?.name || 'Cliente'}</p>
+              <p style={{ fontSize: '9px', color: '#777' }}>{isPurchase ? 'Vendedor' : 'Comprador'}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div style={{ textAlign: 'center', marginTop: '20px', paddingTop: '8px', borderTop: '1px solid #ddd', fontSize: '9px', color: '#aaa' }}>
+          Documento gerado em {format(new Date(), "dd/MM/yyyy 'às' HH:mm")}
         </div>
       </div>
-
-      {/* Receipt Content */}
-      <div className="max-w-[210mm] mx-auto p-4 sm:p-8 print:p-8">
-        <Card className="border-2 print:border print:shadow-none">
-          <CardContent className="p-6 sm:p-8">
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-6">
-              <div>
-                <h1 className="text-xl sm:text-2xl font-bold text-foreground">
-                  {company?.nome_fantasia || company?.razao_social || 'Empresa'}
-                </h1>
-                {company?.cnpj && (
-                  <p className="text-sm text-muted-foreground">CNPJ: {company.cnpj}</p>
-                )}
-                {company?.telefone && (
-                  <p className="text-sm text-muted-foreground">Tel: {company.telefone}</p>
-                )}
-                {company?.rua && (
-                  <p className="text-sm text-muted-foreground">
-                    {[company.rua, company.numero, company.bairro, company.cidade, company.estado]
-                      .filter(Boolean)
-                      .join(', ')}
-                  </p>
-                )}
-              </div>
-              <div className="text-right">
-                <Badge 
-                  variant="outline" 
-                  className={`text-base px-3 py-1 ${isPurchase ? 'border-orange-500 text-orange-600' : 'border-green-500 text-green-600'}`}
-                >
-                  {isPurchase ? (
-                    <>
-                      <ShoppingCart className="w-4 h-4 mr-1" />
-                      RECIBO DE COMPRA
-                    </>
-                  ) : (
-                    <>
-                      <DollarSign className="w-4 h-4 mr-1" />
-                      RECIBO DE VENDA
-                    </>
-                  )}
-                </Badge>
-                <p className="text-sm text-muted-foreground mt-2">
-                  Nº {equipment.code}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {formatDate(transactionDate)}
-                </p>
-              </div>
-            </div>
-
-            <Separator className="my-4" />
-
-            {/* Client Info */}
-            <div className="mb-6">
-              <h2 className="font-semibold text-sm text-muted-foreground mb-2">
-                {isPurchase ? 'VENDEDOR / FORNECEDOR' : 'COMPRADOR'}
-              </h2>
-              {transactionClient ? (
-                <div className="bg-muted/30 rounded-lg p-4">
-                  <p className="font-medium">{transactionClient.name}</p>
-                  {transactionClient.cpf && <p className="text-sm">CPF: {transactionClient.cpf}</p>}
-                  {transactionClient.cnpj && <p className="text-sm">CNPJ: {transactionClient.cnpj}</p>}
-                  {transactionClient.phone && <p className="text-sm">Tel: {transactionClient.phone}</p>}
-                  {transactionClient.email && <p className="text-sm">Email: {transactionClient.email}</p>}
-                  {transactionClient.address && (
-                    <p className="text-sm">
-                      {[transactionClient.address, transactionClient.numero, transactionClient.bairro, transactionClient.city, transactionClient.state]
-                        .filter(Boolean)
-                        .join(', ')}
-                    </p>
-                  )}
-                </div>
-              ) : (
-                <p className="text-muted-foreground text-sm">Não identificado</p>
-              )}
-            </div>
-
-            {/* Equipment Details */}
-            <div className="mb-6">
-              <h2 className="font-semibold text-sm text-muted-foreground mb-2">DADOS DO EQUIPAMENTO</h2>
-              <div className="bg-muted/30 rounded-lg p-4">
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <p className="text-xs text-muted-foreground">Código</p>
-                    <p className="font-mono font-medium">{equipment.code}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Equipamento</p>
-                    <p className="font-medium">{equipment.name}</p>
-                  </div>
-                  {equipment.brand && (
-                    <div>
-                      <p className="text-xs text-muted-foreground">Marca</p>
-                      <p className="font-medium">{equipment.brand}</p>
-                    </div>
-                  )}
-                  {equipment.model && (
-                    <div>
-                      <p className="text-xs text-muted-foreground">Modelo</p>
-                      <p className="font-medium">{equipment.model}</p>
-                    </div>
-                  )}
-                  {(showDetails || type === 'venda') && equipment.serial_number && (
-                    <div>
-                      <p className="text-xs text-muted-foreground">Número de Série</p>
-                      <p className="font-mono text-sm">{equipment.serial_number}</p>
-                    </div>
-                  )}
-                  {(showDetails || type === 'venda') && equipment.imei && (
-                    <div>
-                      <p className="text-xs text-muted-foreground">IMEI</p>
-                      <p className="font-mono text-sm">{equipment.imei}</p>
-                    </div>
-                  )}
-                  <div>
-                    <p className="text-xs text-muted-foreground">Condição</p>
-                    <p className="font-medium">
-                      {EQUIPMENT_CONDITION_LABELS[equipment.condition as EquipmentCondition] || equipment.condition}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Checklist */}
-            {equipment.checklist && typeof equipment.checklist === 'object' && Object.keys(equipment.checklist as Record<string, any>).length > 0 && (
-              <div className="mb-6">
-                <h2 className="font-semibold text-sm text-muted-foreground mb-2">CHECKLIST DE ENTRADA</h2>
-                <div className="bg-muted/30 rounded-lg p-4">
-                  <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
-                    {Object.entries(equipment.checklist as Record<string, boolean | null>).map(([key, value]) => {
-                      const labels: Record<string, string> = {
-                        display: 'Tela', touchscreen: 'Touch', camera_frontal: 'Câm. Frontal',
-                        camera_traseira: 'Câm. Traseira', microfone: 'Microfone', alto_falante: 'Alto-falante',
-                        auricular: 'Auricular', wifi: 'Wi-Fi', bluetooth: 'Bluetooth', bateria: 'Bateria',
-                        biometria: 'Biometria', vibracao: 'Vibração', botoes: 'Botões', chip: 'Chip', sensores: 'Sensores',
-                      };
-                      const label = labels[key] || key;
-                      const icon = value === true ? '✓' : value === false ? '✗' : '-';
-                      const colorClass = value === true ? 'text-green-600 bg-green-50' : value === false ? 'text-red-600 bg-red-50' : 'text-gray-500 bg-gray-50';
-                      return (
-                        <div key={key} className={`text-xs px-2 py-1 rounded text-center ${colorClass}`}>
-                          {icon} {label}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Repair History (optional) */}
-            {showHistory && repairs && repairs.length > 0 && (
-              <div className="mb-6">
-                <h2 className="font-semibold text-sm text-muted-foreground mb-2">HISTÓRICO DE REPAROS</h2>
-                <div className="border rounded-lg overflow-hidden">
-                  <table className="w-full text-sm">
-                    <thead className="bg-muted/50">
-                      <tr>
-                        <th className="text-left p-2">Data</th>
-                        <th className="text-left p-2">Descrição</th>
-                        <th className="text-right p-2">Custo</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {repairs.map((repair) => (
-                        <tr key={repair.id} className="border-t">
-                          <td className="p-2">{format(new Date(repair.created_at), 'dd/MM/yyyy')}</td>
-                          <td className="p-2">{repair.description}</td>
-                          <td className="p-2 text-right">{formatCurrency(Number(repair.total_cost))}</td>
-                        </tr>
-                      ))}
-                      <tr className="border-t bg-muted/30 font-medium">
-                        <td colSpan={2} className="p-2">Total em Reparos</td>
-                        <td className="p-2 text-right">{formatCurrency(Number(equipment.repair_cost))}</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
-
-            {/* Financial Summary */}
-            <div className="mb-6">
-              <h2 className="font-semibold text-sm text-muted-foreground mb-2">RESUMO FINANCEIRO</h2>
-              <div className="bg-muted/30 rounded-lg p-4">
-                {isPurchase ? (
-                  <div className="flex justify-between items-center text-lg font-semibold">
-                    <span>Valor de Compra:</span>
-                    <span className="text-orange-600">{formatCurrency(purchase?.amount || 0)}</span>
-                  </div>
-                ) : (
-                  <>
-                    {/* Only show costs for internal receipts */}
-                    {isInternalReceipt && (
-                      <>
-                        <div className="flex justify-between items-center text-sm">
-                          <span>Custo de Aquisição:</span>
-                          <span>{formatCurrency(Number(equipment.purchase_price))}</span>
-                        </div>
-                        <div className="flex justify-between items-center text-sm">
-                          <span>Custo de Reparos:</span>
-                          <span>{formatCurrency(Number(equipment.repair_cost))}</span>
-                        </div>
-                        <div className="flex justify-between items-center text-sm mb-2 pb-2 border-b">
-                          <span>Custo Total:</span>
-                          <span>{formatCurrency(Number(equipment.total_cost))}</span>
-                        </div>
-                      </>
-                    )}
-                    <div className="flex justify-between items-center text-lg font-semibold">
-                      <span>Valor de Venda:</span>
-                      <span className="text-green-600">{formatCurrency(sale?.amount || 0)}</span>
-                    </div>
-                    {isInternalReceipt && equipment.profit !== null && (
-                      <div className="flex justify-between items-center text-sm mt-2 pt-2 border-t">
-                        <span>Lucro:</span>
-                        <span className={Number(equipment.profit) >= 0 ? 'text-green-600' : 'text-red-600'}>
-                          {formatCurrency(Number(equipment.profit))}
-                        </span>
-                      </div>
-                    )}
-                  </>
-                )}
-                {!isPurchase && sale?.payment_method && (
-                  <div className="flex justify-between items-center text-sm mt-2 pt-2 border-t">
-                    <span>Forma de Pagamento:</span>
-                    <span className="capitalize">{sale.payment_method}</span>
-                  </div>
-                )}
-                {!isPurchase && sale?.warranty_days && sale.warranty_days > 0 && (
-                  <div className="flex justify-between items-center text-sm mt-1">
-                    <span>Garantia:</span>
-                    <span>{sale.warranty_days} dias</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Notes */}
-            {transaction?.notes && (
-              <div className="mb-6">
-                <h2 className="font-semibold text-sm text-muted-foreground mb-2">OBSERVAÇÕES</h2>
-                <p className="text-sm bg-muted/30 rounded-lg p-4">{transaction.notes}</p>
-              </div>
-            )}
-
-            <Separator className="my-6" />
-
-            {/* Signatures */}
-            <div className="grid grid-cols-2 gap-8 mt-8">
-              <div className="text-center">
-                <div className="border-t border-foreground pt-2 mt-16">
-                  <p className="text-sm font-medium">{company?.nome_fantasia || 'Empresa'}</p>
-                  <p className="text-xs text-muted-foreground">Responsável</p>
-                </div>
-              </div>
-              <div className="text-center">
-                <div className="border-t border-foreground pt-2 mt-16">
-                  <p className="text-sm font-medium">{transactionClient?.name || 'Cliente'}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {isPurchase ? 'Vendedor' : 'Comprador'}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="text-center mt-8 pt-4 border-t">
-              <p className="text-xs text-muted-foreground">
-                Documento gerado em {format(new Date(), "dd/MM/yyyy 'às' HH:mm")}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Print Styles */}
-      <style>{`
-        @media print {
-          @page {
-            size: A4;
-            margin: 10mm;
-          }
-          body {
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-          }
-          .print\\:hidden {
-            display: none !important;
-          }
-        }
-      `}</style>
     </div>
   );
 }
