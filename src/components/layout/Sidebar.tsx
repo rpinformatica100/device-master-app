@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import {
   LayoutDashboard,
   FileText,
+  FileBarChart,
   Users,
   Package,
   DollarSign,
@@ -22,6 +23,7 @@ import { toast } from "sonner";
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
   { icon: FileText, label: "Ordens de Serviço", path: "/ordens" },
+  { icon: FileBarChart, label: "Orçamentos", path: "/orcamentos" },
   { icon: Users, label: "Clientes", path: "/clientes" },
   { icon: Package, label: "Estoque", path: "/estoque" },
   { icon: DollarSign, label: "Financeiro", path: "/financeiro" },

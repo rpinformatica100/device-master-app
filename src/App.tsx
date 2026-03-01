@@ -17,6 +17,8 @@ import EquipmentDetailPage from "./pages/EquipmentDetailPage";
 import EquipmentReceiptPage from "./pages/EquipmentReceiptPage";
 import OrderReceiptPage from "./pages/OrderReceiptPage";
 import OrderQuotePage from "./pages/OrderQuotePage";
+import QuotesPage from "./pages/QuotesPage";
+import QuotePrintPage from "./pages/QuotePrintPage";
 import SettingsPage from "./pages/SettingsPage";
 import NotFound from "./pages/NotFound";
 
@@ -59,6 +61,8 @@ function AppRoutes() {
       <Route path="/ordens" element={<ProtectedRoute><OrdersPage /></ProtectedRoute>} />
       <Route path="/ordens/:id/imprimir" element={<ProtectedRoute><OrderReceiptPage /></ProtectedRoute>} />
       <Route path="/ordens/:id/orcamento" element={<ProtectedRoute><OrderQuotePage /></ProtectedRoute>} />
+      <Route path="/orcamentos" element={<ProtectedRoute><QuotesPage /></ProtectedRoute>} />
+      <Route path="/orcamentos/:id/imprimir" element={<ProtectedRoute><QuotePrintPage /></ProtectedRoute>} />
       <Route path="/clientes" element={<ProtectedRoute><ClientsPage /></ProtectedRoute>} />
       <Route path="/estoque" element={<ProtectedRoute><InventoryPage /></ProtectedRoute>} />
       <Route path="/financeiro" element={<ProtectedRoute><FinancialPage /></ProtectedRoute>} />

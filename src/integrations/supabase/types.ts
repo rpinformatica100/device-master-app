@@ -434,6 +434,137 @@ export type Database = {
         }
         Relationships: []
       }
+      quote_items: {
+        Row: {
+          cost_price: number
+          created_at: string
+          description: string | null
+          id: string
+          item_id: string | null
+          item_type: string
+          name: string
+          quantity: number
+          quote_id: string
+          sale_price: number
+        }
+        Insert: {
+          cost_price?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          item_id?: string | null
+          item_type?: string
+          name: string
+          quantity?: number
+          quote_id: string
+          sale_price?: number
+        }
+        Update: {
+          cost_price?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          item_id?: string | null
+          item_type?: string
+          name?: string
+          quantity?: number
+          quote_id?: string
+          sale_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_items_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quotes: {
+        Row: {
+          approved_at: string | null
+          client_id: string | null
+          created_at: string
+          description: string | null
+          discount_percentage: number
+          id: string
+          interest_rate: number
+          max_installments: number
+          notes: string | null
+          order_id: string | null
+          quote_number: string
+          rejected_at: string | null
+          status: string
+          title: string
+          total_cost: number
+          total_profit: number
+          total_sale: number
+          updated_at: string
+          user_id: string
+          validity_days: number
+        }
+        Insert: {
+          approved_at?: string | null
+          client_id?: string | null
+          created_at?: string
+          description?: string | null
+          discount_percentage?: number
+          id?: string
+          interest_rate?: number
+          max_installments?: number
+          notes?: string | null
+          order_id?: string | null
+          quote_number: string
+          rejected_at?: string | null
+          status?: string
+          title?: string
+          total_cost?: number
+          total_profit?: number
+          total_sale?: number
+          updated_at?: string
+          user_id: string
+          validity_days?: number
+        }
+        Update: {
+          approved_at?: string | null
+          client_id?: string | null
+          created_at?: string
+          description?: string | null
+          discount_percentage?: number
+          id?: string
+          interest_rate?: number
+          max_installments?: number
+          notes?: string | null
+          order_id?: string | null
+          quote_number?: string
+          rejected_at?: string | null
+          status?: string
+          title?: string
+          total_cost?: number
+          total_profit?: number
+          total_sale?: number
+          updated_at?: string
+          user_id?: string
+          validity_days?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quotes_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotes_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       services: {
         Row: {
           cost_price: number
@@ -830,6 +961,7 @@ export type Database = {
     Functions: {
       generate_next_equipment_code: { Args: never; Returns: string }
       generate_next_os_number: { Args: never; Returns: string }
+      generate_next_quote_number: { Args: never; Returns: string }
     }
     Enums: {
       [_ in never]: never
