@@ -153,14 +153,6 @@ export function OrderViewDialog({ open, onOpenChange, order, onEdit, onOrderUpda
     sensores: 'Sensores',
   };
 
-  // HTML escape function to prevent XSS attacks
-  const escapeHtml = (text: string | null | undefined): string => {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-  };
-
   // Print is now handled by dedicated pages (/ordens/:id/imprimir and /ordens/:id/orcamento)
 
   const handleFinalizeOrder = async (paymentData: PaymentData) => {
