@@ -40,6 +40,9 @@ export function QuoteFormDialog({ open, onOpenChange, mode, quoteData }: QuoteFo
   const [clientId, setClientId] = useState("");
   const [title, setTitle] = useState("Orçamento");
   const [description, setDescription] = useState("");
+  const [equipmentDescription, setEquipmentDescription] = useState("");
+  const [problemDescription, setProblemDescription] = useState("");
+  const [solutionDescription, setSolutionDescription] = useState("");
   const [validityDays, setValidityDays] = useState(7);
   const [interestRate, setInterestRate] = useState(2.99);
   const [maxInstallments, setMaxInstallments] = useState(12);
@@ -53,6 +56,9 @@ export function QuoteFormDialog({ open, onOpenChange, mode, quoteData }: QuoteFo
       setClientId(quoteData.client_id || "");
       setTitle(quoteData.title || "Orçamento");
       setDescription(quoteData.description || "");
+      setEquipmentDescription(quoteData.equipment_description || "");
+      setProblemDescription(quoteData.problem_description || "");
+      setSolutionDescription(quoteData.solution_description || "");
       setValidityDays(quoteData.validity_days);
       setInterestRate(Number(quoteData.interest_rate));
       setMaxInstallments(quoteData.max_installments);
@@ -73,6 +79,9 @@ export function QuoteFormDialog({ open, onOpenChange, mode, quoteData }: QuoteFo
       setClientId("");
       setTitle("Orçamento");
       setDescription("");
+      setEquipmentDescription("");
+      setProblemDescription("");
+      setSolutionDescription("");
       setValidityDays(7);
       setInterestRate(2.99);
       setMaxInstallments(12);
@@ -128,28 +137,38 @@ export function QuoteFormDialog({ open, onOpenChange, mode, quoteData }: QuoteFo
 
   const total = items.reduce((s, i) => s + i.sale_price * i.quantity, 0);
 
+  const resolvedClientId = clientId && clientId !== "none" ? clientId : undefined;
+
   const handleSubmit = async () => {
     if (items.length === 0) {
       return;
     }
     setIsSubmitting(true);
     try {
+      const quotePayload = {
+        client_id: resolvedClientId,
+        title,
+        description,
+        equipment_description: equipmentDescription || undefined,
+        problem_description: problemDescription || undefined,
+        solution_description: solutionDescription || undefined,
+        validity_days: validityDays,
+        interest_rate: interestRate,
+        max_installments: maxInstallments,
+        discount_percentage: discountPercentage,
+        notes,
+      };
+
       if (mode === "create") {
-        await createQuote({
-          client_id: clientId || undefined,
-          title,
-          description,
-          validity_days: validityDays,
-          interest_rate: interestRate,
-          max_installments: maxInstallments,
-          discount_percentage: discountPercentage,
-          notes,
-        }, items);
+        await createQuote(quotePayload, items);
       } else if (quoteData) {
         await updateQuote(quoteData.id, {
-          client_id: clientId || null,
+          client_id: resolvedClientId || null,
           title,
           description,
+          equipment_description: equipmentDescription || null,
+          problem_description: problemDescription || null,
+          solution_description: solutionDescription || null,
           validity_days: validityDays,
           interest_rate: interestRate,
           max_installments: maxInstallments,
@@ -175,7 +194,7 @@ export function QuoteFormDialog({ open, onOpenChange, mode, quoteData }: QuoteFo
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label className="text-xs">Cliente</Label>
-              <Select value={clientId} onValueChange={setClientId}>
+              <Select value={clientId || "none"} onValueChange={setClientId}>
                 <SelectTrigger className="text-sm">
                   <SelectValue placeholder="Selecione o cliente (opcional)" />
                 </SelectTrigger>
@@ -194,8 +213,25 @@ export function QuoteFormDialog({ open, onOpenChange, mode, quoteData }: QuoteFo
           </div>
 
           <div className="space-y-1">
-            <Label className="text-xs">Descrição</Label>
-            <Textarea value={description} onChange={e => setDescription(e.target.value)} className="text-sm min-h-[60px]" placeholder="Descrição geral do orçamento..." />
+            <Label className="text-xs">Descrição Geral</Label>
+            <Textarea value={description} onChange={e => setDescription(e.target.value)} className="text-sm min-h-[50px]" placeholder="Descrição geral do orçamento..." />
+          </div>
+
+          {/* Equipment / Problem / Solution */}
+          <div className="space-y-3 p-3 rounded-lg border border-border bg-secondary/20">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Detalhes Técnicos (opcional)</p>
+            <div className="space-y-1">
+              <Label className="text-xs">Equipamento</Label>
+              <Textarea value={equipmentDescription} onChange={e => setEquipmentDescription(e.target.value)} className="text-sm min-h-[40px]" placeholder="Ex: Notebook Dell Inspiron 15, i5 10ª gen, 8GB RAM, SSD 256GB" />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Problema / Defeito Relatado</Label>
+              <Textarea value={problemDescription} onChange={e => setProblemDescription(e.target.value)} className="text-sm min-h-[40px]" placeholder="Ex: Equipamento não liga, sem sinal de vídeo, bateria não carrega..." />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Solução Proposta</Label>
+              <Textarea value={solutionDescription} onChange={e => setSolutionDescription(e.target.value)} className="text-sm min-h-[40px]" placeholder="Ex: Substituição da placa de vídeo, troca de bateria, limpeza interna..." />
+            </div>
           </div>
 
           {/* Config row */}

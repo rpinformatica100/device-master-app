@@ -12,6 +12,9 @@ interface QuoteData {
   quote_number: string;
   title: string;
   description?: string;
+  equipment_description?: string;
+  problem_description?: string;
+  solution_description?: string;
   status: string;
   validity_days: number;
   interest_rate: number;
@@ -208,6 +211,36 @@ export default function QuotePrintPage() {
                   <span style={s.label}>CNPJ:</span>
                   <br />
                   <strong>{quote.client.cnpj}</strong>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Equipment / Problem / Solution */}
+        {(quote.equipment_description || quote.problem_description || quote.solution_description) && (
+          <div style={s.section}>
+            <h3 style={s.sectionTitle}>DETALHES TÉCNICOS</h3>
+            <div style={{ display: "grid", gap: "6px", fontSize: "10px" }}>
+              {quote.equipment_description && (
+                <div>
+                  <span style={{ ...s.label, fontWeight: "bold" }}>EQUIPAMENTO:</span>
+                  <br />
+                  <span>{quote.equipment_description}</span>
+                </div>
+              )}
+              {quote.problem_description && (
+                <div>
+                  <span style={{ ...s.label, fontWeight: "bold" }}>PROBLEMA / DEFEITO:</span>
+                  <br />
+                  <span>{quote.problem_description}</span>
+                </div>
+              )}
+              {quote.solution_description && (
+                <div>
+                  <span style={{ ...s.label, fontWeight: "bold" }}>SOLUÇÃO PROPOSTA:</span>
+                  <br />
+                  <span>{quote.solution_description}</span>
                 </div>
               )}
             </div>
