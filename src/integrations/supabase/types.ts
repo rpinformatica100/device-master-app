@@ -488,13 +488,16 @@ export type Database = {
           created_at: string
           description: string | null
           discount_percentage: number
+          equipment_description: string | null
           id: string
           interest_rate: number
           max_installments: number
           notes: string | null
           order_id: string | null
+          problem_description: string | null
           quote_number: string
           rejected_at: string | null
+          solution_description: string | null
           status: string
           title: string
           total_cost: number
@@ -510,13 +513,16 @@ export type Database = {
           created_at?: string
           description?: string | null
           discount_percentage?: number
+          equipment_description?: string | null
           id?: string
           interest_rate?: number
           max_installments?: number
           notes?: string | null
           order_id?: string | null
+          problem_description?: string | null
           quote_number: string
           rejected_at?: string | null
+          solution_description?: string | null
           status?: string
           title?: string
           total_cost?: number
@@ -532,13 +538,16 @@ export type Database = {
           created_at?: string
           description?: string | null
           discount_percentage?: number
+          equipment_description?: string | null
           id?: string
           interest_rate?: number
           max_installments?: number
           notes?: string | null
           order_id?: string | null
+          problem_description?: string | null
           quote_number?: string
           rejected_at?: string | null
+          solution_description?: string | null
           status?: string
           title?: string
           total_cost?: number

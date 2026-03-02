@@ -40,6 +40,9 @@ export function useQuotes() {
       client_id?: string;
       title: string;
       description?: string;
+      equipment_description?: string;
+      problem_description?: string;
+      solution_description?: string;
       validity_days?: number;
       interest_rate?: number;
       max_installments?: number;
@@ -51,7 +54,6 @@ export function useQuotes() {
   ) => {
     if (!user) return null;
     try {
-      // Generate quote number
       const { data: numData, error: numError } = await supabase.rpc('generate_next_quote_number');
       if (numError) throw numError;
 
@@ -66,6 +68,9 @@ export function useQuotes() {
           client_id: quoteData.client_id || null,
           title: quoteData.title,
           description: quoteData.description || null,
+          equipment_description: quoteData.equipment_description || null,
+          problem_description: quoteData.problem_description || null,
+          solution_description: quoteData.solution_description || null,
           validity_days: quoteData.validity_days || 7,
           interest_rate: quoteData.interest_rate || 2.99,
           max_installments: quoteData.max_installments || 12,
@@ -81,7 +86,6 @@ export function useQuotes() {
 
       if (error) throw error;
 
-      // Insert items
       if (items.length > 0) {
         const { error: itemsError } = await supabase
           .from('quote_items')
@@ -140,7 +144,6 @@ export function useQuotes() {
       if (error) throw error;
 
       if (items) {
-        // Delete old items and insert new ones
         await supabase.from('quote_items').delete().eq('quote_id', id);
         if (items.length > 0) {
           const { error: itemsError } = await supabase

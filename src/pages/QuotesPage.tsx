@@ -284,6 +284,7 @@ export default function QuotesPage() {
         onOpenChange={setIsViewOpen}
         quote={selectedQuote}
         onEdit={() => selectedQuote && handleEdit(selectedQuote)}
+        onQuoteUpdated={() => { setIsViewOpen(false); }}
       />
 
       {/* Delete Confirmation Dialog */}

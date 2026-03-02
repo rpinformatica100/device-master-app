@@ -5,6 +5,9 @@ export interface Quote {
   client_id?: string | null;
   title: string;
   description?: string | null;
+  equipment_description?: string | null;
+  problem_description?: string | null;
+  solution_description?: string | null;
   status: string;
   validity_days: number;
   interest_rate: number;
