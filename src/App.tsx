@@ -20,12 +20,17 @@ import OrderQuotePage from "./pages/OrderQuotePage";
 import QuotesPage from "./pages/QuotesPage";
 import QuotePrintPage from "./pages/QuotePrintPage";
 import SettingsPage from "./pages/SettingsPage";
+import SubscriptionExpiredPage from "./pages/SubscriptionExpiredPage";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminUsersPage from "./pages/admin/AdminUsersPage";
+import AdminFinancialPage from "./pages/admin/AdminFinancialPage";
+import AdminNotificationsPage from "./pages/admin/AdminNotificationsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
+  const { user, loading, subscriptionStatus, isAdmin } = useAuth();
   
   if (loading) {
     return (
@@ -38,12 +43,39 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   if (!user) {
     return <Navigate to="/auth" replace />;
   }
+
+  // Admin always has access
+  if (isAdmin) {
+    return <>{children}</>;
+  }
+
+  // Check subscription - allow "ativo" and "trial"
+  if (subscriptionStatus && !["ativo", "trial"].includes(subscriptionStatus)) {
+    return <Navigate to="/assinatura-expirada" replace />;
+  }
+  
+  return <>{children}</>;
+}
+
+function AdminRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading, isAdmin } = useAuth();
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+  
+  if (!user) return <Navigate to="/auth" replace />;
+  if (!isAdmin) return <Navigate to="/dashboard" replace />;
   
   return <>{children}</>;
 }
 
 function AppRoutes() {
-  const { user, loading } = useAuth();
+  const { user, loading, isAdmin } = useAuth();
 
   if (loading) {
     return (
@@ -55,8 +87,17 @@ function AppRoutes() {
 
   return (
     <Routes>
-      <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <LandingPage />} />
-      <Route path="/auth" element={user ? <Navigate to="/dashboard" replace /> : <AuthPage />} />
+      <Route path="/" element={user ? <Navigate to={isAdmin ? "/admin" : "/dashboard"} replace /> : <LandingPage />} />
+      <Route path="/auth" element={user ? <Navigate to={isAdmin ? "/admin" : "/dashboard"} replace /> : <AuthPage />} />
+      <Route path="/assinatura-expirada" element={user ? <SubscriptionExpiredPage /> : <Navigate to="/auth" replace />} />
+      
+      {/* Admin Routes */}
+      <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+      <Route path="/admin/usuarios" element={<AdminRoute><AdminUsersPage /></AdminRoute>} />
+      <Route path="/admin/financeiro" element={<AdminRoute><AdminFinancialPage /></AdminRoute>} />
+      <Route path="/admin/notificacoes" element={<AdminRoute><AdminNotificationsPage /></AdminRoute>} />
+      
+      {/* User Routes */}
       <Route path="/dashboard" element={<ProtectedRoute><Index /></ProtectedRoute>} />
       <Route path="/ordens" element={<ProtectedRoute><OrdersPage /></ProtectedRoute>} />
       <Route path="/ordens/:id/imprimir" element={<ProtectedRoute><OrderReceiptPage /></ProtectedRoute>} />

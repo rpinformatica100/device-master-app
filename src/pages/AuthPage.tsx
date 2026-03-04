@@ -38,14 +38,14 @@ export default function AuthPage() {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   
-  const { signIn, signUp, user } = useAuth();
+  const { signIn, signUp, user, isAdmin } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     if (user) {
-      navigate("/dashboard");
+      navigate(isAdmin ? "/admin" : "/dashboard");
     }
-  }, [user, navigate]);
+  }, [user, isAdmin, navigate]);
 
   useEffect(() => {
     setIsSignUp(searchParams.get("mode") === "signup");
