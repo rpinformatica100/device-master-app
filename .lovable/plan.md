@@ -1,337 +1,73 @@
 
-# Plano de Melhorias do Sistema - Fase 2
 
-## Resumo Executivo
+# Plano: Painel Admin com Controle Financeiro de Assinaturas
 
-Este plano aborda as novas solicitacoes, incluindo checklist nos Seminovos, novos planos de precos, dados adicionais no cadastro de usuarios, melhorias na OS e padronizacao de impressoes.
+## Contexto
 
----
-
-## 1. SEMINOVOS - Checklist no Formulario e Impressao
-
-### 1.1 Adicionar Checklist ao Formulario de Cadastro
-
-**Objetivo:** Reutilizar o componente `MobileChecklist.tsx` existente no cadastro de equipamentos seminovos.
-
-**Solucao:**
-- Adicionar botao "Checklist de Entrada" no `EquipmentFormDialog.tsx` (apenas para categorias smartphone/tablet)
-- Armazenar checklist no campo `checklist` (jsonb) ja existente na tabela `used_equipment`
-- Exibir resumo do checklist no formulario quando preenchido
-
-**Arquivos a modificar:**
-- `src/components/used-equipment/EquipmentFormDialog.tsx`
-- `src/hooks/useUsedEquipment.ts` (salvar checklist)
-
-### 1.2 Adicionar Checklist ao Formulario de Venda
-
-**Objetivo:** Permitir atualizar checklist de saida no momento da venda.
-
-**Solucao:**
-- Adicionar botao "Checklist de Saida" no `SaleFormDialog.tsx`
-- Opcionalmente criar campo separado `sale_checklist` ou reutilizar o existente
-
-**Arquivos a modificar:**
-- `src/components/used-equipment/SaleFormDialog.tsx`
-
-### 1.3 Exibir Checklist na Impressao
-
-**Objetivo:** Mostrar checklist no recibo quando preenchido.
-
-**Solucao:**
-- No `EquipmentReceiptPage.tsx`, buscar dados do checklist do equipamento
-- Renderizar grid de checklist similar ao da OS
-- Somente exibir se checklist tiver dados
-
-**Arquivos a modificar:**
-- `src/pages/EquipmentReceiptPage.tsx`
-- `src/pages/EquipmentDetailPage.tsx` (exibir/editar checklist)
+O sistema ainda nao possui painel admin nem controle de assinaturas. O usuario quer um painel admin completo para gerenciar assistencias cadastradas, com foco em controle financeiro simples: registrar pagamentos de mensalidade, forma de pagamento, data, e ter flexibilidade para editar tudo.
 
 ---
 
-## 2. LANDING PAGE - Novos Planos de Precos
+## Banco de Dados (3 tabelas + 1 funcao)
 
-### 2.1 Reestruturar Planos
+### Tabela `user_roles`
+```text
+id (uuid PK), user_id (uuid, FK auth.users, NOT NULL), role (enum: admin/user)
+unique(user_id, role)
+```
+RLS: funcao `has_role()` SECURITY DEFINER para verificar roles sem recursao.
 
-**De:**
-- Starter (Gratis - 50 OS/mes)
-- Profissional (R$ 49/mes)
-- Empresarial (R$ 99/mes)
+### Tabela `subscriptions`
+```text
+id, user_id, plan (text: free/mensal/anual), status (text: ativo/suspenso/expirado/trial),
+starts_at, expires_at, notes, created_at, updated_at
+```
+RLS: admin le/escreve tudo, usuario le so a propria.
 
-**Para:**
-- Free (Gratis - COM restricoes: max 50 OS/mes, sem exportacao, sem relatorios avancados)
-- Mensal (R$ X/mes - TUDO ilimitado)
-- Anual (R$ Y/ano - TUDO ilimitado + desconto)
+### Tabela `subscription_payments` (NOVO - controle financeiro)
+```text
+id (uuid PK)
+user_id (uuid) -- a assistencia que pagou
+subscription_id (uuid, FK subscriptions)
+amount (numeric) -- valor pago
+payment_method (text) -- pix/cartao/boleto/dinheiro/transferencia
+status (text) -- pago/pendente/atrasado/cancelado
+reference_month (date) -- mes de referencia (ex: 2026-03-01)
+due_date (date) -- vencimento
+paid_at (timestamptz) -- quando pagou
+notes (text) -- observacoes livres
+created_by (uuid) -- admin que registrou
+created_at, updated_at
+```
+RLS: somente admin pode CRUD. Usuario pode ver os proprios.
 
-**Solucao:**
-- Atualizar array `pricingPlans` em `LandingPage.tsx`
-- Manter mesmas features para Mensal e Anual, diferenciando apenas o preco
-- Free com restricoes claras listadas
-
-**Arquivo a modificar:**
-- `src/pages/LandingPage.tsx`
-
----
-
-## 3. CADASTRO DE USUARIO - Mais Dados Pessoais e Empresa
-
-### 3.1 Expandir Formulario de Cadastro
-
-**Objetivo:** Coletar mais dados no signup para usar nas impressoes.
-
-**Novos campos no signup:**
-- Nome Completo (ja existe)
-- Telefone (novo)
-- Nome da Empresa (novo)
-- CNPJ (opcional, novo)
-
-**Solucao:**
-- Expandir `AuthPage.tsx` com campos adicionais
-- Salvar dados no `user_metadata` do Supabase Auth
-- Criar/atualizar automaticamente `company_settings` apos cadastro
-
-**Arquivos a modificar:**
-- `src/pages/AuthPage.tsx`
-- `src/hooks/useAuth.tsx` (passar metadata no signup)
-
-### 3.2 Sincronizar com Company Settings
-
-**Objetivo:** Ao cadastrar, criar registro em `company_settings` com dados iniciais.
-
-**Solucao:**
-- Apos signup bem-sucedido, criar registro em `company_settings`
-- Usar trigger ou logica no frontend
-
-**Arquivos a modificar:**
-- `src/hooks/useAuth.tsx` ou criar migracao com trigger
-
-### 3.3 Usar Dados em TODAS Impressoes
-
-**Objetivo:** Garantir que OS e recibos usem dados de `company_settings`.
-
-**Verificar:**
-- `OrderViewDialog.tsx` (impressao de OS) - Adicionar cabecalho da empresa
-- `EquipmentReceiptPage.tsx` (ja usa company settings)
-- Qualquer outra impressao
-
-**Arquivos a modificar:**
-- `src/components/orders/OrderViewDialog.tsx` (adicionar useCompanySettings)
-
----
-
-## 4. ORDEM DE SERVICO - Melhorias
-
-### 4.1 Diminuir Fonte do Formulario
-
-**Objetivo:** Padronizar fontes menores no formulario de OS.
-
-**Solucao:**
-- Aplicar `text-xs` em Labels
-- Aplicar `text-sm` em Inputs
-- Reduzir padding de campos
-
-**Arquivo a modificar:**
-- `src/components/orders/OrderFormDialog.tsx`
-
-### 4.2 Menu Recolhivel para Caracteristicas do Equipamento
-
-**Objetivo:** Organizar melhor os campos especificos de categoria.
-
-**Solucao:**
-- Usar componente `Collapsible` do Radix UI
-- Adicionar campos Marca e Modelo fixos (nao apenas por categoria)
-- Agrupar campos especificos (IMEI, cor, capacidade, etc) em secao recolhivel
-
-**Arquivo a modificar:**
-- `src/components/orders/OrderFormDialog.tsx`
-
-### 4.3 Melhorar Atualizacao apos CRUD
-
-**Problema:** Demora para aparecer nova OS na tabela.
-
-**Solucao:**
-- Ja existe atualizacao otimista no `useOrders.ts`
-- Verificar se o `setOrders` esta sendo chamado corretamente
-- Adicionar refresh forcado ou usar React Query com invalidation
-
-**Arquivo a verificar:**
-- `src/hooks/useOrders.ts`
-- `src/pages/OrdersPage.tsx`
-
-### 4.4 Melhorar Numeracao da OS com Ano
-
-**De:** `OS-0009`
-**Para:** `OS-0009-2026`
-
-**Regra:** Nao zerar numero ao mudar de ano, apenas atualizar o ano.
-
-**Solucao:**
-- Criar nova migracao para alterar funcao `generate_next_os_number()`
-- Formato: `OS-{numero_sequencial_global}-{ano_atual}`
-
-**Nova logica:**
+### Funcao `has_role()`
 ```sql
--- Pegar maior numero global (ignorando ano)
--- Incrementar
--- Adicionar ano atual
--- Resultado: OS-0042-2026
+SECURITY DEFINER, retorna boolean, verifica user_roles sem RLS recursivo.
 ```
-
-**Arquivo a criar:**
-- Nova migracao SQL
 
 ---
 
-## 5. PADRONIZACAO DE IMPRESSAO - OS e RECIBOS
+## Paginas Admin
 
-### 5.1 Problema Atual
+### `/admin` - Dashboard
+- Total assistencias cadastradas, ativas, suspensas, expiradas
+- Pagamentos pendentes/atrasados do mes
+- Receita do mes (soma de pagamentos pagos)
+- Ultimos cadastros e pagamentos recentes
 
-A impressao atual parece um "print do sistema" e nao um documento profissional.
+### `/admin/usuarios` - Gestao de Usuarios
+- Tabela com todas assistencias: nome, email, telefone, empresa, CNPJ, plano, status, expiracao
+- Acoes: ativar/suspender, editar plano/datas, ver detalhes
+- Dialog para editar subscription com campos livres
 
-### 5.2 Solucao: Criar Pagina de Impressao Dedicada para OS
-
-**Objetivo:** Criar `/ordem-servico/{id}/imprimir` similar a `/seminovos/{id}/recibo`.
-
-**Nova pagina:** `src/pages/OrderReceiptPage.tsx`
-
-**Caracteristicas:**
-- Layout A4 profissional
-- Cabecalho com dados da empresa (de company_settings)
-- Secoes bem definidas com bordas
-- Tabela de itens/servicos formatada
-- Checklist quando aplicavel
-- Assinaturas
-- Termos e condicoes
-- Rodape com data de geracao
-
-### 5.3 Melhorar Impressao de Seminovos
-
-**Ajustes no `EquipmentReceiptPage.tsx`:**
-- Adicionar checklist quando preenchido
-- Melhorar layout para parecer mais profissional
-- Verificar consistencia com OS
-
-### 5.4 Padrao Visual de Impressao
-
-| Elemento | Especificacao |
-|----------|---------------|
-| Tamanho | A4 (210mm x 297mm) |
-| Margens | 10-15mm |
-| Fonte base | 11px |
-| Cabecalho | Logo/Nome empresa, CNPJ, endereco, telefone |
-| Titulo | Tipo de documento centralizado |
-| Secoes | Bordas, titulos em maiusculo |
-| Tabelas | Bordas, cabecalho destacado |
-| Assinaturas | Duas colunas no final |
-| Rodape | Data de geracao |
-
----
-
-## Detalhes Tecnicos
-
-### Campos Adicionais no Signup
-
-```typescript
-interface SignupData {
-  name: string;       // Ja existe
-  email: string;      // Ja existe
-  password: string;   // Ja existe
-  phone?: string;     // Novo
-  company_name?: string; // Novo
-  cnpj?: string;      // Novo
-}
-```
-
-### Nova Funcao SQL para OS Number
-
-```sql
-CREATE OR REPLACE FUNCTION public.generate_next_os_number()
-RETURNS TEXT
-LANGUAGE plpgsql
-SECURITY DEFINER
-AS $$
-DECLARE
-  max_num INTEGER;
-  next_num INTEGER;
-  current_year TEXT;
-  new_os TEXT;
-BEGIN
-  -- Lock table
-  LOCK TABLE orders IN SHARE UPDATE EXCLUSIVE MODE;
-  
-  -- Get max number (extract just the number part, ignoring year suffix)
-  SELECT COALESCE(
-    MAX(CAST(
-      SPLIT_PART(REGEXP_REPLACE(os_number, '^OS-', ''), '-', 1) 
-      AS INTEGER
-    )), 0
-  ) INTO max_num
-  FROM orders
-  WHERE os_number ~ '^OS-[0-9]+';
-  
-  next_num := max_num + 1;
-  current_year := EXTRACT(YEAR FROM CURRENT_DATE)::TEXT;
-  
-  -- Format: OS-0042-2026
-  new_os := 'OS-' || LPAD(next_num::TEXT, 4, '0') || '-' || current_year;
-  
-  RETURN new_os;
-END;
-$$;
-```
-
-### Novos Planos de Precos
-
-```typescript
-const pricingPlans = [
-  {
-    name: "Free",
-    price: "Gratis",
-    period: "para sempre",
-    description: "Para comecar",
-    features: [
-      "Ate 50 OS por mes",
-      "Cadastro de clientes",
-      "Controle de estoque basico",
-      "Sem exportacao de dados",
-    ],
-    restrictions: true,
-    popular: false,
-    cta: "Comecar Gratis"
-  },
-  {
-    name: "Mensal",
-    price: "R$ 49",
-    period: "/mes",
-    description: "Tudo ilimitado",
-    features: [
-      "OS ilimitadas",
-      "Clientes ilimitados",
-      "Financeiro completo",
-      "Relatorios avancados",
-      "Exportacao de dados",
-      "Suporte prioritario"
-    ],
-    restrictions: false,
-    popular: true,
-    cta: "Assinar Mensal"
-  },
-  {
-    name: "Anual",
-    price: "R$ 399",
-    period: "/ano",
-    description: "Economize 32%",
-    features: [
-      "Tudo do plano Mensal",
-      "2 meses gratis",
-      "Prioridade no suporte",
-      "Treinamento incluso"
-    ],
-    restrictions: false,
-    popular: false,
-    cta: "Assinar Anual"
-  }
-];
-```
+### `/admin/financeiro` - Controle Financeiro de Assinaturas (FOCO PRINCIPAL)
+- Visao de todos os pagamentos de mensalidade
+- Filtros: mes, status (pago/pendente/atrasado), assistencia
+- Registrar novo pagamento: selecionar assistencia, valor, forma de pagamento, mes referencia, data pagamento
+- Editar qualquer campo livremente (valor, data, status, forma de pagamento, notas)
+- Indicadores: total recebido no mes, total pendente, total atrasado
+- Marcar como pago com um clique
 
 ---
 
@@ -339,39 +75,37 @@ const pricingPlans = [
 
 | Arquivo | Descricao |
 |---------|-----------|
-| `src/pages/OrderReceiptPage.tsx` | Pagina de impressao profissional de OS |
-| Nova migracao SQL | Atualizar funcao de geracao de OS number |
+| Migracao SQL | user_roles, subscriptions, subscription_payments, has_role(), enum app_role, insert admin inicial |
+| `src/hooks/useAdmin.ts` | CRUD usuarios, subscriptions, payments |
+| `src/pages/admin/AdminDashboard.tsx` | Dashboard admin |
+| `src/pages/admin/AdminUsersPage.tsx` | Gestao de assistencias |
+| `src/pages/admin/AdminFinancialPage.tsx` | Controle financeiro de mensalidades |
+| `src/components/admin/AdminLayout.tsx` | Layout com sidebar propria do admin |
+| `src/components/admin/SubscriptionDialog.tsx` | Editar plano/datas de assinatura |
+| `src/components/admin/PaymentDialog.tsx` | Registrar/editar pagamento |
 
 ## Arquivos a Modificar
 
 | Arquivo | Modificacao |
 |---------|-------------|
-| `src/pages/LandingPage.tsx` | Novos planos de precos |
-| `src/pages/AuthPage.tsx` | Campos adicionais no signup |
-| `src/hooks/useAuth.tsx` | Passar metadata e criar company_settings |
-| `src/components/orders/OrderFormDialog.tsx` | Fontes menores, menu recolhivel, campos Marca/Modelo |
-| `src/components/orders/OrderViewDialog.tsx` | Usar company_settings na impressao |
-| `src/components/used-equipment/EquipmentFormDialog.tsx` | Adicionar checklist |
-| `src/components/used-equipment/SaleFormDialog.tsx` | Adicionar checklist de saida |
-| `src/pages/EquipmentReceiptPage.tsx` | Exibir checklist na impressao |
-| `src/pages/EquipmentDetailPage.tsx` | Exibir/editar checklist |
-| `src/App.tsx` | Nova rota /ordem-servico/:id/imprimir |
+| `src/hooks/useAuth.tsx` | Adicionar `isAdmin` via has_role(), criar subscription padrao no signup |
+| `src/App.tsx` | Rotas `/admin/*` protegidas por AdminRoute, verificacao de subscription ativa |
+| `src/pages/AuthPage.tsx` | Redirecionar admin para `/admin` apos login |
 
----
+## Seguranca
 
-## Ordem de Implementacao
+- Role admin verificada server-side via `has_role()` SECURITY DEFINER
+- Nunca client-side (localStorage)
+- RLS em todas tabelas admin
+- Primeiro admin inserido via migracao SQL (preciso do email do admin)
+- Usuarios com subscription expirada veem tela de renovacao com link WhatsApp
 
-1. **Prioridade Alta:**
-   - Padronizacao de impressao (cria nova pagina OrderReceiptPage)
-   - OS number com ano (migracao SQL)
-   - Dados empresa nas impressoes
+## Fluxo
 
-2. **Prioridade Media:**
-   - Checklist em Seminovos
-   - Formulario OS (fontes, campos, menu recolhivel)
-   - Novos planos na Landing Page
-
-3. **Prioridade Baixa:**
-   - Dados adicionais no signup
-   - Melhorias de atualizacao CRUD
+1. Assistencia se cadastra -> subscription criada com status "trial" ou "aguardando"
+2. Contrata via WhatsApp
+3. Admin acessa `/admin/usuarios`, ativa subscription com plano e data
+4. Admin registra pagamento em `/admin/financeiro`
+5. Pode editar qualquer dado a qualquer momento
+6. Assistencia com assinatura expirada -> tela de renovacao
 
