@@ -6,6 +6,8 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  isAdmin: boolean;
+  subscriptionStatus: string | null;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string, name?: string, metadata?: { phone?: string; company_name?: string; cnpj?: string }) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
@@ -17,12 +19,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
+
+  const checkAdminAndSubscription = async (userId: string) => {
+    // Check admin role via has_role function
+    const { data: roles } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId);
+    
+    const adminRole = (roles || []).some((r: any) => r.role === "admin");
+    setIsAdmin(adminRole);
+
+    if (!adminRole) {
+      // Check subscription status
+      const { data: subs } = await supabase
+        .from("subscriptions")
+        .select("status")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(1);
+      
+      setSubscriptionStatus(subs && subs.length > 0 ? subs[0].status : null);
+    } else {
+      setSubscriptionStatus("ativo");
+    }
+  };
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
+        if (session?.user) {
+          setTimeout(() => checkAdminAndSubscription(session.user.id), 0);
+        } else {
+          setIsAdmin(false);
+          setSubscriptionStatus(null);
+        }
         setLoading(false);
       }
     );
@@ -30,6 +65,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+      if (session?.user) {
+        checkAdminAndSubscription(session.user.id);
+      }
       setLoading(false);
     });
 
@@ -80,7 +118,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, isAdmin, subscriptionStatus, signIn, signUp, signOut }}>
       {children}
     </AuthContext.Provider>
   );
