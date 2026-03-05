@@ -113,7 +113,7 @@ export default function AuthPage() {
           }
         } else {
           toast.success("Login realizado com sucesso!");
-          navigate("/dashboard");
+          // Redirect is handled by useEffect watching user/isAdmin state
         }
       }
     } finally {
