@@ -15,9 +15,11 @@ import {
   LogOut,
   Wallet,
   Smartphone,
+  MessageCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
+import { useUnreadCount } from "@/hooks/useMessages";
 import { toast } from "sonner";
 
 const menuItems = [
