@@ -103,7 +103,14 @@ export function Sidebar() {
                   )
                 }
               >
-                <item.icon className="w-4 h-4 flex-shrink-0" />
+                <div className="relative">
+                  <item.icon className="w-4 h-4 flex-shrink-0" />
+                  {(item as any).hasBadge && unreadCount > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-primary text-primary-foreground text-[9px] font-bold flex items-center justify-center">
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </span>
+                  )}
+                </div>
                 {!collapsed && (
                   <motion.span
                     initial={false}
