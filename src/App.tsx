@@ -12,6 +12,7 @@ import ClientsPage from "./pages/ClientsPage";
 import InventoryPage from "./pages/InventoryPage";
 import FinancialPage from "./pages/FinancialPage";
 import PersonalFinancePage from "./pages/PersonalFinancePage";
+import MessagesPage from "./pages/MessagesPage";
 import UsedEquipmentPage from "./pages/UsedEquipmentPage";
 import EquipmentDetailPage from "./pages/EquipmentDetailPage";
 import EquipmentReceiptPage from "./pages/EquipmentReceiptPage";
@@ -111,6 +112,7 @@ function AppRoutes() {
       <Route path="/seminovos/:id" element={<ProtectedRoute><EquipmentDetailPage /></ProtectedRoute>} />
       <Route path="/seminovos/recibo/:id" element={<ProtectedRoute><EquipmentReceiptPage /></ProtectedRoute>} />
       <Route path="/pessoal" element={<ProtectedRoute><PersonalFinancePage /></ProtectedRoute>} />
+      <Route path="/mensagens" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
       <Route path="/configuracoes" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
     </Routes>

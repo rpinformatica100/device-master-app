@@ -5,19 +5,21 @@ import {
   FileText,
   Users,
   Package,
-  DollarSign,
+  MessageCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useUnreadCount } from "@/hooks/useMessages";
 
 const navItems = [
   { icon: LayoutDashboard, label: "Home", path: "/dashboard" },
   { icon: FileText, label: "Ordens", path: "/ordens" },
   { icon: Users, label: "Clientes", path: "/clientes" },
   { icon: Package, label: "Estoque", path: "/estoque" },
-  { icon: DollarSign, label: "Financeiro", path: "/financeiro" },
+  { icon: MessageCircle, label: "Mensagens", path: "/mensagens", hasBadge: true },
 ];
 
 export function MobileBottomNav() {
+  const { data: unreadCount = 0 } = useUnreadCount();
   return (
     <motion.nav
       initial={{ y: 100 }}
@@ -46,13 +48,18 @@ export function MobileBottomNav() {
             {({ isActive }) => (
               <>
                 <div className={cn(
-                  "p-1 rounded-lg transition-all duration-200",
+                  "p-1 rounded-lg transition-all duration-200 relative",
                   isActive && "bg-primary/10"
                 )}>
                   <item.icon className={cn(
                     "w-4 h-4 transition-transform duration-200",
                     isActive && "scale-110"
                   )} />
+                  {(item as any).hasBadge && unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-primary text-primary-foreground text-[8px] font-bold flex items-center justify-center">
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </span>
+                  )}
                 </div>
                 <span className={cn(
                   "text-[9px] font-medium transition-all duration-200",

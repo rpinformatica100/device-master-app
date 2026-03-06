@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { useAdminPaymentMutations, type AdminUser, type SubscriptionPayment } from "@/hooks/useAdmin";
+import { useAdminPaymentMutations, useAdminSubscriptions, type AdminUser, type SubscriptionPayment } from "@/hooks/useAdmin";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
@@ -18,6 +18,7 @@ interface Props {
 
 export default function PaymentDialog({ open, onOpenChange, users, payment }: Props) {
   const { createPayment, updatePayment } = useAdminPaymentMutations();
+  const { upsertSubscription } = useAdminSubscriptions();
   const { user: currentUser } = useAuth();
   const isEditing = !!payment;
 
@@ -86,6 +87,23 @@ export default function PaymentDialog({ open, onOpenChange, users, payment }: Pr
         await createPayment.mutateAsync(payload);
         toast.success("Pagamento registrado!");
       }
+
+      // Auto-activate subscription when payment is "pago"
+      if (form.status === "pago" && selectedUser?.subscription) {
+        const plan = selectedUser.subscription.plan;
+        const now = new Date();
+        const daysToAdd = plan === "anual" ? 365 : 30;
+        const expiresAt = new Date(now.getTime() + daysToAdd * 24 * 60 * 60 * 1000);
+        await upsertSubscription.mutateAsync({
+          id: selectedUser.subscription.id,
+          user_id: selectedUser.id,
+          plan,
+          status: "ativo",
+          starts_at: now.toISOString().split("T")[0],
+          expires_at: expiresAt.toISOString().split("T")[0],
+        });
+      }
+
       onOpenChange(false);
     } catch (e: any) {
       toast.error("Erro: " + e.message);
