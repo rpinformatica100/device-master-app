@@ -8,6 +8,7 @@ interface AuthContextType {
   loading: boolean;
   isAdmin: boolean;
   subscriptionStatus: string | null;
+  subscriptionExpiresAt: string | null;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string, name?: string, metadata?: { phone?: string; company_name?: string; cnpj?: string }) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
@@ -21,9 +22,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
+  const [subscriptionExpiresAt, setSubscriptionExpiresAt] = useState<string | null>(null);
 
   const checkAdminAndSubscription = async (userId: string) => {
-    // Check admin role via has_role function
     const { data: roles } = await supabase
       .from("user_roles")
       .select("role")
@@ -33,17 +34,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsAdmin(adminRole);
 
     if (!adminRole) {
-      // Check subscription status
       const { data: subs } = await supabase
         .from("subscriptions")
-        .select("status")
+        .select("status, expires_at")
         .eq("user_id", userId)
         .order("created_at", { ascending: false })
         .limit(1);
       
-      setSubscriptionStatus(subs && subs.length > 0 ? subs[0].status : null);
+      if (subs && subs.length > 0) {
+        let status = subs[0].status;
+        const expiresAt = subs[0].expires_at;
+        setSubscriptionExpiresAt(expiresAt);
+
+        // If status is "ativo" but expires_at has passed, treat as expired
+        if (status === "ativo" && expiresAt && new Date(expiresAt) < new Date()) {
+          status = "expirado";
+        }
+        setSubscriptionStatus(status);
+      } else {
+        setSubscriptionStatus(null);
+        setSubscriptionExpiresAt(null);
+      }
     } else {
       setSubscriptionStatus("ativo");
+      setSubscriptionExpiresAt(null);
     }
   };
 
@@ -61,6 +75,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } else {
           setIsAdmin(false);
           setSubscriptionStatus(null);
+          setSubscriptionExpiresAt(null);
         }
         if (mounted) setLoading(false);
       }
@@ -103,7 +118,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    // After successful signup, create company_settings with initial data
     if (!error && data.user) {
       try {
         await supabase.from('company_settings').insert({
@@ -126,7 +140,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, isAdmin, subscriptionStatus, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, isAdmin, subscriptionStatus, subscriptionExpiresAt, signIn, signUp, signOut }}>
       {children}
     </AuthContext.Provider>
   );
