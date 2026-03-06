@@ -32,6 +32,7 @@ export default function AdminFinancialPage() {
     userId: filterUser !== "all" ? filterUser : undefined,
   });
   const { updatePayment, deletePayment } = useAdminPaymentMutations();
+  const { upsertSubscription } = useAdminSubscriptions();
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editPayment, setEditPayment] = useState<SubscriptionPayment | null>(null);
