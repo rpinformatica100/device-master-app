@@ -53,7 +53,25 @@ export default function AdminFinancialPage() {
         status: "pago",
         paid_at: new Date().toISOString(),
       });
-      toast.success("Marcado como pago!");
+
+      // Auto-activate subscription
+      const u = users.find(u => u.id === payment.user_id);
+      if (u?.subscription) {
+        const plan = u.subscription.plan;
+        const now = new Date();
+        const daysToAdd = plan === "anual" ? 365 : 30;
+        const expiresAt = new Date(now.getTime() + daysToAdd * 24 * 60 * 60 * 1000);
+        await upsertSubscription.mutateAsync({
+          id: u.subscription.id,
+          user_id: u.id,
+          plan,
+          status: "ativo",
+          starts_at: now.toISOString().split("T")[0],
+          expires_at: expiresAt.toISOString().split("T")[0],
+        });
+      }
+
+      toast.success("Marcado como pago e assinatura ativada!");
     } catch (e: any) {
       toast.error(e.message);
     }
