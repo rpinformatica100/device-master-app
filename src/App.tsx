@@ -12,6 +12,7 @@ import ClientsPage from "./pages/ClientsPage";
 import InventoryPage from "./pages/InventoryPage";
 import FinancialPage from "./pages/FinancialPage";
 import PersonalFinancePage from "./pages/PersonalFinancePage";
+import MessagesPage from "./pages/MessagesPage";
 import UsedEquipmentPage from "./pages/UsedEquipmentPage";
 import EquipmentDetailPage from "./pages/EquipmentDetailPage";
 import EquipmentReceiptPage from "./pages/EquipmentReceiptPage";
