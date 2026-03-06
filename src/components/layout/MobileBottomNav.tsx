@@ -19,6 +19,7 @@ const navItems = [
 ];
 
 export function MobileBottomNav() {
+  const { data: unreadCount = 0 } = useUnreadCount();
   return (
     <motion.nav
       initial={{ y: 100 }}
