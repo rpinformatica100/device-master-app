@@ -1,6 +1,6 @@
 import { useState } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
-import { useAdminUsers, useAdminPayments, useAdminPaymentMutations, type SubscriptionPayment } from "@/hooks/useAdmin";
+import { useAdminUsers, useAdminPayments, useAdminPaymentMutations, useAdminSubscriptions, type SubscriptionPayment } from "@/hooks/useAdmin";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
