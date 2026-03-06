@@ -31,6 +31,7 @@ const menuItems = [
   { icon: DollarSign, label: "Financeiro", path: "/financeiro" },
   { icon: Smartphone, label: "Seminovos", path: "/seminovos" },
   { icon: Wallet, label: "Pessoal", path: "/pessoal" },
+  { icon: MessageCircle, label: "Mensagens", path: "/mensagens", hasBadge: true },
   { icon: Settings, label: "Configurações", path: "/configuracoes" },
 ];
 
