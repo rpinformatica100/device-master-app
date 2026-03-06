@@ -5,16 +5,17 @@ import {
   FileText,
   Users,
   Package,
-  DollarSign,
+  MessageCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useUnreadCount } from "@/hooks/useMessages";
 
 const navItems = [
   { icon: LayoutDashboard, label: "Home", path: "/dashboard" },
   { icon: FileText, label: "Ordens", path: "/ordens" },
   { icon: Users, label: "Clientes", path: "/clientes" },
   { icon: Package, label: "Estoque", path: "/estoque" },
-  { icon: DollarSign, label: "Financeiro", path: "/financeiro" },
+  { icon: MessageCircle, label: "Mensagens", path: "/mensagens", hasBadge: true },
 ];
 
 export function MobileBottomNav() {
