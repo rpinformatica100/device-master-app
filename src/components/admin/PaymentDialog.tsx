@@ -18,6 +18,7 @@ interface Props {
 
 export default function PaymentDialog({ open, onOpenChange, users, payment }: Props) {
   const { createPayment, updatePayment } = useAdminPaymentMutations();
+  const { upsertSubscription } = useAdminSubscriptions();
   const { user: currentUser } = useAuth();
   const isEditing = !!payment;
 
