@@ -87,6 +87,23 @@ export default function PaymentDialog({ open, onOpenChange, users, payment }: Pr
         await createPayment.mutateAsync(payload);
         toast.success("Pagamento registrado!");
       }
+
+      // Auto-activate subscription when payment is "pago"
+      if (form.status === "pago" && selectedUser?.subscription) {
+        const plan = selectedUser.subscription.plan;
+        const now = new Date();
+        const daysToAdd = plan === "anual" ? 365 : 30;
+        const expiresAt = new Date(now.getTime() + daysToAdd * 24 * 60 * 60 * 1000);
+        await upsertSubscription.mutateAsync({
+          id: selectedUser.subscription.id,
+          user_id: selectedUser.id,
+          plan,
+          status: "ativo",
+          starts_at: now.toISOString().split("T")[0],
+          expires_at: expiresAt.toISOString().split("T")[0],
+        });
+      }
+
       onOpenChange(false);
     } catch (e: any) {
       toast.error("Erro: " + e.message);
