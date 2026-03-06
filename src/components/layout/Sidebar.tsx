@@ -39,6 +39,7 @@ export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const { data: unreadCount = 0 } = useUnreadCount();
 
   const handleLogout = async () => {
     await signOut();
