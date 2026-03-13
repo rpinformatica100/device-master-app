@@ -63,21 +63,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
-    
+    let initialLoad = true;
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         if (!mounted) return;
-        setLoading(true);
         setSession(session);
         setUser(session?.user ?? null);
+
         if (session?.user) {
-          await checkAdminAndSubscription(session.user.id);
+          // Defer DB calls to avoid deadlock with auth callback
+          setTimeout(async () => {
+            if (!mounted) return;
+            await checkAdminAndSubscription(session.user.id);
+            if (mounted && initialLoad) {
+              initialLoad = false;
+              setLoading(false);
+            }
+          }, 0);
         } else {
           setIsAdmin(false);
           setSubscriptionStatus(null);
           setSubscriptionExpiresAt(null);
+          if (initialLoad) {
+            initialLoad = false;
+            setLoading(false);
+          }
         }
-        if (mounted) setLoading(false);
       }
     );
 
@@ -88,7 +100,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (session?.user) {
         await checkAdminAndSubscription(session.user.id);
       }
-      if (mounted) setLoading(false);
+      if (mounted) {
+        initialLoad = false;
+        setLoading(false);
+      }
     });
 
     return () => {
