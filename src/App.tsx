@@ -50,8 +50,8 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     return <>{children}</>;
   }
 
-  // Check subscription - allow "ativo" and "trial"
-  if (subscriptionStatus && !["ativo", "trial"].includes(subscriptionStatus)) {
+  // Check subscription - block null (new users) and non-active statuses
+  if (!subscriptionStatus || !["ativo", "trial"].includes(subscriptionStatus)) {
     return <Navigate to="/assinatura-expirada" replace />;
   }
   

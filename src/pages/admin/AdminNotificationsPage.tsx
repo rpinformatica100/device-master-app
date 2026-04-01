@@ -50,6 +50,7 @@ function AdminMessageItem({ msg, users }: { msg: any; users: any[] }) {
         recipient_id: msg.recipient_id,
         message: replyText.trim(),
         type: "reply",
+        parent_message_id: msg.id,
       });
       setReplyText("");
       toast.success("Resposta enviada!");
