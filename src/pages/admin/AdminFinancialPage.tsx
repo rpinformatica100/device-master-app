@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { calculateRenewalDate } from "@/lib/subscriptionUtils";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { useAdminUsers, useAdminPayments, useAdminPaymentMutations, useAdminSubscriptions, type SubscriptionPayment } from "@/hooks/useAdmin";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -58,16 +59,17 @@ export default function AdminFinancialPage() {
       const u = users.find(u => u.id === payment.user_id);
       if (u?.subscription) {
         const plan = u.subscription.plan;
-        const now = new Date();
-        const daysToAdd = plan === "anual" ? 365 : 30;
-        const expiresAt = new Date(now.getTime() + daysToAdd * 24 * 60 * 60 * 1000);
+        const { startsAt, expiresAt } = calculateRenewalDate(
+          u.subscription.expires_at,
+          plan
+        );
         await upsertSubscription.mutateAsync({
           id: u.subscription.id,
           user_id: u.id,
           plan,
           status: "ativo",
-          starts_at: now.toISOString().split("T")[0],
-          expires_at: expiresAt.toISOString().split("T")[0],
+          starts_at: startsAt,
+          expires_at: expiresAt,
         });
       }
 

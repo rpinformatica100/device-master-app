@@ -191,12 +191,13 @@ export function useAdminSendMessage() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   return useMutation({
-    mutationFn: async (data: { recipient_id: string | null; message: string; type: string }) => {
+    mutationFn: async (data: { recipient_id: string | null; message: string; type: string; parent_message_id?: string | null }) => {
       const { error } = await supabase.from("messages").insert({
         sender_id: user!.id,
         recipient_id: data.recipient_id,
         message: data.message,
         type: data.type,
+        parent_message_id: data.parent_message_id || null,
       });
       if (error) throw error;
     },
