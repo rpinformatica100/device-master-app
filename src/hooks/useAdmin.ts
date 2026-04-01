@@ -54,41 +54,15 @@ export function useAdminUsers() {
   return useQuery({
     queryKey: ["admin-users"],
     queryFn: async () => {
-      // Get all users via edge function or auth admin
-      // Since we can't query auth.users directly, we use company_settings + subscriptions
-      const { data: settings, error: settingsError } = await supabase
-        .from("company_settings")
-        .select("*");
-      
-      if (settingsError) throw settingsError;
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Not authenticated");
 
-      const { data: subs } = await supabase
-        .from("subscriptions")
-        .select("*");
-
-      // Map settings to user format
-      return (settings || []).map((s: any) => {
-        const sub = (subs || []).find((sub: any) => sub.user_id === s.user_id);
-        return {
-          id: s.user_id,
-          email: s.email || "",
-          created_at: s.created_at,
-          raw_user_meta_data: {
-            full_name: s.nome_fantasia || s.razao_social || "",
-            phone: s.telefone || "",
-            company_name: s.nome_fantasia || "",
-            cnpj: s.cnpj || "",
-          },
-          subscription: sub ? {
-            id: sub.id,
-            plan: sub.plan,
-            status: sub.status,
-            starts_at: sub.starts_at,
-            expires_at: sub.expires_at,
-            notes: sub.notes,
-          } : null,
-        } as AdminUser;
+      const response = await supabase.functions.invoke("admin-list-users", {
+        headers: { Authorization: `Bearer ${session.access_token}` },
       });
+
+      if (response.error) throw response.error;
+      return (response.data || []) as AdminUser[];
     },
   });
 }
