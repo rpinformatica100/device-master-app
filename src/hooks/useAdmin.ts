@@ -5,12 +5,16 @@ export interface AdminUser {
   id: string;
   email: string;
   created_at: string;
+  email_confirmed_at: string | null;
+  last_sign_in_at: string | null;
   raw_user_meta_data: {
     full_name?: string;
     phone?: string;
     company_name?: string;
     cnpj?: string;
+    [key: string]: any;
   };
+  roles: string[];
   subscription?: {
     id: string;
     plan: string;
@@ -18,6 +22,15 @@ export interface AdminUser {
     starts_at: string | null;
     expires_at: string | null;
     notes: string | null;
+  } | null;
+  company_settings?: {
+    nome_fantasia: string | null;
+    razao_social: string | null;
+    cnpj: string | null;
+    telefone: string | null;
+    email: string | null;
+    cidade: string | null;
+    estado: string | null;
   } | null;
 }
 
