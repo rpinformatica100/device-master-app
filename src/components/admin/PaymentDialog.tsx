@@ -90,14 +90,14 @@ export default function PaymentDialog({ open, onOpenChange, users, payment }: Pr
       }
 
       // Auto-activate subscription when payment is "pago"
-      if (form.status === "pago" && selectedUser?.subscription) {
-        const plan = selectedUser.subscription.plan;
+      if (form.status === "pago" && selectedUser) {
+        const plan = selectedUser.subscription?.plan || "mensal";
         const { startsAt, expiresAt } = calculateRenewalDate(
-          selectedUser.subscription.expires_at,
+          selectedUser.subscription?.expires_at ?? null,
           plan
         );
         await upsertSubscription.mutateAsync({
-          id: selectedUser.subscription.id,
+          id: selectedUser.subscription?.id,
           user_id: selectedUser.id,
           plan,
           status: "ativo",

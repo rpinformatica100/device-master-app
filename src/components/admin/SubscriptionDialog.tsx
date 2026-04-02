@@ -101,9 +101,11 @@ export default function SubscriptionDialog({ open, onOpenChange, user }: Props) 
   // Auto-calculate expires_at when plan or starts_at changes
   const handlePlanChange = (newPlan: string) => {
     setPlan(newPlan);
-    if (startsAt && planConfig[newPlan]?.days > 0) {
-      const days = planConfig[newPlan].days;
-      setExpiresAt(addDays(startsAt, days));
+    const days = planConfig[newPlan]?.days || 0;
+    if (days > 0) {
+      const start = startsAt || new Date();
+      if (!startsAt) setStartsAt(start);
+      setExpiresAt(addDays(start, days));
     }
   };
 

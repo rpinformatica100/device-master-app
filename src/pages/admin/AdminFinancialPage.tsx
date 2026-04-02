@@ -57,14 +57,14 @@ export default function AdminFinancialPage() {
 
       // Auto-activate subscription
       const u = users.find(u => u.id === payment.user_id);
-      if (u?.subscription) {
-        const plan = u.subscription.plan;
+      if (u) {
+        const plan = u.subscription?.plan || "mensal";
         const { startsAt, expiresAt } = calculateRenewalDate(
-          u.subscription.expires_at,
+          u.subscription?.expires_at ?? null,
           plan
         );
         await upsertSubscription.mutateAsync({
-          id: u.subscription.id,
+          id: u.subscription?.id,
           user_id: u.id,
           plan,
           status: "ativo",
