@@ -72,8 +72,14 @@ function ExpiredMessageItem({ msg }: { msg: any }) {
 }
 
 export default function SubscriptionExpiredPage() {
-  const { signOut, subscriptionStatus, subscriptionExpiresAt } = useAuth();
+  const { signOut, isAdmin, subscriptionStatus, subscriptionExpiresAt } = useAuth();
   const { data: messages = [] } = useUserMessages();
+
+  // Admin never gets stuck here
+  if (isAdmin) {
+    window.location.href = "/admin";
+    return null;
+  }
 
   const whatsappUrl = "https://wa.me/5500000000000?text=Olá! Gostaria de renovar minha assinatura do TechOS.";
 
