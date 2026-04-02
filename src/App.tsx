@@ -90,7 +90,7 @@ function AppRoutes() {
     <Routes>
       <Route path="/" element={user ? <Navigate to={isAdmin ? "/admin" : "/dashboard"} replace /> : <LandingPage />} />
       <Route path="/auth" element={user ? <Navigate to={isAdmin ? "/admin" : "/dashboard"} replace /> : <AuthPage />} />
-      <Route path="/assinatura-expirada" element={user ? <SubscriptionExpiredPage /> : <Navigate to="/auth" replace />} />
+      <Route path="/assinatura-expirada" element={!user ? <Navigate to="/auth" replace /> : isAdmin ? <Navigate to="/admin" replace /> : <SubscriptionExpiredPage />} />
       
       {/* Admin Routes */}
       <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
