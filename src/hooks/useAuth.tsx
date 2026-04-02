@@ -25,18 +25,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [subscriptionExpiresAt, setSubscriptionExpiresAt] = useState<string | null>(null);
 
   const checkAdminAndSubscription = async (userId: string) => {
-    const { data: roles } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId);
-    
-    const adminRole = (roles || []).some((r: any) => r.role === "admin");
-    setIsAdmin(adminRole);
+    try {
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId);
+      
+      const adminRole = (roles || []).some((r: any) => r.role === "admin");
+      setIsAdmin(adminRole);
 
-    if (!adminRole) {
+      if (adminRole) {
+        // Admins always have full access - no subscription needed
+        setSubscriptionStatus("ativo");
+        setSubscriptionExpiresAt(null);
+        return;
+      }
+
+      // For regular users, check subscription
       const { data: subs } = await supabase
         .from("subscriptions")
-        .select("status, expires_at")
+        .select("status, expires_at, plan")
         .eq("user_id", userId)
         .order("created_at", { ascending: false })
         .limit(1);
@@ -50,13 +58,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (status === "ativo" && expiresAt && new Date(expiresAt) < new Date()) {
           status = "expirado";
         }
+        
+        // If status is "ativo" and no expires_at, still allow access (admin activated without date)
         setSubscriptionStatus(status);
       } else {
-        setSubscriptionStatus(null);
+        // No subscription record = new user waiting activation
+        setSubscriptionStatus("aguardando");
         setSubscriptionExpiresAt(null);
       }
-    } else {
-      setSubscriptionStatus("ativo");
+    } catch (err) {
+      console.error("Error checking admin/subscription:", err);
+      setSubscriptionStatus(null);
       setSubscriptionExpiresAt(null);
     }
   };
