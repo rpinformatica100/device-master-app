@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Plus, Trash2, Loader2, Package, Wrench } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { useClients } from "@/hooks/useClients";
 import { useProducts } from "@/hooks/useProducts";
 import { useServices } from "@/hooks/useServices";
@@ -47,6 +48,7 @@ export function QuoteFormDialog({ open, onOpenChange, mode, quoteData }: QuoteFo
   const [interestRate, setInterestRate] = useState(2.99);
   const [maxInstallments, setMaxInstallments] = useState(12);
   const [discountPercentage, setDiscountPercentage] = useState(0);
+  const [enableInstallments, setEnableInstallments] = useState(false);
   const [notes, setNotes] = useState("");
   const [items, setItems] = useState<QuoteItemInput[]>([]);
   const [addItemType, setAddItemType] = useState<"product" | "service" | "manual">("service");
@@ -63,6 +65,7 @@ export function QuoteFormDialog({ open, onOpenChange, mode, quoteData }: QuoteFo
       setInterestRate(Number(quoteData.interest_rate));
       setMaxInstallments(quoteData.max_installments);
       setDiscountPercentage(Number(quoteData.discount_percentage));
+      setEnableInstallments(Number(quoteData.interest_rate) > 0 && quoteData.max_installments > 1);
       setNotes(quoteData.notes || "");
       setItems(
         (quoteData.items || []).map(i => ({
@@ -83,8 +86,9 @@ export function QuoteFormDialog({ open, onOpenChange, mode, quoteData }: QuoteFo
       setProblemDescription("");
       setSolutionDescription("");
       setValidityDays(7);
-      setInterestRate(2.99);
-      setMaxInstallments(12);
+      setInterestRate(0);
+      setMaxInstallments(1);
+      setEnableInstallments(false);
       setDiscountPercentage(0);
       setNotes("");
       setItems([]);
@@ -154,7 +158,7 @@ export function QuoteFormDialog({ open, onOpenChange, mode, quoteData }: QuoteFo
         solution_description: solutionDescription || undefined,
         validity_days: validityDays,
         interest_rate: interestRate,
-        max_installments: maxInstallments,
+        max_installments: enableInstallments ? maxInstallments : 1,
         discount_percentage: discountPercentage,
         notes,
       };
@@ -235,24 +239,40 @@ export function QuoteFormDialog({ open, onOpenChange, mode, quoteData }: QuoteFo
           </div>
 
           {/* Config row */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             <div className="space-y-1">
               <Label className="text-xs">Validade (dias)</Label>
               <Input type="number" min={1} value={validityDays} onChange={e => setValidityDays(Number(e.target.value) || 7)} className="text-sm" />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs">Juros (% a.m.)</Label>
-              <Input type="number" step="0.01" min={0} value={interestRate} onChange={e => setInterestRate(Number(e.target.value) || 0)} className="text-sm" />
-            </div>
-            <div className="space-y-1">
-              <Label className="text-xs">Máx. Parcelas</Label>
-              <Input type="number" min={2} max={24} value={maxInstallments} onChange={e => setMaxInstallments(Number(e.target.value) || 12)} className="text-sm" />
-            </div>
-            <div className="space-y-1">
               <Label className="text-xs">Desconto à vista (%)</Label>
               <Input type="number" step="0.5" min={0} max={100} value={discountPercentage} onChange={e => setDiscountPercentage(Number(e.target.value) || 0)} className="text-sm" />
             </div>
+            <div className="space-y-1 flex flex-col justify-end">
+              <div className="flex items-center gap-2 h-9">
+                <Switch checked={enableInstallments} onCheckedChange={(checked) => {
+                  setEnableInstallments(checked);
+                  if (checked && interestRate === 0) setInterestRate(2.99);
+                  if (checked && maxInstallments <= 1) setMaxInstallments(12);
+                  if (!checked) { setInterestRate(0); setMaxInstallments(1); }
+                }} />
+                <Label className="text-xs">Parcelamento</Label>
+              </div>
+            </div>
           </div>
+
+          {enableInstallments && (
+            <div className="grid grid-cols-2 gap-3 p-3 rounded-lg border border-border bg-secondary/20">
+              <div className="space-y-1">
+                <Label className="text-xs">Juros (% a.m.)</Label>
+                <Input type="number" step="0.01" min={0} value={interestRate} onChange={e => setInterestRate(Number(e.target.value) || 0)} className="text-sm" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Máx. Parcelas</Label>
+                <Input type="number" min={2} max={24} value={maxInstallments} onChange={e => setMaxInstallments(Number(e.target.value) || 12)} className="text-sm" />
+              </div>
+            </div>
+          )}
 
           {/* Items */}
           <div className="space-y-2">
