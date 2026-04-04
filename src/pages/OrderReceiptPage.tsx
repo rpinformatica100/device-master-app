@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ArrowLeft, Printer } from "lucide-react";
+import { ArrowLeft, Printer, Download, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
@@ -79,12 +79,37 @@ const checklistLabels: Record<string, string> = {
   sensores: "Sensores",
 };
 
+const generatePDF = async (elementId: string, filename: string) => {
+  const { default: html2canvas } = await import("html2canvas");
+  const { jsPDF } = await import("jspdf");
+  const el = document.getElementById(elementId);
+  if (!el) return;
+  const canvas = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
+  const imgData = canvas.toDataURL("image/png");
+  const pdf = new jsPDF("p", "mm", "a4");
+  const imgW = 210;
+  const imgH = (canvas.height * imgW) / canvas.width;
+  const pageH = 297;
+  let heightLeft = imgH;
+  let position = 0;
+  pdf.addImage(imgData, "PNG", 0, position, imgW, imgH);
+  heightLeft -= pageH;
+  while (heightLeft > 0) {
+    position -= pageH;
+    pdf.addPage();
+    pdf.addImage(imgData, "PNG", 0, position, imgW, imgH);
+    heightLeft -= pageH;
+  }
+  pdf.save(filename);
+};
+
 export default function OrderReceiptPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { settings: company } = useCompanySettings();
   const [order, setOrder] = useState<OrderData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -105,6 +130,16 @@ export default function OrderReceiptPage() {
     };
     fetchOrder();
   }, [id]);
+
+  const handleDownloadPDF = async () => {
+    if (!order) return;
+    setDownloading(true);
+    try {
+      await generatePDF("os-print-content", `OS-${order.os_number}.pdf`);
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   const fmt = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
 
@@ -128,11 +163,17 @@ export default function OrderReceiptPage() {
       {/* Action Bar */}
       <div className="print:hidden sticky top-0 z-10 bg-card border-b p-3 flex items-center justify-between">
         <Button variant="ghost" size="sm" onClick={() => navigate('/ordens')}><ArrowLeft className="w-4 h-4 mr-2" />Voltar</Button>
-        <Button variant="outline" size="sm" onClick={() => window.print()}><Printer className="w-4 h-4 mr-2" />Imprimir</Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={handleDownloadPDF} disabled={downloading}>
+            {downloading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}
+            Baixar PDF
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => window.print()}><Printer className="w-4 h-4 mr-2" />Imprimir</Button>
+        </div>
       </div>
 
       {/* A4 Content */}
-      <div className="max-w-[210mm] mx-auto px-[15mm] py-[10mm] text-black bg-white print:px-0 print:py-0" style={{ fontSize: '11px', lineHeight: '1.5' }}>
+      <div id="os-print-content" className="max-w-[210mm] mx-auto px-[15mm] py-[10mm] text-black bg-white" style={{ fontSize: '11px', lineHeight: '1.5' }}>
         {/* Header */}
         <div style={{ textAlign: 'center', borderBottom: '2px solid #000', paddingBottom: '10px', marginBottom: '14px' }}>
           <h1 style={{ fontSize: '20px', fontWeight: 'bold', letterSpacing: '1px', textTransform: 'uppercase', margin: 0 }}>
