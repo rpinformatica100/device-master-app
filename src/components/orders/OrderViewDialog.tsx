@@ -387,10 +387,6 @@ export function OrderViewDialog({ open, onOpenChange, order, onEdit, onOrderUpda
               <Printer className="w-4 h-4" />
               Imprimir OS
             </Button>
-            <Button variant="outline" className="gap-2" onClick={() => navigate(`/ordens/${order.id}/orcamento`)}>
-              <FileBarChart className="w-4 h-4" />
-              Orçamento
-            </Button>
           </div>
           <div className="flex gap-2 flex-wrap">
             {canFinalize && (
