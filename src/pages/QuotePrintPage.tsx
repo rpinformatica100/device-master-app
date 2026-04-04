@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { format, addDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ArrowLeft, Printer } from "lucide-react";
+import { ArrowLeft, Printer, Download, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
@@ -40,12 +40,37 @@ interface QuoteData {
   }>;
 }
 
+const generatePDF = async (elementId: string, filename: string) => {
+  const { default: html2canvas } = await import("html2canvas");
+  const { jsPDF } = await import("jspdf");
+  const el = document.getElementById(elementId);
+  if (!el) return;
+  const canvas = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
+  const imgData = canvas.toDataURL("image/png");
+  const pdf = new jsPDF("p", "mm", "a4");
+  const imgW = 210;
+  const imgH = (canvas.height * imgW) / canvas.width;
+  const pageH = 297;
+  let heightLeft = imgH;
+  let position = 0;
+  pdf.addImage(imgData, "PNG", 0, position, imgW, imgH);
+  heightLeft -= pageH;
+  while (heightLeft > 0) {
+    position -= pageH;
+    pdf.addPage();
+    pdf.addImage(imgData, "PNG", 0, position, imgW, imgH);
+    heightLeft -= pageH;
+  }
+  pdf.save(filename);
+};
+
 export default function QuotePrintPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { settings: company } = useCompanySettings();
   const [quote, setQuote] = useState<QuoteData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
     const fetchQuote = async () => {
@@ -73,6 +98,16 @@ export default function QuotePrintPage() {
 
   const fmt = (v: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
+
+  const handleDownloadPDF = async () => {
+    if (!quote) return;
+    setDownloading(true);
+    try {
+      await generatePDF("quote-print-content", `ORC-${quote.quote_number}.pdf`);
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   const calcInstallment = (total: number, n: number, rate: number) => {
     if (n <= 1) return total;
@@ -104,6 +139,7 @@ export default function QuotePrintPage() {
   const installmentOptions = [2, 3, 4, 5, 6, 10, 12].filter(
     (n) => n <= quote.max_installments
   );
+  const showInstallments = Number(quote.interest_rate) > 0 && quote.max_installments > 1 && installmentOptions.length > 0;
 
   const s: Record<string, React.CSSProperties> = {
     page: { maxWidth: "210mm", margin: "0 auto", padding: "10mm 15mm", fontSize: "11px", lineHeight: "1.5", color: "#000", background: "#fff", fontFamily: "Arial, Helvetica, sans-serif" },
@@ -136,14 +172,20 @@ export default function QuotePrintPage() {
           <ArrowLeft className="w-4 h-4 mr-2" />
           Voltar
         </Button>
-        <Button variant="outline" size="sm" onClick={() => window.print()}>
-          <Printer className="w-4 h-4 mr-2" />
-          Imprimir
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={handleDownloadPDF} disabled={downloading}>
+            {downloading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}
+            Baixar PDF
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => window.print()}>
+            <Printer className="w-4 h-4 mr-2" />
+            Imprimir
+          </Button>
+        </div>
       </div>
 
       {/* A4 Content */}
-      <div style={s.page}>
+      <div id="quote-print-content" style={s.page}>
         {/* Header */}
         <div style={s.header}>
           <h1 style={s.h1}>{company?.nome_fantasia || company?.razao_social || "Empresa"}</h1>
@@ -314,8 +356,8 @@ export default function QuotePrintPage() {
             </div>
           </div>
 
-          {/* Installments */}
-          {Number(quote.interest_rate) > 0 && installmentOptions.length > 0 && (
+          {/* Installments - only if configured */}
+          {showInstallments && (
             <div style={{ padding: "12px" }}>
               <p style={{ fontSize: "9px", color: "#555", textAlign: "center", marginBottom: "8px" }}>
                 Parcelamento no Cartão de Crédito ({quote.interest_rate}% a.m.)
