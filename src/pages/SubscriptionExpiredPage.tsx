@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserMessages, useMarkMessageRead, useSendReply, useMessageReplies } from "@/hooks/useMessages";
 import { Button } from "@/components/ui/button";
@@ -74,11 +75,15 @@ function ExpiredMessageItem({ msg }: { msg: any }) {
 export default function SubscriptionExpiredPage() {
   const { signOut, isAdmin, subscriptionStatus, subscriptionExpiresAt } = useAuth();
   const { data: messages = [] } = useUserMessages();
+  const hasActiveSubscription = !!subscriptionStatus && ["ativo", "trial"].includes(subscriptionStatus);
 
   // Admin never gets stuck here
   if (isAdmin) {
-    window.location.href = "/admin";
-    return null;
+    return <Navigate to="/admin" replace />;
+  }
+
+  if (hasActiveSubscription) {
+    return <Navigate to="/dashboard" replace />;
   }
 
   const whatsappUrl = "https://wa.me/5500000000000?text=Olá! Gostaria de renovar minha assinatura do TechOS.";

@@ -6,6 +6,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  accessResolved: boolean;
   isAdmin: boolean;
   subscriptionStatus: string | null;
   subscriptionExpiresAt: string | null;
@@ -20,9 +21,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [accessResolved, setAccessResolved] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
   const [subscriptionExpiresAt, setSubscriptionExpiresAt] = useState<string | null>(null);
+
+  const resetAccessState = () => {
+    setIsAdmin(false);
+    setSubscriptionStatus(null);
+    setSubscriptionExpiresAt(null);
+  };
 
   const checkAdminAndSubscription = async (userId: string) => {
     try {
@@ -68,8 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     } catch (err) {
       console.error("Error checking admin/subscription:", err);
-      setSubscriptionStatus(null);
-      setSubscriptionExpiresAt(null);
+      resetAccessState();
     }
   };
 
@@ -84,19 +91,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(session?.user ?? null);
 
         if (session?.user) {
+          if (event === "TOKEN_REFRESHED") return;
+
+          setAccessResolved(false);
+          resetAccessState();
+
           // Defer DB calls to avoid deadlock with auth callback
           setTimeout(async () => {
             if (!mounted) return;
             await checkAdminAndSubscription(session.user.id);
+            if (mounted) {
+              setAccessResolved(true);
+            }
             if (mounted && initialLoad) {
               initialLoad = false;
               setLoading(false);
             }
           }, 0);
         } else {
-          setIsAdmin(false);
-          setSubscriptionStatus(null);
-          setSubscriptionExpiresAt(null);
+          resetAccessState();
+          setAccessResolved(true);
           if (initialLoad) {
             initialLoad = false;
             setLoading(false);
@@ -110,7 +124,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
+        setAccessResolved(false);
+        resetAccessState();
         await checkAdminAndSubscription(session.user.id);
+        if (mounted) {
+          setAccessResolved(true);
+        }
+      } else {
+        resetAccessState();
+        setAccessResolved(true);
       }
       if (mounted) {
         initialLoad = false;
@@ -167,7 +189,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, isAdmin, subscriptionStatus, subscriptionExpiresAt, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, accessResolved, isAdmin, subscriptionStatus, subscriptionExpiresAt, signIn, signUp, signOut }}>
       {children}
     </AuthContext.Provider>
   );

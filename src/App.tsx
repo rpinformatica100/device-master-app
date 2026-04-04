@@ -29,11 +29,12 @@ import AdminNotificationsPage from "./pages/admin/AdminNotificationsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
+const ACTIVE_SUBSCRIPTION_STATUSES = ["ativo", "trial"];
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading, subscriptionStatus, isAdmin } = useAuth();
+  const { user, loading, accessResolved, subscriptionStatus, isAdmin } = useAuth();
   
-  if (loading) {
+  if (loading || (user && !accessResolved)) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
@@ -51,7 +52,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }
 
   // Check subscription - block null (new users) and non-active statuses
-  if (!subscriptionStatus || !["ativo", "trial"].includes(subscriptionStatus)) {
+  if (!subscriptionStatus || !ACTIVE_SUBSCRIPTION_STATUSES.includes(subscriptionStatus)) {
     return <Navigate to="/assinatura-expirada" replace />;
   }
   
@@ -59,9 +60,9 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 function AdminRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading, isAdmin } = useAuth();
+  const { user, loading, accessResolved, isAdmin } = useAuth();
   
-  if (loading) {
+  if (loading || (user && !accessResolved)) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
@@ -76,9 +77,10 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
 }
 
 function AppRoutes() {
-  const { user, loading, isAdmin } = useAuth();
+  const { user, loading, accessResolved, isAdmin, subscriptionStatus } = useAuth();
+  const hasActiveSubscription = !!subscriptionStatus && ACTIVE_SUBSCRIPTION_STATUSES.includes(subscriptionStatus);
 
-  if (loading) {
+  if (loading || (user && !accessResolved)) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
@@ -88,9 +90,9 @@ function AppRoutes() {
 
   return (
     <Routes>
-      <Route path="/" element={user ? <Navigate to={isAdmin ? "/admin" : "/dashboard"} replace /> : <LandingPage />} />
-      <Route path="/auth" element={user ? <Navigate to={isAdmin ? "/admin" : "/dashboard"} replace /> : <AuthPage />} />
-      <Route path="/assinatura-expirada" element={!user ? <Navigate to="/auth" replace /> : isAdmin ? <Navigate to="/admin" replace /> : <SubscriptionExpiredPage />} />
+      <Route path="/" element={user ? <Navigate to={isAdmin ? "/admin" : hasActiveSubscription ? "/dashboard" : "/assinatura-expirada"} replace /> : <LandingPage />} />
+      <Route path="/auth" element={user ? <Navigate to={isAdmin ? "/admin" : hasActiveSubscription ? "/dashboard" : "/assinatura-expirada"} replace /> : <AuthPage />} />
+      <Route path="/assinatura-expirada" element={!user ? <Navigate to="/auth" replace /> : isAdmin ? <Navigate to="/admin" replace /> : hasActiveSubscription ? <Navigate to="/dashboard" replace /> : <SubscriptionExpiredPage />} />
       
       {/* Admin Routes */}
       <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
