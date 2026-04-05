@@ -1,72 +1,42 @@
 
 
-# Plano: Admin Funcional Completo — Tudo Funcionando
+# Plano: Otimizar Layout de Impressão da OS e Orçamento
 
-## Problemas Identificados
+## Problemas Atuais
 
-1. **ProtectedRoute**: `subscriptionStatus === null` (usuario novo) **passa pelo check** e acessa o sistema — deveria bloquear
-2. **Renovacao perde dias**: Pagamento calcula `expires_at = now + 30 dias` em vez de `max(expires_at_atual, now) + 30 dias`
-3. **Admin reply quebrado**: Reply do admin no chat nao envia `parent_message_id` — resposta vai como mensagem nova
-4. **AdminLayout sem mobile**: Sidebar fixa 256px, inutilizavel em tela pequena
-5. **"Voltar ao sistema" no admin**: SuperAdmin nao deveria acessar area de OS
-6. **Cron nao agendado**: Edge function de expiracao existe mas nunca roda automaticamente
-7. **Logica duplicada**: Ativacao de subscription duplicada entre PaymentDialog e AdminFinancialPage
+1. **Cabeçalho ocupa muito espaço vertical** — empresa e dados empilhados no centro
+2. **Seções Cliente e Equipamento ocupam blocos separados** — poderiam ser lado a lado
+3. **PDF gerado muito grande** — `html2canvas` com `scale: 2` gera imagem PNG enorme
+4. **Título do arquivo genérico** — falta nome da assistência no nome do PDF/impressão
+5. **Campos longos sem truncamento** — textos grandes quebram o layout
 
----
+## Mudanças Propostas
 
-## Mudancas
+### 1. Cabeçalho compacto lado a lado (OS e Orçamento)
+- Logo/nome da empresa à esquerda, dados de contato à direita, numa única faixa horizontal
+- Número da OS/Orçamento e data na mesma linha abaixo do cabeçalho
 
-### 1. ProtectedRoute — Bloquear `null`
-**`src/App.tsx`** — Tratar subscription null como bloqueado:
-```typescript
-// Antes (bug):
-if (subscriptionStatus && !["ativo", "trial"].includes(subscriptionStatus)) {
+### 2. Cliente + Equipamento lado a lado (OS)
+- Grid de 2 colunas: cliente à esquerda, equipamento à direita
+- Truncar campos longos (endereço, acessórios) com `overflow: hidden; text-overflow: ellipsis; max-width`
 
-// Depois (fix):
-if (!subscriptionStatus || !["ativo", "trial"].includes(subscriptionStatus)) {
-```
+### 3. Reduzir tamanho do PDF
+- Baixar `scale` de `2` para `1.5` no `html2canvas`
+- Usar `image/jpeg` com qualidade 0.85 em vez de PNG
+- Aplicar em ambas as páginas (OS e Orçamento)
 
-### 2. Logica de Renovacao Inteligente
-**`src/components/admin/PaymentDialog.tsx`** e **`src/pages/admin/AdminFinancialPage.tsx`**:
-- Extrair funcao `calculateRenewalDate` reutilizavel
-- Base = `max(current_expires_at, now)` + dias do plano
-- Evita perda de dias em pagamento antecipado
+### 4. Título personalizado do documento
+- PDF: `OS-{numero}_{NomeEmpresa}.pdf` / `ORC-{numero}_{NomeEmpresa}.pdf`
+- Impressão: usar `document.title` temporariamente durante `window.print()` para que o navegador use o título correto
 
-### 3. Admin Reply com `parent_message_id`
-**`src/pages/admin/AdminNotificationsPage.tsx`**:
-- `useAdminSendMessage` precisa aceitar `parent_message_id` opcional
-- No reply do `AdminMessageItem`, passar `parent_message_id: msg.id`
-
-**`src/hooks/useMessages.ts`**:
-- Atualizar `useAdminSendMessage` para aceitar `parent_message_id`
-
-### 4. AdminLayout Responsivo
-**`src/components/admin/AdminLayout.tsx`**:
-- Adicionar menu hamburger para mobile (sheet/drawer)
-- Sidebar oculta em telas < 1024px
-- Header mobile com titulo e hamburger
-
-### 5. Remover "Voltar ao sistema"
-**`src/components/admin/AdminLayout.tsx`**:
-- Remover botao "Voltar ao sistema" — admin so gerencia, nao usa OS
-
-### 6. Agendar Cron de Expiracao
-- Usar `supabase insert tool` para criar pg_cron job que chama a edge function diariamente as 3h
-
-### 7. DRY na Ativacao de Subscription
-- Criar funcao utilitaria `activateSubscriptionOnPayment(user, upsertSubscription)` usada por PaymentDialog e AdminFinancialPage
-
----
+### 5. Campos com limite de caracteres
+- Truncar textos longos em campos do grid (max ~60 chars) com reticências
+- Acessórios e endereço com `white-space: nowrap; overflow: hidden; text-overflow: ellipsis`
 
 ## Arquivos Modificados
 
-| Arquivo | Mudanca |
-|---------|---------|
-| `src/App.tsx` | Fix ProtectedRoute null check |
-| `src/hooks/useMessages.ts` | `useAdminSendMessage` aceitar `parent_message_id` |
-| `src/pages/admin/AdminNotificationsPage.tsx` | Reply com `parent_message_id` |
-| `src/components/admin/AdminLayout.tsx` | Responsivo + remover "Voltar ao sistema" |
-| `src/components/admin/PaymentDialog.tsx` | Renovacao inteligente (max dates) |
-| `src/pages/admin/AdminFinancialPage.tsx` | Renovacao inteligente (max dates) |
-| SQL (insert tool) | pg_cron schedule para edge function |
+| Arquivo | Alteração |
+|---|---|
+| `src/pages/OrderReceiptPage.tsx` | Cabeçalho horizontal, cliente+equipamento lado a lado, PDF JPEG menor, título personalizado, truncamento |
+| `src/pages/QuotePrintPage.tsx` | Cabeçalho horizontal, PDF JPEG menor, título personalizado |
 
