@@ -85,27 +85,33 @@ const truncate = (text: string | undefined, max: number) => {
 };
 
 const generatePDF = async (elementId: string, filename: string) => {
-  const { default: html2canvas } = await import("html2canvas");
-  const { jsPDF } = await import("jspdf");
-  const el = document.getElementById(elementId);
-  if (!el) return;
-  const canvas = await html2canvas(el, { scale: 1.5, useCORS: true, backgroundColor: "#ffffff" });
-  const imgData = canvas.toDataURL("image/jpeg", 0.85);
-  const pdf = new jsPDF("p", "mm", "a4");
-  const imgW = 210;
-  const imgH = (canvas.height * imgW) / canvas.width;
-  const pageH = 297;
-  let heightLeft = imgH;
-  let position = 0;
-  pdf.addImage(imgData, "JPEG", 0, position, imgW, imgH);
-  heightLeft -= pageH;
-  while (heightLeft > 0) {
-    position -= pageH;
-    pdf.addPage();
+  try {
+    const html2canvasModule = await import("html2canvas");
+    const html2canvas = html2canvasModule.default;
+    const jspdfModule = await import("jspdf");
+    const jsPDF = jspdfModule.jsPDF;
+    const el = document.getElementById(elementId);
+    if (!el) return;
+    const canvas = await html2canvas(el, { scale: 1.5, useCORS: true, backgroundColor: "#ffffff" });
+    const imgData = canvas.toDataURL("image/jpeg", 0.85);
+    const pdf = new jsPDF("p", "mm", "a4");
+    const imgW = 210;
+    const imgH = (canvas.height * imgW) / canvas.width;
+    const pageH = 297;
+    let heightLeft = imgH;
+    let position = 0;
     pdf.addImage(imgData, "JPEG", 0, position, imgW, imgH);
     heightLeft -= pageH;
+    while (heightLeft > 0) {
+      position -= pageH;
+      pdf.addPage();
+      pdf.addImage(imgData, "JPEG", 0, position, imgW, imgH);
+      heightLeft -= pageH;
+    }
+    pdf.save(filename);
+  } catch (err) {
+    console.error("PDF generation error:", err);
   }
-  pdf.save(filename);
 };
 
 const sanitizeFilename = (name: string) => name.replace(/[^a-zA-Z0-9_-]/g, "_").replace(/_+/g, "_");
