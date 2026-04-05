@@ -85,27 +85,33 @@ const truncate = (text: string | undefined, max: number) => {
 };
 
 const generatePDF = async (elementId: string, filename: string) => {
-  const { default: html2canvas } = await import("html2canvas");
-  const { jsPDF } = await import("jspdf");
-  const el = document.getElementById(elementId);
-  if (!el) return;
-  const canvas = await html2canvas(el, { scale: 1.5, useCORS: true, backgroundColor: "#ffffff" });
-  const imgData = canvas.toDataURL("image/jpeg", 0.85);
-  const pdf = new jsPDF("p", "mm", "a4");
-  const imgW = 210;
-  const imgH = (canvas.height * imgW) / canvas.width;
-  const pageH = 297;
-  let heightLeft = imgH;
-  let position = 0;
-  pdf.addImage(imgData, "JPEG", 0, position, imgW, imgH);
-  heightLeft -= pageH;
-  while (heightLeft > 0) {
-    position -= pageH;
-    pdf.addPage();
+  try {
+    const html2canvasModule = await import("html2canvas");
+    const html2canvas = html2canvasModule.default;
+    const jspdfModule = await import("jspdf");
+    const jsPDF = jspdfModule.jsPDF;
+    const el = document.getElementById(elementId);
+    if (!el) return;
+    const canvas = await html2canvas(el, { scale: 1.5, useCORS: true, backgroundColor: "#ffffff" });
+    const imgData = canvas.toDataURL("image/jpeg", 0.85);
+    const pdf = new jsPDF("p", "mm", "a4");
+    const imgW = 210;
+    const imgH = (canvas.height * imgW) / canvas.width;
+    const pageH = 297;
+    let heightLeft = imgH;
+    let position = 0;
     pdf.addImage(imgData, "JPEG", 0, position, imgW, imgH);
     heightLeft -= pageH;
+    while (heightLeft > 0) {
+      position -= pageH;
+      pdf.addPage();
+      pdf.addImage(imgData, "JPEG", 0, position, imgW, imgH);
+      heightLeft -= pageH;
+    }
+    pdf.save(filename);
+  } catch (err) {
+    console.error("PDF generation error:", err);
   }
-  pdf.save(filename);
 };
 
 const sanitizeFilename = (name: string) => name.replace(/[^a-zA-Z0-9_-]/g, "_").replace(/_+/g, "_");
@@ -195,31 +201,27 @@ export default function OrderReceiptPage() {
 
       {/* A4 Content */}
       <div id="os-print-content" className="max-w-[210mm] mx-auto px-[15mm] py-[10mm] text-black bg-white" style={{ fontSize: '11px', lineHeight: '1.5' }}>
-        {/* Header - Horizontal */}
+        {/* Header - Company left, OS details right */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '2px solid #000', paddingBottom: '8px', marginBottom: '10px' }}>
           <div>
             <h1 style={{ fontSize: '18px', fontWeight: 'bold', letterSpacing: '1px', textTransform: 'uppercase', margin: 0 }}>
               {companyName}
             </h1>
             {company?.cnpj && <p style={{ fontSize: '9px', color: '#555', margin: '1px 0' }}>CNPJ: {company.cnpj}</p>}
+            {company?.telefone && <p style={{ fontSize: '9px', color: '#555', margin: '1px 0' }}>Tel: {company.telefone}</p>}
+            {company?.email && <p style={{ fontSize: '9px', color: '#555', margin: '1px 0' }}>{company.email}</p>}
+            {companyAddr && <p style={{ fontSize: '9px', color: '#555', margin: '1px 0' }}>{truncate(companyAddr, 60)}</p>}
           </div>
-          <div style={{ textAlign: 'right', fontSize: '9px', color: '#555' }}>
-            {company?.telefone && <p style={{ margin: '1px 0' }}>Tel: {company.telefone}</p>}
-            {company?.email && <p style={{ margin: '1px 0' }}>{company.email}</p>}
-            {companyAddr && <p style={{ margin: '1px 0', maxWidth: '220px' }}>{truncate(companyAddr, 60)}</p>}
+          <div style={{ textAlign: 'right' }}>
+            <p style={{ fontSize: '14px', fontWeight: 'bold', margin: '0 0 4px 0' }}>{order.os_number}</p>
+            <div style={{ display: 'flex', gap: '4px', justifyContent: 'flex-end', marginBottom: '4px' }}>
+              <span style={{ fontSize: '9px', border: '1px solid #999', borderRadius: '3px', padding: '1px 6px', background: '#f5f5f5' }}>{statusLabels[order.status] || order.status}</span>
+              <span style={{ fontSize: '9px', border: '1px solid #999', borderRadius: '3px', padding: '1px 6px', background: '#f5f5f5' }}>Prior: {priorityLabels[order.priority] || order.priority}</span>
+            </div>
+            <p style={{ fontSize: '9px', color: '#555', margin: 0 }}>
+              Abertura: {format(new Date(order.created_at), "dd 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR })}
+            </p>
           </div>
-        </div>
-
-        {/* OS Number + Status + Date - single line */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', padding: '4px 8px', background: '#f5f5f5', borderRadius: '4px', border: '1px solid #ddd' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span style={{ fontSize: '14px', fontWeight: 'bold' }}>ORDEM DE SERVIÇO {order.os_number}</span>
-            <span style={{ fontSize: '9px', border: '1px solid #999', borderRadius: '3px', padding: '1px 6px' }}>{statusLabels[order.status] || order.status}</span>
-            <span style={{ fontSize: '9px', border: '1px solid #999', borderRadius: '3px', padding: '1px 6px' }}>Prior: {priorityLabels[order.priority] || order.priority}</span>
-          </div>
-          <span style={{ fontSize: '9px', color: '#555' }}>
-            {format(new Date(order.created_at), "dd/MM/yyyy HH:mm")}
-          </span>
         </div>
 
         {/* Client + Equipment side by side */}
