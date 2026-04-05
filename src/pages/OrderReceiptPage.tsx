@@ -79,29 +79,36 @@ const checklistLabels: Record<string, string> = {
   sensores: "Sensores",
 };
 
+const truncate = (text: string | undefined, max: number) => {
+  if (!text) return "—";
+  return text.length > max ? text.slice(0, max) + "…" : text;
+};
+
 const generatePDF = async (elementId: string, filename: string) => {
   const { default: html2canvas } = await import("html2canvas");
   const { jsPDF } = await import("jspdf");
   const el = document.getElementById(elementId);
   if (!el) return;
-  const canvas = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
-  const imgData = canvas.toDataURL("image/png");
+  const canvas = await html2canvas(el, { scale: 1.5, useCORS: true, backgroundColor: "#ffffff" });
+  const imgData = canvas.toDataURL("image/jpeg", 0.85);
   const pdf = new jsPDF("p", "mm", "a4");
   const imgW = 210;
   const imgH = (canvas.height * imgW) / canvas.width;
   const pageH = 297;
   let heightLeft = imgH;
   let position = 0;
-  pdf.addImage(imgData, "PNG", 0, position, imgW, imgH);
+  pdf.addImage(imgData, "JPEG", 0, position, imgW, imgH);
   heightLeft -= pageH;
   while (heightLeft > 0) {
     position -= pageH;
     pdf.addPage();
-    pdf.addImage(imgData, "PNG", 0, position, imgW, imgH);
+    pdf.addImage(imgData, "JPEG", 0, position, imgW, imgH);
     heightLeft -= pageH;
   }
   pdf.save(filename);
 };
+
+const sanitizeFilename = (name: string) => name.replace(/[^a-zA-Z0-9_-]/g, "_").replace(/_+/g, "_");
 
 export default function OrderReceiptPage() {
   const { id } = useParams<{ id: string }>();
@@ -131,14 +138,25 @@ export default function OrderReceiptPage() {
     fetchOrder();
   }, [id]);
 
+  const companyName = company?.nome_fantasia || company?.razao_social || "Assistência Técnica";
+
   const handleDownloadPDF = async () => {
     if (!order) return;
     setDownloading(true);
     try {
-      await generatePDF("os-print-content", `OS-${order.os_number}.pdf`);
+      const fname = `OS-${order.os_number}_${sanitizeFilename(companyName)}.pdf`;
+      await generatePDF("os-print-content", fname);
     } finally {
       setDownloading(false);
     }
+  };
+
+  const handlePrint = () => {
+    if (!order) return;
+    const prev = document.title;
+    document.title = `OS-${order.os_number} - ${companyName}`;
+    window.print();
+    document.title = prev;
   };
 
   const fmt = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
@@ -158,6 +176,9 @@ export default function OrderReceiptPage() {
   const companyAddr = company ? [company.rua, company.numero, company.bairro, company.cidade, company.estado, company.cep].filter(Boolean).join(', ') : '';
   const clientAddr = order.client ? [order.client.address, order.client.numero, order.client.bairro, order.client.city, order.client.state].filter(Boolean).join(', ') : '';
 
+  const lbl: React.CSSProperties = { color: '#777', fontSize: '9px' };
+  const val: React.CSSProperties = { fontWeight: 'bold', fontSize: '10px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const, maxWidth: '180px' };
+
   return (
     <div className="min-h-screen bg-white print:bg-white">
       {/* Action Bar */}
@@ -168,80 +189,86 @@ export default function OrderReceiptPage() {
             {downloading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}
             Baixar PDF
           </Button>
-          <Button variant="outline" size="sm" onClick={() => window.print()}><Printer className="w-4 h-4 mr-2" />Imprimir</Button>
+          <Button variant="outline" size="sm" onClick={handlePrint}><Printer className="w-4 h-4 mr-2" />Imprimir</Button>
         </div>
       </div>
 
       {/* A4 Content */}
       <div id="os-print-content" className="max-w-[210mm] mx-auto px-[15mm] py-[10mm] text-black bg-white" style={{ fontSize: '11px', lineHeight: '1.5' }}>
-        {/* Header */}
-        <div style={{ textAlign: 'center', borderBottom: '2px solid #000', paddingBottom: '10px', marginBottom: '14px' }}>
-          <h1 style={{ fontSize: '20px', fontWeight: 'bold', letterSpacing: '1px', textTransform: 'uppercase', margin: 0 }}>
-            {company?.nome_fantasia || company?.razao_social || 'Assistência Técnica'}
-          </h1>
-          {company?.cnpj && <p style={{ fontSize: '10px', color: '#555', margin: '2px 0' }}>CNPJ: {company.cnpj}</p>}
-          {company?.telefone && <p style={{ fontSize: '10px', color: '#555', margin: '2px 0' }}>Tel: {company.telefone}</p>}
-          {company?.email && <p style={{ fontSize: '10px', color: '#555', margin: '2px 0' }}>Email: {company.email}</p>}
-          {companyAddr && <p style={{ fontSize: '10px', color: '#555', margin: '2px 0' }}>{companyAddr}</p>}
-        </div>
-
-        {/* Title */}
-        <div style={{ textAlign: 'center', marginBottom: '16px' }}>
-          <h2 style={{ fontSize: '16px', fontWeight: 'bold', border: '2px solid #000', display: 'inline-block', padding: '4px 24px' }}>ORDEM DE SERVIÇO</h2>
-          <div style={{ marginTop: '6px' }}>
-            <span style={{ fontSize: '14px', fontWeight: 'bold' }}>{order.os_number}</span>
-            <span style={{ marginLeft: '12px', fontSize: '10px', border: '1px solid #999', borderRadius: '3px', padding: '1px 6px' }}>{statusLabels[order.status] || order.status}</span>
-            <span style={{ marginLeft: '8px', fontSize: '10px', border: '1px solid #999', borderRadius: '3px', padding: '1px 6px' }}>Prior: {priorityLabels[order.priority] || order.priority}</span>
+        {/* Header - Horizontal */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '2px solid #000', paddingBottom: '8px', marginBottom: '10px' }}>
+          <div>
+            <h1 style={{ fontSize: '18px', fontWeight: 'bold', letterSpacing: '1px', textTransform: 'uppercase', margin: 0 }}>
+              {companyName}
+            </h1>
+            {company?.cnpj && <p style={{ fontSize: '9px', color: '#555', margin: '1px 0' }}>CNPJ: {company.cnpj}</p>}
           </div>
-          <p style={{ fontSize: '10px', color: '#555', marginTop: '4px' }}>
-            Abertura: {format(new Date(order.created_at), "dd 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR })}
-          </p>
-        </div>
-
-        {/* Client */}
-        <div style={{ border: '1px solid #000', borderRadius: '4px', padding: '8px 10px', marginBottom: '10px' }}>
-          <h3 style={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', borderBottom: '1px solid #ccc', paddingBottom: '4px', marginBottom: '6px' }}>DADOS DO CLIENTE</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px', fontSize: '10px' }}>
-            <div><span style={{ color: '#777', fontSize: '9px' }}>Nome:</span><br/><strong>{order.client?.name || '—'}</strong></div>
-            <div><span style={{ color: '#777', fontSize: '9px' }}>Telefone:</span><br/><strong>{order.client?.phone || '—'}</strong></div>
-            <div><span style={{ color: '#777', fontSize: '9px' }}>Email:</span><br/><strong>{order.client?.email || '—'}</strong></div>
-            {order.client?.cpf && <div><span style={{ color: '#777', fontSize: '9px' }}>CPF:</span><br/><strong>{order.client.cpf}</strong></div>}
-            {order.client?.cnpj && <div><span style={{ color: '#777', fontSize: '9px' }}>CNPJ:</span><br/><strong>{order.client.cnpj}</strong></div>}
-            {clientAddr && <div style={{ gridColumn: 'span 2' }}><span style={{ color: '#777', fontSize: '9px' }}>Endereço:</span><br/><strong>{clientAddr}</strong></div>}
+          <div style={{ textAlign: 'right', fontSize: '9px', color: '#555' }}>
+            {company?.telefone && <p style={{ margin: '1px 0' }}>Tel: {company.telefone}</p>}
+            {company?.email && <p style={{ margin: '1px 0' }}>{company.email}</p>}
+            {companyAddr && <p style={{ margin: '1px 0', maxWidth: '220px' }}>{truncate(companyAddr, 60)}</p>}
           </div>
         </div>
 
-        {/* Equipment */}
-        <div style={{ border: '1px solid #000', borderRadius: '4px', padding: '8px 10px', marginBottom: '10px' }}>
-          <h3 style={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', borderBottom: '1px solid #ccc', paddingBottom: '4px', marginBottom: '6px' }}>DADOS DO EQUIPAMENTO</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px', fontSize: '10px' }}>
-            <div><span style={{ color: '#777', fontSize: '9px' }}>Dispositivo:</span><br/><strong>{order.device}</strong></div>
-            <div><span style={{ color: '#777', fontSize: '9px' }}>Categoria:</span><br/><strong style={{ textTransform: 'capitalize' }}>{order.category}</strong></div>
-            <div><span style={{ color: '#777', fontSize: '9px' }}>Nº Série:</span><br/><strong style={{ fontFamily: 'monospace' }}>{order.serial_number || '—'}</strong></div>
-            {csf.brand && <div><span style={{ color: '#777', fontSize: '9px' }}>Marca:</span><br/><strong>{csf.brand}</strong></div>}
-            {csf.model && <div><span style={{ color: '#777', fontSize: '9px' }}>Modelo:</span><br/><strong>{csf.model}</strong></div>}
-            {csf.imei && <div><span style={{ color: '#777', fontSize: '9px' }}>IMEI:</span><br/><strong style={{ fontFamily: 'monospace' }}>{csf.imei}</strong></div>}
-            {csf.color && <div><span style={{ color: '#777', fontSize: '9px' }}>Cor:</span><br/><strong>{csf.color}</strong></div>}
-            {csf.storage && <div><span style={{ color: '#777', fontSize: '9px' }}>Capacidade:</span><br/><strong>{csf.storage}</strong></div>}
-            {order.password && <div><span style={{ color: '#777', fontSize: '9px' }}>Senha:</span><br/><strong>{order.password}</strong></div>}
-            {order.accessories && <div style={{ gridColumn: 'span 2' }}><span style={{ color: '#777', fontSize: '9px' }}>Acessórios:</span><br/><strong>{order.accessories}</strong></div>}
+        {/* OS Number + Status + Date - single line */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', padding: '4px 8px', background: '#f5f5f5', borderRadius: '4px', border: '1px solid #ddd' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={{ fontSize: '14px', fontWeight: 'bold' }}>ORDEM DE SERVIÇO {order.os_number}</span>
+            <span style={{ fontSize: '9px', border: '1px solid #999', borderRadius: '3px', padding: '1px 6px' }}>{statusLabels[order.status] || order.status}</span>
+            <span style={{ fontSize: '9px', border: '1px solid #999', borderRadius: '3px', padding: '1px 6px' }}>Prior: {priorityLabels[order.priority] || order.priority}</span>
+          </div>
+          <span style={{ fontSize: '9px', color: '#555' }}>
+            {format(new Date(order.created_at), "dd/MM/yyyy HH:mm")}
+          </span>
+        </div>
+
+        {/* Client + Equipment side by side */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '10px' }}>
+          {/* Client */}
+          <div style={{ border: '1px solid #000', borderRadius: '4px', padding: '6px 8px' }}>
+            <h3 style={{ fontSize: '9px', fontWeight: 'bold', textTransform: 'uppercase', borderBottom: '1px solid #ccc', paddingBottom: '3px', marginBottom: '4px' }}>CLIENTE</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', fontSize: '10px' }}>
+              <div style={{ gridColumn: 'span 2' }}><span style={lbl}>Nome:</span><br/><strong>{truncate(order.client?.name, 50)}</strong></div>
+              <div><span style={lbl}>Telefone:</span><br/><strong>{order.client?.phone || '—'}</strong></div>
+              <div><span style={lbl}>Email:</span><br/><span style={val}>{truncate(order.client?.email, 30)}</span></div>
+              {order.client?.cpf && <div><span style={lbl}>CPF:</span><br/><strong>{order.client.cpf}</strong></div>}
+              {order.client?.cnpj && <div><span style={lbl}>CNPJ:</span><br/><strong>{order.client.cnpj}</strong></div>}
+              {clientAddr && <div style={{ gridColumn: 'span 2' }}><span style={lbl}>Endereço:</span><br/><span style={val}>{truncate(clientAddr, 60)}</span></div>}
+            </div>
+          </div>
+
+          {/* Equipment */}
+          <div style={{ border: '1px solid #000', borderRadius: '4px', padding: '6px 8px' }}>
+            <h3 style={{ fontSize: '9px', fontWeight: 'bold', textTransform: 'uppercase', borderBottom: '1px solid #ccc', paddingBottom: '3px', marginBottom: '4px' }}>EQUIPAMENTO</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', fontSize: '10px' }}>
+              <div><span style={lbl}>Dispositivo:</span><br/><span style={val}>{truncate(order.device, 30)}</span></div>
+              <div><span style={lbl}>Categoria:</span><br/><strong style={{ textTransform: 'capitalize' }}>{order.category}</strong></div>
+              <div><span style={lbl}>Nº Série:</span><br/><span style={{ ...val, fontFamily: 'monospace' }}>{truncate(order.serial_number, 25)}</span></div>
+              {csf.brand && <div><span style={lbl}>Marca:</span><br/><strong>{csf.brand}</strong></div>}
+              {csf.model && <div><span style={lbl}>Modelo:</span><br/><span style={val}>{truncate(csf.model, 25)}</span></div>}
+              {csf.imei && <div><span style={lbl}>IMEI:</span><br/><span style={{ ...val, fontFamily: 'monospace' }}>{csf.imei}</span></div>}
+              {csf.color && <div><span style={lbl}>Cor:</span><br/><strong>{csf.color}</strong></div>}
+              {csf.storage && <div><span style={lbl}>Capacidade:</span><br/><strong>{csf.storage}</strong></div>}
+              {order.password && <div><span style={lbl}>Senha:</span><br/><strong>{order.password}</strong></div>}
+              {order.accessories && <div style={{ gridColumn: 'span 2' }}><span style={lbl}>Acessórios:</span><br/><span style={val}>{truncate(order.accessories, 50)}</span></div>}
+            </div>
           </div>
         </div>
 
         {/* Defect */}
-        <div style={{ border: '1px solid #000', borderRadius: '4px', padding: '8px 10px', marginBottom: '10px' }}>
-          <h3 style={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', borderBottom: '1px solid #ccc', paddingBottom: '4px', marginBottom: '6px' }}>DEFEITO RELATADO</h3>
-          <p style={{ fontSize: '11px' }}>{order.issue}</p>
+        <div style={{ border: '1px solid #000', borderRadius: '4px', padding: '6px 8px', marginBottom: '8px' }}>
+          <h3 style={{ fontSize: '9px', fontWeight: 'bold', textTransform: 'uppercase', borderBottom: '1px solid #ccc', paddingBottom: '3px', marginBottom: '4px' }}>DEFEITO RELATADO</h3>
+          <p style={{ fontSize: '10px', margin: 0 }}>{order.issue}</p>
         </div>
 
         {/* Checklist */}
         {hasChecklist && (
-          <div style={{ border: '1px solid #000', borderRadius: '4px', padding: '8px 10px', marginBottom: '10px' }}>
-            <h3 style={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', borderBottom: '1px solid #ccc', paddingBottom: '4px', marginBottom: '6px' }}>CHECKLIST DE ENTRADA</h3>
+          <div style={{ border: '1px solid #000', borderRadius: '4px', padding: '6px 8px', marginBottom: '8px' }}>
+            <h3 style={{ fontSize: '9px', fontWeight: 'bold', textTransform: 'uppercase', borderBottom: '1px solid #ccc', paddingBottom: '3px', marginBottom: '4px' }}>CHECKLIST DE ENTRADA</h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '3px', fontSize: '9px' }}>
               {Object.entries(checklist).map(([key, value]) => (
                 <div key={key} style={{
-                  padding: '3px 5px', borderRadius: '3px', textAlign: 'center',
+                  padding: '2px 4px', borderRadius: '3px', textAlign: 'center',
                   background: value === true ? '#e8f5e9' : value === false ? '#ffebee' : '#f5f5f5',
                   color: value === true ? '#2e7d32' : value === false ? '#c62828' : '#666',
                 }}>
@@ -250,7 +277,7 @@ export default function OrderReceiptPage() {
               ))}
             </div>
             {csf.checklist_observations && (
-              <div style={{ marginTop: '6px', padding: '6px', background: '#fffde7', borderRadius: '3px', fontSize: '10px' }}>
+              <div style={{ marginTop: '4px', padding: '4px', background: '#fffde7', borderRadius: '3px', fontSize: '9px' }}>
                 <strong>Obs:</strong> {csf.checklist_observations}
               </div>
             )}
@@ -258,42 +285,42 @@ export default function OrderReceiptPage() {
         )}
 
         {/* Items */}
-        <div style={{ border: '1px solid #000', borderRadius: '4px', overflow: 'hidden', marginBottom: '10px' }}>
-          <h3 style={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', background: '#f0f0f0', padding: '6px 10px', borderBottom: '1px solid #000' }}>PRODUTOS E SERVIÇOS</h3>
+        <div style={{ border: '1px solid #000', borderRadius: '4px', overflow: 'hidden', marginBottom: '8px' }}>
+          <h3 style={{ fontSize: '9px', fontWeight: 'bold', textTransform: 'uppercase', background: '#f0f0f0', padding: '5px 8px', borderBottom: '1px solid #000' }}>PRODUTOS E SERVIÇOS</h3>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10px' }}>
             <thead>
               <tr style={{ background: '#f9f9f9', borderBottom: '1px solid #000' }}>
-                <th style={{ textAlign: 'left', padding: '5px 8px', borderRight: '1px solid #ddd' }}>Item</th>
-                <th style={{ textAlign: 'center', padding: '5px', borderRight: '1px solid #ddd', width: '60px' }}>Tipo</th>
-                <th style={{ textAlign: 'center', padding: '5px', borderRight: '1px solid #ddd', width: '40px' }}>Qtd</th>
-                <th style={{ textAlign: 'right', padding: '5px', borderRight: '1px solid #ddd', width: '80px' }}>Vlr Unit.</th>
-                <th style={{ textAlign: 'right', padding: '5px 8px', width: '80px' }}>Total</th>
+                <th style={{ textAlign: 'left', padding: '4px 6px', borderRight: '1px solid #ddd' }}>Item</th>
+                <th style={{ textAlign: 'center', padding: '4px', borderRight: '1px solid #ddd', width: '55px' }}>Tipo</th>
+                <th style={{ textAlign: 'center', padding: '4px', borderRight: '1px solid #ddd', width: '35px' }}>Qtd</th>
+                <th style={{ textAlign: 'right', padding: '4px', borderRight: '1px solid #ddd', width: '70px' }}>Vlr Unit.</th>
+                <th style={{ textAlign: 'right', padding: '4px 6px', width: '70px' }}>Total</th>
               </tr>
             </thead>
             <tbody>
               {items.length === 0 ? (
-                <tr><td colSpan={5} style={{ padding: '10px', textAlign: 'center', color: '#999' }}>Nenhum item</td></tr>
+                <tr><td colSpan={5} style={{ padding: '8px', textAlign: 'center', color: '#999' }}>Nenhum item</td></tr>
               ) : items.map((item, i) => (
                 <tr key={item.id} style={{ borderBottom: i < items.length - 1 ? '1px solid #eee' : 'none' }}>
-                  <td style={{ padding: '5px 8px', borderRight: '1px solid #eee' }}>{item.name}</td>
-                  <td style={{ padding: '5px', textAlign: 'center', borderRight: '1px solid #eee' }}>{item.item_type === 'product' ? 'Produto' : 'Serviço'}</td>
-                  <td style={{ padding: '5px', textAlign: 'center', borderRight: '1px solid #eee' }}>{item.quantity}</td>
-                  <td style={{ padding: '5px', textAlign: 'right', borderRight: '1px solid #eee' }}>{fmt(Number(item.sale_price))}</td>
-                  <td style={{ padding: '5px 8px', textAlign: 'right' }}>{fmt(Number(item.sale_price) * item.quantity)}</td>
+                  <td style={{ padding: '4px 6px', borderRight: '1px solid #eee' }}>{truncate(item.name, 40)}</td>
+                  <td style={{ padding: '4px', textAlign: 'center', borderRight: '1px solid #eee' }}>{item.item_type === 'product' ? 'Produto' : 'Serviço'}</td>
+                  <td style={{ padding: '4px', textAlign: 'center', borderRight: '1px solid #eee' }}>{item.quantity}</td>
+                  <td style={{ padding: '4px', textAlign: 'right', borderRight: '1px solid #eee' }}>{fmt(Number(item.sale_price))}</td>
+                  <td style={{ padding: '4px 6px', textAlign: 'right' }}>{fmt(Number(item.sale_price) * item.quantity)}</td>
                 </tr>
               ))}
               <tr style={{ borderTop: '2px solid #000', background: '#f0f0f0', fontWeight: 'bold' }}>
-                <td colSpan={4} style={{ padding: '6px 8px', textAlign: 'right' }}>TOTAL:</td>
-                <td style={{ padding: '6px 8px', textAlign: 'right' }}>{fmt(total)}</td>
+                <td colSpan={4} style={{ padding: '5px 6px', textAlign: 'right' }}>TOTAL:</td>
+                <td style={{ padding: '5px 6px', textAlign: 'right' }}>{fmt(total)}</td>
               </tr>
             </tbody>
           </table>
         </div>
 
         {/* Terms */}
-        <div style={{ border: '1px solid #000', borderRadius: '4px', padding: '8px 10px', marginBottom: '14px' }}>
-          <h3 style={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', borderBottom: '1px solid #ccc', paddingBottom: '4px', marginBottom: '6px' }}>TERMOS E CONDIÇÕES</h3>
-          <ol style={{ fontSize: '9px', color: '#555', paddingLeft: '14px', margin: 0 }}>
+        <div style={{ border: '1px solid #000', borderRadius: '4px', padding: '6px 8px', marginBottom: '10px' }}>
+          <h3 style={{ fontSize: '9px', fontWeight: 'bold', textTransform: 'uppercase', borderBottom: '1px solid #ccc', paddingBottom: '3px', marginBottom: '4px' }}>TERMOS E CONDIÇÕES</h3>
+          <ol style={{ fontSize: '8px', color: '#555', paddingLeft: '12px', margin: 0 }}>
             <li>Prazo para retirada: 90 dias após conclusão do serviço.</li>
             <li>Equipamentos não retirados serão descartados conforme legislação.</li>
             <li>Garantia de 90 dias para peças e mão de obra, exceto mau uso.</li>
@@ -303,23 +330,23 @@ export default function OrderReceiptPage() {
         </div>
 
         {/* Signatures */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px', marginTop: '30px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px', marginTop: '20px' }}>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ borderTop: '1px solid #000', paddingTop: '6px', marginTop: '50px' }}>
-              <p style={{ fontSize: '10px', fontWeight: '500' }}>{company?.nome_fantasia || 'Responsável Técnico'}</p>
-              <p style={{ fontSize: '9px', color: '#777' }}>Assinatura</p>
+            <div style={{ borderTop: '1px solid #000', paddingTop: '4px', marginTop: '40px' }}>
+              <p style={{ fontSize: '9px', fontWeight: '500' }}>{companyName}</p>
+              <p style={{ fontSize: '8px', color: '#777' }}>Assinatura</p>
             </div>
           </div>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ borderTop: '1px solid #000', paddingTop: '6px', marginTop: '50px' }}>
-              <p style={{ fontSize: '10px', fontWeight: '500' }}>{order.client?.name || 'Cliente'}</p>
-              <p style={{ fontSize: '9px', color: '#777' }}>Assinatura</p>
+            <div style={{ borderTop: '1px solid #000', paddingTop: '4px', marginTop: '40px' }}>
+              <p style={{ fontSize: '9px', fontWeight: '500' }}>{order.client?.name || 'Cliente'}</p>
+              <p style={{ fontSize: '8px', color: '#777' }}>Assinatura</p>
             </div>
           </div>
         </div>
 
         {/* Footer */}
-        <div style={{ textAlign: 'center', marginTop: '20px', paddingTop: '8px', borderTop: '1px solid #ddd', fontSize: '9px', color: '#aaa' }}>
+        <div style={{ textAlign: 'center', marginTop: '14px', paddingTop: '6px', borderTop: '1px solid #ddd', fontSize: '8px', color: '#aaa' }}>
           Documento gerado em {format(new Date(), "dd/MM/yyyy 'às' HH:mm")}
         </div>
       </div>
