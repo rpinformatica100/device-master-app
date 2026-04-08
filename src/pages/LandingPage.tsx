@@ -85,58 +85,7 @@ const testimonials = [
   }
 ];
 
-const pricingPlans = [
-  {
-    name: "Free",
-    price: "Grátis",
-    period: "para sempre",
-    description: "Para começar",
-    features: [
-      "Até 50 OS por mês",
-      "Cadastro de clientes",
-      "Controle de estoque básico",
-      "Relatórios simples"
-    ],
-    limitations: [
-      "Sem exportação de dados",
-      "Sem relatórios avançados"
-    ],
-    popular: false,
-    cta: "Começar Grátis"
-  },
-  {
-    name: "Mensal",
-    price: "R$ 49",
-    period: "/mês",
-    description: "Tudo ilimitado",
-    features: [
-      "OS ilimitadas",
-      "Clientes ilimitados",
-      "Financeiro completo",
-      "Relatórios avançados",
-      "Exportação de dados",
-      "Suporte prioritário"
-    ],
-    limitations: [],
-    popular: true,
-    cta: "Assinar Mensal"
-  },
-  {
-    name: "Anual",
-    price: "R$ 399",
-    period: "/ano",
-    description: "Economize 32%",
-    features: [
-      "Tudo do plano Mensal",
-      "2 meses grátis",
-      "Prioridade no suporte",
-      "Treinamento incluso"
-    ],
-    limitations: [],
-    popular: false,
-    cta: "Assinar Anual"
-  }
-];
+// pricingPlans moved to dynamic query
 
 const faqs = [
   {
