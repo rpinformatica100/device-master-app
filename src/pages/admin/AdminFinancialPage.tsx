@@ -25,6 +25,10 @@ const statusColors: Record<string, string> = {
 
 export default function AdminFinancialPage() {
   const { data: users = [] } = useAdminUsers();
+  const { data: plans = [] } = usePlanPricing();
+  const updatePlan = useUpdatePlanPricing();
+  const [editingPlan, setEditingPlan] = useState<Record<string, { price: string }>>({});
+  const [showPlanSettings, setShowPlanSettings] = useState(false);
   const [filterMonth, setFilterMonth] = useState(new Date().toISOString().slice(0, 7) + "-01");
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterUser, setFilterUser] = useState("all");
