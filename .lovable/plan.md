@@ -1,42 +1,105 @@
 
 
-# Plano: Otimizar Layout de Impressão da OS e Orçamento
+# Plano: Centralizar Preços dos Planos, Melhorar Financeiro Admin e Sistema de Chamados
 
-## Problemas Atuais
+## Resumo
 
-1. **Cabeçalho ocupa muito espaço vertical** — empresa e dados empilhados no centro
-2. **Seções Cliente e Equipamento ocupam blocos separados** — poderiam ser lado a lado
-3. **PDF gerado muito grande** — `html2canvas` com `scale: 2` gera imagem PNG enorme
-4. **Título do arquivo genérico** — falta nome da assistência no nome do PDF/impressão
-5. **Campos longos sem truncamento** — textos grandes quebram o layout
+Três frentes de trabalho: (1) centralizar os valores dos planos em uma tabela configurável pelo admin, integrando Landing Page, Financeiro Admin e PaymentDialog; (2) melhorar o fluxo de "Novo Pagamento" com auto-preenchimento baseado no plano; (3) transformar mensagens em chamados com status (aberto/encerrado).
 
-## Mudanças Propostas
+---
 
-### 1. Cabeçalho compacto lado a lado (OS e Orçamento)
-- Logo/nome da empresa à esquerda, dados de contato à direita, numa única faixa horizontal
-- Número da OS/Orçamento e data na mesma linha abaixo do cabeçalho
+## 1. Tabela de Configuração de Planos (nova migração)
 
-### 2. Cliente + Equipamento lado a lado (OS)
-- Grid de 2 colunas: cliente à esquerda, equipamento à direita
-- Truncar campos longos (endereço, acessórios) com `overflow: hidden; text-overflow: ellipsis; max-width`
+Criar tabela `plan_pricing` para armazenar os valores dos planos de forma editável:
 
-### 3. Reduzir tamanho do PDF
-- Baixar `scale` de `2` para `1.5` no `html2canvas`
-- Usar `image/jpeg` com qualidade 0.85 em vez de PNG
-- Aplicar em ambas as páginas (OS e Orçamento)
+```sql
+CREATE TABLE public.plan_pricing (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  plan_key text UNIQUE NOT NULL, -- 'free', 'mensal', 'anual'
+  name text NOT NULL,
+  price numeric NOT NULL DEFAULT 0,
+  period_label text NOT NULL, -- '/mês', '/ano', 'para sempre'
+  description text,
+  features jsonb DEFAULT '[]',
+  popular boolean DEFAULT false,
+  active boolean DEFAULT true,
+  updated_at timestamptz DEFAULT now()
+);
 
-### 4. Título personalizado do documento
-- PDF: `OS-{numero}_{NomeEmpresa}.pdf` / `ORC-{numero}_{NomeEmpresa}.pdf`
-- Impressão: usar `document.title` temporariamente durante `window.print()` para que o navegador use o título correto
+-- Dados iniciais
+INSERT INTO plan_pricing (plan_key, name, price, period_label, description, features, popular) VALUES
+  ('free', 'Free', 0, 'para sempre', 'Para começar', '["Até 50 OS por mês","Cadastro de clientes","Controle de estoque básico","Relatórios simples"]', false),
+  ('mensal', 'Mensal', 49, '/mês', 'Tudo ilimitado', '["OS ilimitadas","Clientes ilimitados","Financeiro completo","Relatórios avançados","Exportação de dados","Suporte prioritário"]', true),
+  ('anual', 'Anual', 399, '/ano', 'Economize 32%', '["Tudo do plano Mensal","2 meses grátis","Prioridade no suporte","Treinamento incluso"]', false);
 
-### 5. Campos com limite de caracteres
-- Truncar textos longos em campos do grid (max ~60 chars) com reticências
-- Acessórios e endereço com `white-space: nowrap; overflow: hidden; text-overflow: ellipsis`
+-- RLS: leitura pública, escrita apenas admin
+ALTER TABLE plan_pricing ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Anyone can read plans" ON plan_pricing FOR SELECT TO public USING (true);
+CREATE POLICY "Admin can manage plans" ON plan_pricing FOR ALL TO authenticated USING (has_role(auth.uid(), 'admin')) WITH CHECK (has_role(auth.uid(), 'admin'));
+```
 
-## Arquivos Modificados
+## 2. Adicionar campo `status` à tabela `messages` (migração)
 
-| Arquivo | Alteração |
+```sql
+ALTER TABLE public.messages ADD COLUMN IF NOT EXISTS status text NOT NULL DEFAULT 'aberto';
+```
+
+Valores possíveis: `aberto`, `encerrado`.
+
+---
+
+## 3. Hook `usePlanPricing`
+
+Novo hook (`src/hooks/usePlanPricing.ts`) que busca os planos da tabela `plan_pricing`. Usado por:
+- Landing Page (substituir array hardcoded `pricingPlans`)
+- PaymentDialog (auto-preencher valor ao selecionar plano)
+- Admin (para editar preços)
+
+## 4. Melhorar PaymentDialog (`src/components/admin/PaymentDialog.tsx`)
+
+- Adicionar seletor de **Plano** (Free/Mensal/Anual) que:
+  - Auto-preenche o campo Valor com o preço da tabela `plan_pricing`
+  - Auto-calcula datas de início e expiração baseado no plano
+- Ao selecionar a assistência, mostrar plano atual e status da assinatura
+
+## 5. Landing Page dinâmica (`src/pages/LandingPage.tsx`)
+
+- Substituir o array `pricingPlans` hardcoded pela query `usePlanPricing`
+- Formatar preço dinamicamente (R$ 0 = "Grátis", senão `R$ {price}`)
+
+## 6. Painel Admin: Gerenciar Preços dos Planos
+
+- Nova seção na página de Assistências ou Financeiro Admin para editar os valores dos planos
+- Formulário simples: Nome, Preço, Descrição, Features
+- Usar mutation para atualizar `plan_pricing`
+
+## 7. Sistema de Chamados (Mensagens com Status)
+
+**Admin (`AdminNotificationsPage.tsx`):**
+- Adicionar botão "Encerrar Chamado" em cada conversa
+- Filtro por status: Abertos / Encerrados
+- Ao encerrar, atualiza `messages.status = 'encerrado'` na mensagem pai
+
+**Usuário (`MessagesPage.tsx`):**
+- Mostrar badge "Encerrado" em conversas fechadas
+- Desabilitar campo de resposta em chamados encerrados
+
+**Hook (`useMessages.ts`):**
+- Adicionar mutation `useCloseTicket` para atualizar status
+- Filtrar mensagens por status quando necessário
+
+---
+
+## Arquivos Modificados/Criados
+
+| Arquivo | Ação |
 |---|---|
-| `src/pages/OrderReceiptPage.tsx` | Cabeçalho horizontal, cliente+equipamento lado a lado, PDF JPEG menor, título personalizado, truncamento |
-| `src/pages/QuotePrintPage.tsx` | Cabeçalho horizontal, PDF JPEG menor, título personalizado |
+| Migração SQL | Criar tabela `plan_pricing` + adicionar `status` em `messages` |
+| `src/hooks/usePlanPricing.ts` | Novo hook para buscar/editar preços dos planos |
+| `src/pages/LandingPage.tsx` | Usar preços dinâmicos da tabela |
+| `src/components/admin/PaymentDialog.tsx` | Seletor de plano com auto-preenchimento de valor e datas |
+| `src/hooks/useMessages.ts` | Adicionar mutation `useCloseTicket` |
+| `src/pages/admin/AdminNotificationsPage.tsx` | Botão encerrar chamado + filtros |
+| `src/pages/MessagesPage.tsx` | Badge encerrado + bloquear resposta |
+| `src/pages/admin/AdminFinancialPage.tsx` | Seção para gerenciar preços dos planos (ou página separada) |
 
