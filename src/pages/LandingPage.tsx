@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { usePlanPricing } from "@/hooks/usePlanPricing";
 import { 
   Wrench, 
   Users, 
