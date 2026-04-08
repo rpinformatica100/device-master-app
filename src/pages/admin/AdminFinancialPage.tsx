@@ -177,6 +177,72 @@ export default function AdminFinancialPage() {
           </Select>
         </div>
 
+        {/* Plan Pricing Settings */}
+        {showPlanSettings && (
+          <Card className="bg-card border-border">
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Settings className="w-4 h-4" />
+                Gerenciar Preços dos Planos
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {plans.map((plan) => {
+                  const editing = editingPlan[plan.id];
+                  return (
+                    <div key={plan.id} className={`p-4 rounded-lg border ${plan.popular ? "border-primary/50" : "border-border"}`}>
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-semibold text-foreground">{plan.name}</h4>
+                        {plan.popular && <Badge className="gradient-primary text-[10px]">Popular</Badge>}
+                      </div>
+                      <p className="text-xs text-muted-foreground mb-3">{plan.description}</p>
+                      <div className="flex items-center gap-2 mb-3">
+                        <Label className="text-xs">R$</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          className="h-8"
+                          value={editing?.price ?? String(plan.price)}
+                          onChange={(e) => setEditingPlan(prev => ({ ...prev, [plan.id]: { price: e.target.value } }))}
+                        />
+                        <span className="text-xs text-muted-foreground whitespace-nowrap">{plan.period_label}</span>
+                      </div>
+                      {editing && editing.price !== String(plan.price) && (
+                        <Button
+                          size="sm"
+                          className="w-full gradient-primary"
+                          disabled={updatePlan.isPending}
+                          onClick={async () => {
+                            try {
+                              await updatePlan.mutateAsync({ id: plan.id, price: Number(editing.price) });
+                              setEditingPlan(prev => { const n = { ...prev }; delete n[plan.id]; return n; });
+                              toast.success(`Preço do plano ${plan.name} atualizado!`);
+                            } catch (e: any) {
+                              toast.error(e.message);
+                            }
+                          }}
+                        >
+                          <Save className="w-3 h-3 mr-1" />
+                          Salvar
+                        </Button>
+                      )}
+                      <ul className="mt-3 space-y-1">
+                        {plan.features.map((f, i) => (
+                          <li key={i} className="text-[11px] text-muted-foreground flex items-center gap-1">
+                            <CheckCircle className="w-3 h-3 text-primary flex-shrink-0" />
+                            {f}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Payments Table */}
         <div className="border border-border rounded-lg overflow-hidden">
           <Table>
