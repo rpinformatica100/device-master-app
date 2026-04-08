@@ -119,6 +119,23 @@ const stats = [
 
 export default function LandingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const { data: dynamicPlans = [] } = usePlanPricing();
+
+  const pricingPlans = dynamicPlans.length > 0
+    ? dynamicPlans.map(p => ({
+        name: p.name,
+        price: p.price === 0 ? "Grátis" : `R$ ${p.price}`,
+        period: p.period_label,
+        description: p.description || "",
+        features: p.features,
+        popular: p.popular,
+        cta: p.plan_key === "free" ? "Começar Grátis" : p.plan_key === "anual" ? "Assinar Anual" : "Assinar Mensal",
+      }))
+    : [
+        { name: "Free", price: "Grátis", period: "para sempre", description: "Para começar", features: ["Até 50 OS por mês", "Cadastro de clientes", "Controle de estoque básico", "Relatórios simples"], popular: false, cta: "Começar Grátis" },
+        { name: "Mensal", price: "R$ 49", period: "/mês", description: "Tudo ilimitado", features: ["OS ilimitadas", "Clientes ilimitados", "Financeiro completo", "Relatórios avançados", "Exportação de dados", "Suporte prioritário"], popular: true, cta: "Assinar Mensal" },
+        { name: "Anual", price: "R$ 399", period: "/ano", description: "Economize 32%", features: ["Tudo do plano Mensal", "2 meses grátis", "Prioridade no suporte", "Treinamento incluso"], popular: false, cta: "Assinar Anual" },
+      ];
 
   return (
     <div className="min-h-screen bg-background overflow-hidden">
