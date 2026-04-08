@@ -103,10 +103,16 @@ export default function AdminFinancialPage() {
             <h1 className="text-2xl font-bold text-foreground">Controle Financeiro</h1>
             <p className="text-muted-foreground">Pagamentos de mensalidade das assistências</p>
           </div>
-          <Button className="gradient-primary" onClick={() => { setEditPayment(null); setDialogOpen(true); }}>
-            <Plus className="w-4 h-4 mr-2" />
-            Novo Pagamento
-          </Button>
+          <div className="flex gap-2">
+            <Button className="gradient-primary" onClick={() => { setEditPayment(null); setDialogOpen(true); }}>
+              <Plus className="w-4 h-4 mr-2" />
+              Novo Pagamento
+            </Button>
+            <Button variant="outline" onClick={() => setShowPlanSettings(!showPlanSettings)}>
+              <Settings className="w-4 h-4 mr-2" />
+              Planos
+            </Button>
+          </div>
         </div>
 
         {/* Summary Cards */}
