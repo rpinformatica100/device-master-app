@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { MessageCircle, Send, Info, AlertTriangle, CheckCircle, XCircle, ChevronDown, ChevronUp, Check, CheckCheck } from "lucide-react";
+import { MessageCircle, Send, Info, AlertTriangle, CheckCircle, XCircle, ChevronDown, ChevronUp, Lock } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 
@@ -34,6 +34,7 @@ function MessageItem({ msg }: { msg: any }) {
 
   const Icon = typeIcons[msg.type] || Info;
   const isUnread = !msg.read_at && msg.sender_id !== user?.id;
+  const isClosed = msg.status === "encerrado";
 
   const handleExpand = () => {
     if (!expanded && isUnread) {
@@ -54,18 +55,24 @@ function MessageItem({ msg }: { msg: any }) {
   };
 
   return (
-    <Card className={`bg-card border-border transition-all ${isUnread ? "border-l-4 border-l-primary" : ""}`}>
+    <Card className={`bg-card border-border transition-all ${isUnread ? "border-l-4 border-l-primary" : ""} ${isClosed ? "opacity-70" : ""}`}>
       <CardContent className="p-4 space-y-3">
         <div className="flex items-start justify-between cursor-pointer" onClick={handleExpand}>
           <div className="flex items-center gap-2 flex-1">
             <Icon className={`w-5 h-5 flex-shrink-0 ${typeColors[msg.type]}`} />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-foreground">{msg.message}</p>
-              <div className="flex items-center gap-2 mt-1">
+              <div className="flex items-center gap-2 mt-1 flex-wrap">
                 <span className="text-xs text-muted-foreground">
                   {format(new Date(msg.created_at), "dd/MM/yyyy HH:mm")}
                 </span>
                 {!msg.recipient_id && <Badge variant="outline" className="text-[10px]">Global</Badge>}
+                {isClosed && (
+                  <Badge variant="outline" className="text-[10px] bg-muted text-muted-foreground">
+                    <Lock className="w-2.5 h-2.5 mr-0.5" />
+                    Encerrado
+                  </Badge>
+                )}
               </div>
             </div>
           </div>
@@ -87,18 +94,25 @@ function MessageItem({ msg }: { msg: any }) {
                 ))}
               </div>
             )}
-            <div className="flex gap-2">
-              <Textarea
-                value={replyText}
-                onChange={(e) => setReplyText(e.target.value)}
-                placeholder="Escreva uma resposta..."
-                rows={2}
-                className="flex-1"
-              />
-              <Button size="icon" onClick={handleReply} disabled={sendReply.isPending} className="gradient-primary self-end">
-                <Send className="w-4 h-4" />
-              </Button>
-            </div>
+            {isClosed ? (
+              <p className="text-xs text-muted-foreground italic text-center py-2">
+                <Lock className="w-3 h-3 inline mr-1" />
+                Este chamado foi encerrado
+              </p>
+            ) : (
+              <div className="flex gap-2">
+                <Textarea
+                  value={replyText}
+                  onChange={(e) => setReplyText(e.target.value)}
+                  placeholder="Escreva uma resposta..."
+                  rows={2}
+                  className="flex-1"
+                />
+                <Button size="icon" onClick={handleReply} disabled={sendReply.isPending} className="gradient-primary self-end">
+                  <Send className="w-4 h-4" />
+                </Button>
+              </div>
+            )}
           </div>
         )}
       </CardContent>

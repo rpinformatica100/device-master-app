@@ -130,6 +130,40 @@ export function useMarkMessageRead() {
   });
 }
 
+export function useCloseTicket() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from("messages")
+        .update({ status: "encerrado" } as any)
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["user-messages"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-messages"] });
+    },
+  });
+}
+
+export function useReopenTicket() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from("messages")
+        .update({ status: "aberto" } as any)
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["user-messages"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-messages"] });
+    },
+  });
+}
+
 export function useSendReply() {
   const queryClient = useQueryClient();
   const { user } = useAuth();

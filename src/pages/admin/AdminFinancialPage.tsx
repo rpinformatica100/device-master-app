@@ -2,13 +2,15 @@ import { useState } from "react";
 import { calculateRenewalDate } from "@/lib/subscriptionUtils";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { useAdminUsers, useAdminPayments, useAdminPaymentMutations, useAdminSubscriptions, type SubscriptionPayment } from "@/hooks/useAdmin";
+import { usePlanPricing, useUpdatePlanPricing } from "@/hooks/usePlanPricing";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-import { Plus, CheckCircle, Trash2, Edit, DollarSign, Clock, AlertTriangle } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Plus, CheckCircle, Trash2, Edit, DollarSign, Clock, AlertTriangle, Save, Settings } from "lucide-react";
 import PaymentDialog from "@/components/admin/PaymentDialog";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -23,6 +25,10 @@ const statusColors: Record<string, string> = {
 
 export default function AdminFinancialPage() {
   const { data: users = [] } = useAdminUsers();
+  const { data: plans = [] } = usePlanPricing();
+  const updatePlan = useUpdatePlanPricing();
+  const [editingPlan, setEditingPlan] = useState<Record<string, { price: string }>>({});
+  const [showPlanSettings, setShowPlanSettings] = useState(false);
   const [filterMonth, setFilterMonth] = useState(new Date().toISOString().slice(0, 7) + "-01");
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterUser, setFilterUser] = useState("all");
@@ -97,10 +103,16 @@ export default function AdminFinancialPage() {
             <h1 className="text-2xl font-bold text-foreground">Controle Financeiro</h1>
             <p className="text-muted-foreground">Pagamentos de mensalidade das assistências</p>
           </div>
-          <Button className="gradient-primary" onClick={() => { setEditPayment(null); setDialogOpen(true); }}>
-            <Plus className="w-4 h-4 mr-2" />
-            Novo Pagamento
-          </Button>
+          <div className="flex gap-2">
+            <Button className="gradient-primary" onClick={() => { setEditPayment(null); setDialogOpen(true); }}>
+              <Plus className="w-4 h-4 mr-2" />
+              Novo Pagamento
+            </Button>
+            <Button variant="outline" onClick={() => setShowPlanSettings(!showPlanSettings)}>
+              <Settings className="w-4 h-4 mr-2" />
+              Planos
+            </Button>
+          </div>
         </div>
 
         {/* Summary Cards */}
@@ -164,6 +176,72 @@ export default function AdminFinancialPage() {
             </SelectContent>
           </Select>
         </div>
+
+        {/* Plan Pricing Settings */}
+        {showPlanSettings && (
+          <Card className="bg-card border-border">
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Settings className="w-4 h-4" />
+                Gerenciar Preços dos Planos
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {plans.map((plan) => {
+                  const editing = editingPlan[plan.id];
+                  return (
+                    <div key={plan.id} className={`p-4 rounded-lg border ${plan.popular ? "border-primary/50" : "border-border"}`}>
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-semibold text-foreground">{plan.name}</h4>
+                        {plan.popular && <Badge className="gradient-primary text-[10px]">Popular</Badge>}
+                      </div>
+                      <p className="text-xs text-muted-foreground mb-3">{plan.description}</p>
+                      <div className="flex items-center gap-2 mb-3">
+                        <Label className="text-xs">R$</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          className="h-8"
+                          value={editing?.price ?? String(plan.price)}
+                          onChange={(e) => setEditingPlan(prev => ({ ...prev, [plan.id]: { price: e.target.value } }))}
+                        />
+                        <span className="text-xs text-muted-foreground whitespace-nowrap">{plan.period_label}</span>
+                      </div>
+                      {editing && editing.price !== String(plan.price) && (
+                        <Button
+                          size="sm"
+                          className="w-full gradient-primary"
+                          disabled={updatePlan.isPending}
+                          onClick={async () => {
+                            try {
+                              await updatePlan.mutateAsync({ id: plan.id, price: Number(editing.price) });
+                              setEditingPlan(prev => { const n = { ...prev }; delete n[plan.id]; return n; });
+                              toast.success(`Preço do plano ${plan.name} atualizado!`);
+                            } catch (e: any) {
+                              toast.error(e.message);
+                            }
+                          }}
+                        >
+                          <Save className="w-3 h-3 mr-1" />
+                          Salvar
+                        </Button>
+                      )}
+                      <ul className="mt-3 space-y-1">
+                        {plan.features.map((f, i) => (
+                          <li key={i} className="text-[11px] text-muted-foreground flex items-center gap-1">
+                            <CheckCircle className="w-3 h-3 text-primary flex-shrink-0" />
+                            {f}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Payments Table */}
         <div className="border border-border rounded-lg overflow-hidden">
