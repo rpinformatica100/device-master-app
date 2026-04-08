@@ -254,6 +254,7 @@ export type Database = {
           read_at: string | null
           recipient_id: string | null
           sender_id: string
+          status: string
           type: string
         }
         Insert: {
@@ -264,6 +265,7 @@ export type Database = {
           read_at?: string | null
           recipient_id?: string | null
           sender_id: string
+          status?: string
           type?: string
         }
         Update: {
@@ -274,6 +276,7 @@ export type Database = {
           read_at?: string | null
           recipient_id?: string | null
           sender_id?: string
+          status?: string
           type?: string
         }
         Relationships: [
@@ -462,6 +465,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      plan_pricing: {
+        Row: {
+          active: boolean | null
+          description: string | null
+          features: Json | null
+          id: string
+          name: string
+          period_label: string
+          plan_key: string
+          popular: boolean | null
+          price: number
+          updated_at: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          description?: string | null
+          features?: Json | null
+          id?: string
+          name: string
+          period_label: string
+          plan_key: string
+          popular?: boolean | null
+          price?: number
+          updated_at?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          description?: string | null
+          features?: Json | null
+          id?: string
+          name?: string
+          period_label?: string
+          plan_key?: string
+          popular?: boolean | null
+          price?: number
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       products: {
         Row: {
