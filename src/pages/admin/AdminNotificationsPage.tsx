@@ -1,7 +1,7 @@
 import { useState } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { useAdminUsers } from "@/hooks/useAdmin";
-import { useAdminMessages, useAdminSendMessage, useMessageReplies } from "@/hooks/useMessages";
+import { useAdminMessages, useAdminSendMessage, useMessageReplies, useCloseTicket, useReopenTicket } from "@/hooks/useMessages";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Send, MessageCircle, Info, AlertTriangle, CheckCircle, XCircle, Check, CheckCheck, ChevronDown, ChevronUp } from "lucide-react";
+import { Send, MessageCircle, Info, AlertTriangle, CheckCircle, XCircle, Check, CheckCheck, ChevronDown, ChevronUp, Lock, Unlock } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
@@ -34,6 +34,8 @@ function AdminMessageItem({ msg, users }: { msg: any; users: any[] }) {
   const [expanded, setExpanded] = useState(false);
   const { data: replies = [] } = useMessageReplies(expanded ? msg.id : null);
   const sendReply = useAdminSendMessage();
+  const closeTicket = useCloseTicket();
+  const reopenTicket = useReopenTicket();
   const [replyText, setReplyText] = useState("");
 
   const Icon = typeIcons[msg.type] || Info;
@@ -42,6 +44,7 @@ function AdminMessageItem({ msg, users }: { msg: any; users: any[] }) {
     : "Todos";
 
   const hasUnreadReplies = replies.some((r: any) => r.sender_id !== admin?.id && !r.read_at);
+  const isClosed = msg.status === "encerrado";
 
   const handleReply = async () => {
     if (!replyText.trim()) return;
@@ -59,19 +62,35 @@ function AdminMessageItem({ msg, users }: { msg: any; users: any[] }) {
     }
   };
 
+  const handleToggleTicket = async () => {
+    try {
+      if (isClosed) {
+        await reopenTicket.mutateAsync(msg.id);
+        toast.success("Chamado reaberto!");
+      } else {
+        await closeTicket.mutateAsync(msg.id);
+        toast.success("Chamado encerrado!");
+      }
+    } catch (e: any) {
+      toast.error(e.message);
+    }
+  };
+
   return (
-    <div className="p-3 rounded-lg border border-border space-y-2">
+    <div className={`p-3 rounded-lg border space-y-2 ${isClosed ? "border-border/50 opacity-70" : "border-border"}`}>
       <div className="flex items-start justify-between cursor-pointer" onClick={() => setExpanded(!expanded)}>
         <div className="flex items-center gap-2 flex-1">
           <Icon className={`w-4 h-4 ${typeColors[msg.type]}`} />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-foreground truncate">{msg.message}</p>
-            <div className="flex items-center gap-2 mt-0.5">
+            <div className="flex items-center gap-2 mt-0.5 flex-wrap">
               <Badge variant="outline" className="text-[10px]">{recipientName}</Badge>
               <span className="text-[10px] text-muted-foreground">
                 {format(new Date(msg.created_at), "dd/MM HH:mm")}
               </span>
-              {/* Read receipt */}
+              {isClosed && (
+                <Badge variant="outline" className="text-[10px] bg-muted text-muted-foreground">Encerrado</Badge>
+              )}
               {msg.recipient_id && (
                 msg.read_at
                   ? <CheckCheck className="w-3 h-3 text-primary" />
@@ -99,14 +118,30 @@ function AdminMessageItem({ msg, users }: { msg: any; users: any[] }) {
               </div>
             );
           })}
-          {msg.recipient_id && (
-            <div className="flex gap-2">
-              <Textarea value={replyText} onChange={(e) => setReplyText(e.target.value)} placeholder="Responder..." rows={2} className="flex-1" />
-              <Button size="icon" onClick={handleReply} disabled={sendReply.isPending} className="gradient-primary self-end">
-                <Send className="w-3 h-3" />
-              </Button>
-            </div>
-          )}
+
+          <div className="flex items-center gap-2">
+            {msg.recipient_id && !isClosed && (
+              <>
+                <Textarea value={replyText} onChange={(e) => setReplyText(e.target.value)} placeholder="Responder..." rows={2} className="flex-1" />
+                <Button size="icon" onClick={handleReply} disabled={sendReply.isPending} className="gradient-primary self-end">
+                  <Send className="w-3 h-3" />
+                </Button>
+              </>
+            )}
+            {isClosed && msg.recipient_id && (
+              <p className="text-xs text-muted-foreground italic flex-1">Chamado encerrado</p>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={(e) => { e.stopPropagation(); handleToggleTicket(); }}
+              disabled={closeTicket.isPending || reopenTicket.isPending}
+              className="self-end"
+            >
+              {isClosed ? <Unlock className="w-3 h-3 mr-1" /> : <Lock className="w-3 h-3 mr-1" />}
+              {isClosed ? "Reabrir" : "Encerrar"}
+            </Button>
+          </div>
         </div>
       )}
     </div>
@@ -117,12 +152,20 @@ export default function AdminNotificationsPage() {
   const { data: users = [] } = useAdminUsers();
   const { data: messages = [] } = useAdminMessages();
   const sendMessage = useAdminSendMessage();
+  const [statusFilter, setStatusFilter] = useState<string>("aberto");
 
   const [form, setForm] = useState({
     user_id: "all",
     message: "",
     type: "info",
   });
+
+  const filteredMessages = statusFilter === "all"
+    ? messages
+    : messages.filter((m: any) => (m.status || "aberto") === statusFilter);
+
+  const openCount = messages.filter((m: any) => (m.status || "aberto") === "aberto").length;
+  const closedCount = messages.filter((m: any) => m.status === "encerrado").length;
 
   const handleSend = async () => {
     if (!form.message) {
@@ -146,7 +189,7 @@ export default function AdminNotificationsPage() {
     <AdminLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Central de Mensagens</h1>
+          <h1 className="text-2xl font-bold text-foreground">Central de Chamados</h1>
           <p className="text-muted-foreground">Comunicação bidirecional com as assistências</p>
         </div>
 
@@ -202,16 +245,44 @@ export default function AdminNotificationsPage() {
 
           <Card className="bg-card border-border">
             <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <MessageCircle className="w-4 h-4" />
-                Conversas
-              </CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <MessageCircle className="w-4 h-4" />
+                  Chamados
+                </CardTitle>
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant={statusFilter === "aberto" ? "default" : "outline"}
+                    size="sm"
+                    className={`text-xs h-7 ${statusFilter === "aberto" ? "gradient-primary" : ""}`}
+                    onClick={() => setStatusFilter("aberto")}
+                  >
+                    Abertos ({openCount})
+                  </Button>
+                  <Button
+                    variant={statusFilter === "encerrado" ? "default" : "outline"}
+                    size="sm"
+                    className="text-xs h-7"
+                    onClick={() => setStatusFilter("encerrado")}
+                  >
+                    Encerrados ({closedCount})
+                  </Button>
+                  <Button
+                    variant={statusFilter === "all" ? "default" : "outline"}
+                    size="sm"
+                    className="text-xs h-7"
+                    onClick={() => setStatusFilter("all")}
+                  >
+                    Todos
+                  </Button>
+                </div>
+              </div>
             </CardHeader>
             <CardContent className="space-y-3 max-h-[600px] overflow-y-auto">
-              {messages.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-8">Nenhuma mensagem enviada</p>
+              {filteredMessages.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-8">Nenhum chamado encontrado</p>
               ) : (
-                messages.map((m) => <AdminMessageItem key={m.id} msg={m} users={users} />)
+                filteredMessages.map((m) => <AdminMessageItem key={m.id} msg={m} users={users} />)
               )}
             </CardContent>
           </Card>
