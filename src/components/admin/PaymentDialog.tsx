@@ -95,6 +95,18 @@ export default function PaymentDialog({ open, onOpenChange, users, payment }: Pr
       toast.error("Selecione a assistência e informe o valor");
       return;
     }
+    if (Number(form.amount) <= 0) {
+      toast.error("O valor deve ser maior que zero");
+      return;
+    }
+    if (form.due_date && form.reference_month && form.due_date < form.reference_month) {
+      toast.error("Vencimento não pode ser antes do mês de referência");
+      return;
+    }
+    if (form.status === "pago" && !form.paid_at) {
+      toast.error("Informe a data de pagamento");
+      return;
+    }
 
     try {
       const payload = {
