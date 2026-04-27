@@ -222,16 +222,49 @@ export default function AdminUsersPage() {
                       </span>
                     </TableCell>
                     <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => {
-                          setSelectedUser(user);
-                          setSubDialogOpen(true);
-                        }}
-                      >
-                        <Settings className="w-4 h-4" />
-                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreVertical className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48">
+                          <DropdownMenuItem onClick={() => { setSelectedUser(user); setSubDialogOpen(true); }}>
+                            <Settings className="w-4 h-4 mr-2" />
+                            Gerenciar assinatura
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => { setResetUser(user); setNewPassword(""); }}>
+                            <KeyRound className="w-4 h-4 mr-2" />
+                            Resetar senha
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={async () => {
+                              if (!confirm(`Suspender ${user.email}? O acesso será bloqueado.`)) return;
+                              try {
+                                await userActions.mutateAsync({ action: "soft_delete", target_user_id: user.id });
+                                toast.success("Usuário suspenso");
+                              } catch (e: any) { toast.error(e.message); }
+                            }}
+                          >
+                            <Ban className="w-4 h-4 mr-2 text-amber-500" />
+                            Suspender acesso
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            className="text-destructive focus:text-destructive"
+                            onClick={async () => {
+                              if (!confirm(`EXCLUIR PERMANENTEMENTE ${user.email}? Esta ação não pode ser desfeita.`)) return;
+                              try {
+                                await userActions.mutateAsync({ action: "hard_delete", target_user_id: user.id });
+                                toast.success("Usuário excluído");
+                              } catch (e: any) { toast.error(e.message); }
+                            }}
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Excluir permanente
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 ))
@@ -246,6 +279,48 @@ export default function AdminUsersPage() {
         onOpenChange={setSubDialogOpen}
         user={selectedUser}
       />
+
+      {/* Reset password dialog */}
+      <Dialog open={!!resetUser} onOpenChange={(o) => !o && setResetUser(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Resetar senha</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">{resetUser?.email}</p>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Nova senha (mín. 8 caracteres)</Label>
+              <Input
+                type="text"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Nova senha"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setResetUser(null)}>Cancelar</Button>
+            <Button
+              className="gradient-primary"
+              disabled={newPassword.length < 8 || userActions.isPending}
+              onClick={async () => {
+                if (!resetUser) return;
+                try {
+                  await userActions.mutateAsync({
+                    action: "reset_password",
+                    target_user_id: resetUser.id,
+                    new_password: newPassword,
+                  });
+                  toast.success("Senha alterada!");
+                  setResetUser(null);
+                } catch (e: any) { toast.error(e.message); }
+              }}
+            >
+              Confirmar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 }
