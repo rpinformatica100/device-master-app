@@ -53,6 +53,7 @@ export interface SubscriptionPayment {
 export function useAdminUsers() {
   return useQuery({
     queryKey: ["admin-users"],
+    staleTime: 60_000,
     queryFn: async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Not authenticated");
@@ -65,6 +66,15 @@ export function useAdminUsers() {
       return (response.data || []) as AdminUser[];
     },
   });
+}
+
+/** Returns only non-admin users (assistências). */
+export function useNonAdminUsers() {
+  const q = useAdminUsers();
+  return {
+    ...q,
+    data: (q.data || []).filter((u) => !u.roles.includes("admin")),
+  };
 }
 
 export function useAdminSubscriptions() {

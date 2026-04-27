@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.auto_activate_subscription_on_payment() FROM PUBLIC, anon, authenticated;
