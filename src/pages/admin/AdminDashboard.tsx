@@ -1,14 +1,16 @@
 import AdminLayout from "@/components/admin/AdminLayout";
-import { useAdminUsers, useAdminPayments } from "@/hooks/useAdmin";
+import { useNonAdminUsers, useAdminPayments } from "@/hooks/useAdmin";
+import { usePlanPricing } from "@/hooks/usePlanPricing";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, CheckCircle, AlertTriangle, Clock, DollarSign, TrendingUp } from "lucide-react";
+import { Users, CheckCircle, AlertTriangle, Clock, TrendingUp, Repeat, BarChart3 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 export default function AdminDashboard() {
-  const { data: users = [], isLoading: loadingUsers } = useAdminUsers();
+  const { data: users = [], isLoading: loadingUsers } = useNonAdminUsers();
+  const { data: plans = [] } = usePlanPricing();
   const currentMonth = format(new Date(), "yyyy-MM-01");
-  const { data: payments = [], isLoading: loadingPayments } = useAdminPayments({ month: currentMonth });
+  const { data: payments = [] } = useAdminPayments({ month: currentMonth });
 
   const totalUsers = users.length;
   const activeUsers = users.filter(u => u.subscription?.status === "ativo").length;
@@ -23,6 +25,16 @@ export default function AdminDashboard() {
   const monthRevenue = paidPayments.reduce((sum, p) => sum + Number(p.amount), 0);
   const monthPending = pendingPayments.reduce((sum, p) => sum + Number(p.amount), 0);
 
+  // MRR / ARR — based on active subscriptions and current plan prices
+  const planMap = new Map(plans.map(p => [p.plan_key, Number(p.price)]));
+  const priceMensal = planMap.get("mensal") || 0;
+  const priceAnual = planMap.get("anual") || 0;
+  const activeMensal = users.filter(u => u.subscription?.status === "ativo" && u.subscription?.plan === "mensal").length;
+  const activeAnual = users.filter(u => u.subscription?.status === "ativo" && u.subscription?.plan === "anual").length;
+  const mrr = activeMensal * priceMensal + activeAnual * (priceAnual / 12);
+  const arr = mrr * 12;
+  const churnRate = totalUsers > 0 ? ((expiredUsers + suspendedUsers) / totalUsers) * 100 : 0;
+
   const stats = [
     { label: "Total Assistências", value: totalUsers, icon: Users, color: "text-primary" },
     { label: "Ativas", value: activeUsers, icon: CheckCircle, color: "text-emerald-500" },
@@ -32,7 +44,7 @@ export default function AdminDashboard() {
     { label: "Receita do Mês", value: `R$ ${monthRevenue.toFixed(2)}`, icon: TrendingUp, color: "text-emerald-500" },
   ];
 
-  const recentUsers = [...users].sort((a, b) => 
+  const recentUsers = [...users].sort((a, b) =>
     new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   ).slice(0, 5);
 
@@ -42,6 +54,42 @@ export default function AdminDashboard() {
         <div>
           <h1 className="text-2xl font-bold text-foreground">Dashboard Admin</h1>
           <p className="text-muted-foreground">Visão geral do sistema</p>
+        </div>
+
+        {/* MRR / ARR / Churn */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card className="bg-card border-border">
+            <CardContent className="p-4 flex items-center gap-3">
+              <Repeat className="w-8 h-8 text-emerald-500" />
+              <div>
+                <p className="text-xs text-muted-foreground">MRR (Receita Mensal Recorrente)</p>
+                <p className="text-2xl font-bold text-emerald-500">R$ {mrr.toFixed(2)}</p>
+                <p className="text-[10px] text-muted-foreground">
+                  {activeMensal} mensal · {activeAnual} anual
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="bg-card border-border">
+            <CardContent className="p-4 flex items-center gap-3">
+              <BarChart3 className="w-8 h-8 text-primary" />
+              <div>
+                <p className="text-xs text-muted-foreground">ARR (Receita Anual Recorrente)</p>
+                <p className="text-2xl font-bold text-primary">R$ {arr.toFixed(2)}</p>
+                <p className="text-[10px] text-muted-foreground">Projeção 12 meses</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="bg-card border-border">
+            <CardContent className="p-4 flex items-center gap-3">
+              <AlertTriangle className="w-8 h-8 text-amber-500" />
+              <div>
+                <p className="text-xs text-muted-foreground">Churn / Inadimplência</p>
+                <p className="text-2xl font-bold text-amber-500">{churnRate.toFixed(1)}%</p>
+                <p className="text-[10px] text-muted-foreground">{expiredUsers + suspendedUsers} de {totalUsers}</p>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Stats Grid */}
