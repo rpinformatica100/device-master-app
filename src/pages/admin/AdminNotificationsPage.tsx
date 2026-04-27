@@ -1,6 +1,6 @@
 import { useState } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
-import { useAdminUsers } from "@/hooks/useAdmin";
+import { useNonAdminUsers } from "@/hooks/useAdmin";
 import { useAdminMessages, useAdminSendMessage, useMessageReplies, useCloseTicket, useReopenTicket } from "@/hooks/useMessages";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -149,7 +149,7 @@ function AdminMessageItem({ msg, users }: { msg: any; users: any[] }) {
 }
 
 export default function AdminNotificationsPage() {
-  const { data: users = [] } = useAdminUsers();
+  const { data: users = [] } = useNonAdminUsers();
   const { data: messages = [] } = useAdminMessages();
   const sendMessage = useAdminSendMessage();
   const [statusFilter, setStatusFilter] = useState<string>("aberto");
