@@ -1,15 +1,20 @@
 import { useState } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
-import { useAdminUsers } from "@/hooks/useAdmin";
+import { useNonAdminUsers } from "@/hooks/useAdmin";
+import { useAdminUserActions } from "@/hooks/useAuditLog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Settings, Search, Phone, Mail, Building2, MapPin, Calendar, Shield, Clock } from "lucide-react";
+import { Settings, Search, Phone, Mail, MapPin, Clock, MoreVertical, KeyRound, Ban, Trash2 } from "lucide-react";
 import SubscriptionDialog from "@/components/admin/SubscriptionDialog";
 import type { AdminUser } from "@/hooks/useAdmin";
 import { format } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 
 const statusColors: Record<string, string> = {
   ativo: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
@@ -20,14 +25,14 @@ const statusColors: Record<string, string> = {
 };
 
 export default function AdminUsersPage() {
-  const { data: users = [], isLoading } = useAdminUsers();
+  const { data: nonAdminUsers = [], isLoading } = useNonAdminUsers();
+  const userActions = useAdminUserActions();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [subDialogOpen, setSubDialogOpen] = useState(false);
-
-  // Filter out admin users - only show assistências
-  const nonAdminUsers = users.filter((u) => !u.roles.includes("admin"));
+  const [resetUser, setResetUser] = useState<AdminUser | null>(null);
+  const [newPassword, setNewPassword] = useState("");
 
   const filtered = nonAdminUsers.filter((u) => {
     const q = search.toLowerCase();
