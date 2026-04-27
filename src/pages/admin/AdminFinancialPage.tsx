@@ -209,52 +209,96 @@ export default function AdminFinancialPage() {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {plans.map((plan) => {
-                  const editing = editingPlan[plan.id];
+                  const editing = editingPlan[plan.id] || {};
+                  const currentPrice = editing.price ?? String(plan.price);
+                  const currentPeriod = editing.period_label ?? plan.period_label;
+                  const currentDescription = editing.description ?? (plan.description || "");
+                  const currentFeatures = editing.features ?? plan.features.join("\n");
+                  const currentPopular = editing.popular ?? plan.popular;
+
+                  const hasChanges =
+                    currentPrice !== String(plan.price) ||
+                    currentPeriod !== plan.period_label ||
+                    currentDescription !== (plan.description || "") ||
+                    currentFeatures !== plan.features.join("\n") ||
+                    currentPopular !== plan.popular;
+
+                  const setField = (field: string, value: any) =>
+                    setEditingPlan(prev => ({ ...prev, [plan.id]: { ...prev[plan.id], [field]: value } }));
+
                   return (
-                    <div key={plan.id} className={`p-4 rounded-lg border ${plan.popular ? "border-primary/50" : "border-border"}`}>
-                      <div className="flex items-center justify-between mb-2">
+                    <div key={plan.id} className={`p-4 rounded-lg border space-y-3 ${currentPopular ? "border-primary/50" : "border-border"}`}>
+                      <div className="flex items-center justify-between">
                         <h4 className="font-semibold text-foreground">{plan.name}</h4>
-                        {plan.popular && <Badge className="gradient-primary text-[10px]">Popular</Badge>}
+                        <div className="flex items-center gap-2">
+                          <Label className="text-[10px] text-muted-foreground">Popular</Label>
+                          <Switch checked={currentPopular} onCheckedChange={(v) => setField("popular", v)} />
+                        </div>
                       </div>
-                      <p className="text-xs text-muted-foreground mb-3">{plan.description}</p>
-                      <div className="flex items-center gap-2 mb-3">
-                        <Label className="text-xs">R$</Label>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          className="h-8"
-                          value={editing?.price ?? String(plan.price)}
-                          onChange={(e) => setEditingPlan(prev => ({ ...prev, [plan.id]: { price: e.target.value } }))}
+
+                      <div className="space-y-1.5">
+                        <Label className="text-xs">Descrição</Label>
+                        <Input className="h-8" value={currentDescription} onChange={(e) => setField("description", e.target.value)} />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-1.5">
+                          <Label className="text-xs">Preço (R$)</Label>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            className="h-8"
+                            value={currentPrice}
+                            onChange={(e) => setField("price", e.target.value)}
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-xs">Período</Label>
+                          <Input
+                            className="h-8"
+                            value={currentPeriod}
+                            onChange={(e) => setField("period_label", e.target.value)}
+                            placeholder="/mês"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <Label className="text-xs">Recursos (1 por linha)</Label>
+                        <Textarea
+                          rows={5}
+                          className="text-xs"
+                          value={currentFeatures}
+                          onChange={(e) => setField("features", e.target.value)}
                         />
-                        <span className="text-xs text-muted-foreground whitespace-nowrap">{plan.period_label}</span>
                       </div>
-                      {editing && editing.price !== String(plan.price) && (
+
+                      {hasChanges && (
                         <Button
                           size="sm"
                           className="w-full gradient-primary"
                           disabled={updatePlan.isPending}
                           onClick={async () => {
                             try {
-                              await updatePlan.mutateAsync({ id: plan.id, price: Number(editing.price) });
+                              await updatePlan.mutateAsync({
+                                id: plan.id,
+                                price: Number(currentPrice),
+                                period_label: currentPeriod,
+                                description: currentDescription,
+                                popular: currentPopular,
+                                features: currentFeatures.split("\n").map(s => s.trim()).filter(Boolean),
+                              });
                               setEditingPlan(prev => { const n = { ...prev }; delete n[plan.id]; return n; });
-                              toast.success(`Preço do plano ${plan.name} atualizado!`);
+                              toast.success(`Plano ${plan.name} atualizado!`);
                             } catch (e: any) {
                               toast.error(e.message);
                             }
                           }}
                         >
                           <Save className="w-3 h-3 mr-1" />
-                          Salvar
+                          Salvar alterações
                         </Button>
                       )}
-                      <ul className="mt-3 space-y-1">
-                        {plan.features.map((f, i) => (
-                          <li key={i} className="text-[11px] text-muted-foreground flex items-center gap-1">
-                            <CheckCircle className="w-3 h-3 text-primary flex-shrink-0" />
-                            {f}
-                          </li>
-                        ))}
-                      </ul>
                     </div>
                   );
                 })}
