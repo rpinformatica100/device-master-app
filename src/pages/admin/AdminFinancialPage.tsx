@@ -106,10 +106,14 @@ export default function AdminFinancialPage() {
             <h1 className="text-2xl font-bold text-foreground">Controle Financeiro</h1>
             <p className="text-muted-foreground">Pagamentos de mensalidade das assistências</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <Button className="gradient-primary" onClick={() => { setEditPayment(null); setDialogOpen(true); }}>
               <Plus className="w-4 h-4 mr-2" />
               Novo Pagamento
+            </Button>
+            <Button variant="outline" onClick={() => exportPaymentsToCsv(payments, users)} disabled={payments.length === 0}>
+              <Download className="w-4 h-4 mr-2" />
+              Exportar CSV
             </Button>
             <Button variant="outline" onClick={() => setShowPlanSettings(!showPlanSettings)}>
               <Settings className="w-4 h-4 mr-2" />
@@ -150,13 +154,26 @@ export default function AdminFinancialPage() {
         </div>
 
         {/* Filters */}
-        <div className="flex gap-3 flex-wrap">
-          <Input
-            type="month"
-            className="w-48"
-            value={filterMonth?.slice(0, 7)}
-            onChange={(e) => setFilterMonth(e.target.value ? e.target.value + "-01" : "")}
-          />
+        <div className="flex gap-3 flex-wrap items-center">
+          <div className="relative">
+            <Input
+              type="month"
+              className="w-48 pr-8"
+              value={filterMonth?.slice(0, 7) || ""}
+              onChange={(e) => setFilterMonth(e.target.value ? e.target.value + "-01" : "")}
+            />
+            {filterMonth && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute right-0 top-0 h-full w-8"
+                onClick={() => setFilterMonth("")}
+                title="Limpar mês"
+              >
+                <X className="w-3 h-3" />
+              </Button>
+            )}
+          </div>
           <Select value={filterStatus} onValueChange={setFilterStatus}>
             <SelectTrigger className="w-40"><SelectValue placeholder="Status" /></SelectTrigger>
             <SelectContent>
