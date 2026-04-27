@@ -1,16 +1,19 @@
 import { useState } from "react";
 import { calculateRenewalDate } from "@/lib/subscriptionUtils";
 import AdminLayout from "@/components/admin/AdminLayout";
-import { useAdminUsers, useAdminPayments, useAdminPaymentMutations, useAdminSubscriptions, type SubscriptionPayment } from "@/hooks/useAdmin";
+import { useNonAdminUsers, useAdminPayments, useAdminPaymentMutations, useAdminSubscriptions, type SubscriptionPayment } from "@/hooks/useAdmin";
 import { usePlanPricing, useUpdatePlanPricing } from "@/hooks/usePlanPricing";
+import { exportPaymentsToCsv } from "@/lib/exportPayments";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, CheckCircle, Trash2, Edit, DollarSign, Clock, AlertTriangle, Save, Settings } from "lucide-react";
+import { Plus, CheckCircle, Trash2, Edit, DollarSign, Clock, AlertTriangle, Save, Settings, Download, X } from "lucide-react";
 import PaymentDialog from "@/components/admin/PaymentDialog";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -24,10 +27,10 @@ const statusColors: Record<string, string> = {
 };
 
 export default function AdminFinancialPage() {
-  const { data: users = [] } = useAdminUsers();
+  const { data: users = [] } = useNonAdminUsers();
   const { data: plans = [] } = usePlanPricing();
   const updatePlan = useUpdatePlanPricing();
-  const [editingPlan, setEditingPlan] = useState<Record<string, { price: string }>>({});
+  const [editingPlan, setEditingPlan] = useState<Record<string, { price?: string; period_label?: string; description?: string; features?: string; popular?: boolean }>>({});
   const [showPlanSettings, setShowPlanSettings] = useState(false);
   const [filterMonth, setFilterMonth] = useState(new Date().toISOString().slice(0, 7) + "-01");
   const [filterStatus, setFilterStatus] = useState("all");
