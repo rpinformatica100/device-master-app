@@ -2,7 +2,7 @@ import { ReactNode, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { 
-  LayoutDashboard, Users, DollarSign, Bell, LogOut, Wrench, Menu, X 
+  LayoutDashboard, Users, DollarSign, Bell, LogOut, Wrench, Menu, ShieldCheck 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -13,6 +13,7 @@ const navItems = [
   { title: "Assistências", href: "/admin/usuarios", icon: Users },
   { title: "Financeiro", href: "/admin/financeiro", icon: DollarSign },
   { title: "Mensagens", href: "/admin/notificacoes", icon: Bell },
+  { title: "Auditoria", href: "/admin/auditoria", icon: ShieldCheck },
 ];
 
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
