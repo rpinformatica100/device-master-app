@@ -34,6 +34,8 @@ export default function AdminUsersPage() {
   const [subDialogOpen, setSubDialogOpen] = useState(false);
   const [resetUser, setResetUser] = useState<AdminUser | null>(null);
   const [newPassword, setNewPassword] = useState("");
+  const [deleteUser, setDeleteUser] = useState<AdminUser | null>(null);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
 
   const filtered = nonAdminUsers.filter((u) => {
     const q = search.toLowerCase();
