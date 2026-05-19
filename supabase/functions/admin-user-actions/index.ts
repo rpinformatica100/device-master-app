@@ -83,12 +83,31 @@ Deno.serve(async (req) => {
       });
       if (error) throw error;
     } else if (action === "soft_delete") {
-      // Suspend subscription instead of deleting auth user
+      // Suspend subscription
       await adminClient.from("subscriptions").update({
         status: "suspenso",
         notes: `Suspenso pelo admin em ${new Date().toISOString()}`,
       }).eq("user_id", target_user_id);
+      // Revoke active sessions + ban for 100 years (effectively blocks login)
+      await adminClient.auth.admin.updateUserById(target_user_id, {
+        ban_duration: "876000h",
+      } as any);
+    } else if (action === "reactivate") {
+      // Lift ban
+      await adminClient.auth.admin.updateUserById(target_user_id, {
+        ban_duration: "none",
+      } as any);
+      await adminClient.from("subscriptions").update({
+        status: "aguardando",
+        notes: `Reativado pelo admin em ${new Date().toISOString()}`,
+      }).eq("user_id", target_user_id);
     } else if (action === "hard_delete") {
+      // Purge all user data first via SECURITY DEFINER RPC (runs as admin since user JWT carries admin role)
+      const { error: purgeErr } = await userClient.rpc("admin_purge_user_data", {
+        _user_id: target_user_id,
+      });
+      if (purgeErr) throw purgeErr;
+      // Now delete auth user
       const { error } = await adminClient.auth.admin.deleteUser(target_user_id);
       if (error) throw error;
     } else {

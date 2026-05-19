@@ -26,6 +26,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminUsersPage from "./pages/admin/AdminUsersPage";
 import AdminFinancialPage from "./pages/admin/AdminFinancialPage";
 import AdminNotificationsPage from "./pages/admin/AdminNotificationsPage";
+import AdminAuditPage from "./pages/admin/AdminAuditPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -99,6 +100,7 @@ function AppRoutes() {
       <Route path="/admin/usuarios" element={<AdminRoute><AdminUsersPage /></AdminRoute>} />
       <Route path="/admin/financeiro" element={<AdminRoute><AdminFinancialPage /></AdminRoute>} />
       <Route path="/admin/notificacoes" element={<AdminRoute><AdminNotificationsPage /></AdminRoute>} />
+      <Route path="/admin/auditoria" element={<AdminRoute><AdminAuditPage /></AdminRoute>} />
       
       {/* User Routes */}
       <Route path="/dashboard" element={<ProtectedRoute><Index /></ProtectedRoute>} />

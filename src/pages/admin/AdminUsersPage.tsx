@@ -13,6 +13,7 @@ import { format } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
@@ -33,6 +34,8 @@ export default function AdminUsersPage() {
   const [subDialogOpen, setSubDialogOpen] = useState(false);
   const [resetUser, setResetUser] = useState<AdminUser | null>(null);
   const [newPassword, setNewPassword] = useState("");
+  const [deleteUser, setDeleteUser] = useState<AdminUser | null>(null);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
 
   const filtered = nonAdminUsers.filter((u) => {
     const q = search.toLowerCase();
@@ -252,13 +255,7 @@ export default function AdminUsersPage() {
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
                             className="text-destructive focus:text-destructive"
-                            onClick={async () => {
-                              if (!confirm(`EXCLUIR PERMANENTEMENTE ${user.email}? Esta ação não pode ser desfeita.`)) return;
-                              try {
-                                await userActions.mutateAsync({ action: "hard_delete", target_user_id: user.id });
-                                toast.success("Usuário excluído");
-                              } catch (e: any) { toast.error(e.message); }
-                            }}
+                            onClick={() => { setDeleteUser(user); setDeleteConfirmText(""); }}
                           >
                             <Trash2 className="w-4 h-4 mr-2" />
                             Excluir permanente
@@ -321,6 +318,42 @@ export default function AdminUsersPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Hard delete confirmation */}
+      <AlertDialog open={!!deleteUser} onOpenChange={(o) => !o && setDeleteUser(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-destructive">Excluir permanentemente?</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <span className="block">Esta ação remove <strong>{deleteUser?.email}</strong> e <strong>todos os dados</strong> associados (clientes, ordens, financeiro, orçamentos, equipamentos, mensagens). Não há como desfazer.</span>
+              <span className="block pt-2">Digite <strong>EXCLUIR</strong> para confirmar:</span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <Input
+            value={deleteConfirmText}
+            onChange={(e) => setDeleteConfirmText(e.target.value)}
+            placeholder="EXCLUIR"
+            className="font-mono"
+          />
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={deleteConfirmText !== "EXCLUIR" || userActions.isPending}
+              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+              onClick={async () => {
+                if (!deleteUser) return;
+                try {
+                  await userActions.mutateAsync({ action: "hard_delete", target_user_id: deleteUser.id });
+                  toast.success("Usuário e dados excluídos");
+                  setDeleteUser(null);
+                } catch (e: any) { toast.error(e.message); }
+              }}
+            >
+              Excluir permanentemente
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AdminLayout>
   );
 }
