@@ -255,13 +255,7 @@ export default function AdminUsersPage() {
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
                             className="text-destructive focus:text-destructive"
-                            onClick={async () => {
-                              if (!confirm(`EXCLUIR PERMANENTEMENTE ${user.email}? Esta ação não pode ser desfeita.`)) return;
-                              try {
-                                await userActions.mutateAsync({ action: "hard_delete", target_user_id: user.id });
-                                toast.success("Usuário excluído");
-                              } catch (e: any) { toast.error(e.message); }
-                            }}
+                            onClick={() => { setDeleteUser(user); setDeleteConfirmText(""); }}
                           >
                             <Trash2 className="w-4 h-4 mr-2" />
                             Excluir permanente
