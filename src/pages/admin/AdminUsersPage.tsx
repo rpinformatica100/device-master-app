@@ -318,6 +318,42 @@ export default function AdminUsersPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Hard delete confirmation */}
+      <AlertDialog open={!!deleteUser} onOpenChange={(o) => !o && setDeleteUser(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-destructive">Excluir permanentemente?</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <span className="block">Esta ação remove <strong>{deleteUser?.email}</strong> e <strong>todos os dados</strong> associados (clientes, ordens, financeiro, orçamentos, equipamentos, mensagens). Não há como desfazer.</span>
+              <span className="block pt-2">Digite <strong>EXCLUIR</strong> para confirmar:</span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <Input
+            value={deleteConfirmText}
+            onChange={(e) => setDeleteConfirmText(e.target.value)}
+            placeholder="EXCLUIR"
+            className="font-mono"
+          />
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={deleteConfirmText !== "EXCLUIR" || userActions.isPending}
+              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+              onClick={async () => {
+                if (!deleteUser) return;
+                try {
+                  await userActions.mutateAsync({ action: "hard_delete", target_user_id: deleteUser.id });
+                  toast.success("Usuário e dados excluídos");
+                  setDeleteUser(null);
+                } catch (e: any) { toast.error(e.message); }
+              }}
+            >
+              Excluir permanentemente
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AdminLayout>
   );
 }
