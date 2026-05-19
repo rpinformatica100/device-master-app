@@ -100,6 +100,7 @@ function AppRoutes() {
       <Route path="/admin/usuarios" element={<AdminRoute><AdminUsersPage /></AdminRoute>} />
       <Route path="/admin/financeiro" element={<AdminRoute><AdminFinancialPage /></AdminRoute>} />
       <Route path="/admin/notificacoes" element={<AdminRoute><AdminNotificationsPage /></AdminRoute>} />
+      <Route path="/admin/auditoria" element={<AdminRoute><AdminAuditPage /></AdminRoute>} />
       
       {/* User Routes */}
       <Route path="/dashboard" element={<ProtectedRoute><Index /></ProtectedRoute>} />
