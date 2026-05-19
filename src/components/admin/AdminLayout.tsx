@@ -1,5 +1,5 @@
 import { ReactNode, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { 
   LayoutDashboard, Users, DollarSign, Bell, LogOut, Wrench, Menu, ShieldCheck 
