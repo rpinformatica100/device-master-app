@@ -1233,6 +1233,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_purge_user_data: { Args: { _user_id: string }; Returns: undefined }
       generate_next_equipment_code: { Args: never; Returns: string }
       generate_next_os_number: { Args: never; Returns: string }
       generate_next_quote_number: { Args: never; Returns: string }
