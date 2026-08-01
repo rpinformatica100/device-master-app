@@ -105,7 +105,8 @@ export default function AuthPage() {
           }
         } else {
           toast.success("Conta criada com sucesso! Verifique seu email.");
-          navigate("/dashboard");
+          navigate(safeNext ?? "/dashboard");
+
         }
       } else {
         const { error } = await signIn(formData.email, formData.password);
