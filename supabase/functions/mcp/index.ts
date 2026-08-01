@@ -109,7 +109,7 @@ var get_order_default = defineTool2({
     }
     const supabase = supabaseForUser(ctx);
     let query = supabase.from("orders").select(
-      "id, os_number, device, issue, status, priority, category, serial_number, accessories, internal_notes, total_sale, total_cost, total_profit, created_at, completed_at, clients(id, name, phone, email), repair_items(*)"
+      "id, os_number, device, issue, status, priority, category, serial_number, accessories, internal_notes, total_sale, total_cost, total_profit, created_at, completed_at, clients(id, name, phone, email), order_items(*)"
     ).limit(1);
     query = id ? query.eq("id", id) : query.eq("os_number", os_number);
     const { data, error } = await query.maybeSingle();
