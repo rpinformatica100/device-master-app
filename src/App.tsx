@@ -89,11 +89,17 @@ function AppRoutes() {
     );
   }
 
+  const nextParam = new URLSearchParams(window.location.search).get("next");
+  const safeNext = nextParam && /^\/(?!\/)/.test(nextParam) ? nextParam : null;
+  const afterLogin = safeNext ?? (isAdmin ? "/admin" : hasActiveSubscription ? "/dashboard" : "/assinatura-expirada");
+
   return (
     <Routes>
-      <Route path="/" element={user ? <Navigate to={isAdmin ? "/admin" : hasActiveSubscription ? "/dashboard" : "/assinatura-expirada"} replace /> : <LandingPage />} />
-      <Route path="/auth" element={user ? <Navigate to={isAdmin ? "/admin" : hasActiveSubscription ? "/dashboard" : "/assinatura-expirada"} replace /> : <AuthPage />} />
+      <Route path="/" element={user ? <Navigate to={afterLogin} replace /> : <LandingPage />} />
+      <Route path="/auth" element={user ? <Navigate to={afterLogin} replace /> : <AuthPage />} />
+      <Route path="/.lovable/oauth/consent" element={<OAuthConsentPage />} />
       <Route path="/assinatura-expirada" element={!user ? <Navigate to="/auth" replace /> : isAdmin ? <Navigate to="/admin" replace /> : hasActiveSubscription ? <Navigate to="/dashboard" replace /> : <SubscriptionExpiredPage />} />
+
       
       {/* Admin Routes */}
       <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
