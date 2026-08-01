@@ -41,11 +41,15 @@ export default function AuthPage() {
   const { signIn, signUp, user, isAdmin } = useAuth();
   const navigate = useNavigate();
 
+  const nextParam = searchParams.get("next");
+  const safeNext = nextParam && /^\/(?!\/)/.test(nextParam) ? nextParam : null;
+
   useEffect(() => {
     if (user) {
-      navigate(isAdmin ? "/admin" : "/dashboard");
+      navigate(safeNext ?? (isAdmin ? "/admin" : "/dashboard"));
     }
-  }, [user, isAdmin, navigate]);
+  }, [user, isAdmin, navigate, safeNext]);
+
 
   useEffect(() => {
     setIsSignUp(searchParams.get("mode") === "signup");
@@ -101,7 +105,8 @@ export default function AuthPage() {
           }
         } else {
           toast.success("Conta criada com sucesso! Verifique seu email.");
-          navigate("/dashboard");
+          navigate(safeNext ?? "/dashboard");
+
         }
       } else {
         const { error } = await signIn(formData.email, formData.password);

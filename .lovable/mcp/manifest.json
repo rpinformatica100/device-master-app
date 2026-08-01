@@ -1,0 +1,213 @@
+{
+  "version": 1,
+  "sdk_version": "0.26.1",
+  "path": "/functions/v1/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://cahkipreywowzjenpovw.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "techcare-os",
+      "version": "0.1.0",
+      "title": "TechCare OS"
+    },
+    "tools": [
+      {
+        "name": "list_orders",
+        "title": "Listar ordens de serviço",
+        "description": "Lista as ordens de serviço (OS) da assistência técnica do usuário autenticado, com filtro opcional por status e busca por equipamento ou número da OS.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "description": "Filtra por status da OS, por exemplo: aberta, em_andamento, concluida, cancelada."
+            },
+            "search": {
+              "type": "string",
+              "description": "Busca por número da OS, equipamento ou defeito relatado."
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Máximo de ordens retornadas (padrão 20, máximo 100)."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_order",
+        "title": "Detalhar ordem de serviço",
+        "description": "Retorna os detalhes completos de uma ordem de serviço (dados do equipamento, cliente e itens de reparo) pelo número da OS ou pelo id.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "os_number": {
+              "type": "string",
+              "description": "Número da OS, por exemplo OS-0012-2026."
+            },
+            "id": {
+              "type": "string",
+              "description": "Identificador (uuid) da ordem de serviço."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_clients",
+        "title": "Listar clientes",
+        "description": "Lista os clientes cadastrados do usuário autenticado, com busca opcional por nome, telefone, e-mail, CPF ou CNPJ.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "search": {
+              "type": "string",
+              "description": "Texto para buscar por nome, telefone ou e-mail do cliente."
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Máximo de clientes retornados (padrão 20, máximo 100)."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "create_client",
+        "title": "Cadastrar cliente",
+        "description": "Cadastra um novo cliente na assistência técnica do usuário autenticado.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Nome completo ou razão social do cliente."
+            },
+            "phone": {
+              "type": "string",
+              "description": "Telefone/WhatsApp do cliente."
+            },
+            "email": {
+              "type": "string",
+              "description": "E-mail do cliente."
+            },
+            "client_type": {
+              "type": "string",
+              "description": "Tipo do cliente: 'pf' (pessoa física) ou 'pj' (pessoa jurídica)."
+            },
+            "cpf": {
+              "type": "string",
+              "description": "CPF, quando pessoa física."
+            },
+            "cnpj": {
+              "type": "string",
+              "description": "CNPJ, quando pessoa jurídica."
+            },
+            "notes": {
+              "type": "string",
+              "description": "Observações internas sobre o cliente."
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_inventory",
+        "title": "Consultar estoque",
+        "description": "Lista os produtos/peças do estoque do usuário autenticado, com opção de mostrar apenas itens com estoque baixo (abaixo do mínimo).",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "search": {
+              "type": "string",
+              "description": "Busca por nome ou SKU do produto."
+            },
+            "low_stock_only": {
+              "type": "boolean",
+              "description": "Se verdadeiro, retorna apenas itens com estoque igual ou abaixo do mínimo."
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Máximo de produtos retornados (padrão 50, máximo 200)."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "financial_summary",
+        "title": "Resumo financeiro",
+        "description": "Resume receitas, despesas, custos e lucro das transações financeiras do usuário autenticado em um período (datas ISO YYYY-MM-DD).",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "start_date": {
+              "type": "string",
+              "description": "Data inicial no formato YYYY-MM-DD."
+            },
+            "end_date": {
+              "type": "string",
+              "description": "Data final no formato YYYY-MM-DD."
+            },
+            "status": {
+              "type": "string",
+              "description": "Filtra por status da transação, por exemplo 'pago' ou 'pendente'."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
