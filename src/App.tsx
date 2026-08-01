@@ -27,7 +27,9 @@ import AdminUsersPage from "./pages/admin/AdminUsersPage";
 import AdminFinancialPage from "./pages/admin/AdminFinancialPage";
 import AdminNotificationsPage from "./pages/admin/AdminNotificationsPage";
 import AdminAuditPage from "./pages/admin/AdminAuditPage";
+import OAuthConsentPage from "./pages/OAuthConsentPage";
 import NotFound from "./pages/NotFound";
+
 
 const queryClient = new QueryClient();
 const ACTIVE_SUBSCRIPTION_STATUSES = ["ativo", "trial"];
