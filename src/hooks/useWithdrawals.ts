@@ -94,7 +94,7 @@ export function useWithdrawals() {
           user_id: user.id,
           amount: amount,
           description: description || 'Pro-labore',
-          reference_month: referenceMonth.toISOString().split('T')[0],
+          reference_month: `${referenceMonth.getFullYear()}-${String(referenceMonth.getMonth() + 1).padStart(2, '0')}-01`,
           status: 'confirmado',
           confirmed_at: new Date().toISOString(),
           financial_transaction_id: financialTx.id,
