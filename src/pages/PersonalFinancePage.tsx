@@ -191,7 +191,7 @@ export default function PersonalFinancePage() {
 
             {/* Filters */}
             <Card>
-              <CardContent className="py-3 md:py-4">
+              <CardContent className="p-3">
                 <div className="flex flex-col gap-3">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -252,7 +252,7 @@ export default function PersonalFinancePage() {
                   </div>
                 ) : isMobile ? (
                   /* Mobile Cards */
-                  <div className="space-y-3 -mx-2">
+                  <div className="space-y-2">
                     {filteredTransactions.map(transaction => (
                       <PersonalTransactionCard
                         key={transaction.id}
@@ -264,7 +264,7 @@ export default function PersonalFinancePage() {
                   </div>
                 ) : (
                   /* Desktop Table */
-                  <div className="overflow-x-auto -mx-6">
+                  <div className="overflow-x-auto -mx-3">
                     <table className="w-full">
                       <thead>
                         <tr className="border-b border-border">
