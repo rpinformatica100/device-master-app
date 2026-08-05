@@ -98,40 +98,40 @@ export default function EquipmentReceiptPage() {
       {/* A4 Content */}
       <div className="max-w-[210mm] mx-auto px-[15mm] py-[10mm] text-black bg-white print:px-0 print:py-0" style={{ fontSize: '11px', lineHeight: '1.5' }}>
         {/* Header */}
-        <div style={{ textAlign: 'center', borderBottom: '2px solid #000', paddingBottom: '10px', marginBottom: '14px' }}>
+        <div style={{ textAlign: 'center', borderBottom: '2px solid #0f172a', paddingBottom: '10px', marginBottom: '14px' }}>
           <h1 style={{ fontSize: '20px', fontWeight: 'bold', letterSpacing: '1px', textTransform: 'uppercase', margin: 0 }}>
             {company?.nome_fantasia || company?.razao_social || 'Empresa'}
           </h1>
-          {company?.cnpj && <p style={{ fontSize: '10px', color: '#555', margin: '2px 0' }}>CNPJ: {company.cnpj}</p>}
-          {company?.telefone && <p style={{ fontSize: '10px', color: '#555', margin: '2px 0' }}>Tel: {company.telefone}</p>}
-          {company?.email && <p style={{ fontSize: '10px', color: '#555', margin: '2px 0' }}>Email: {company.email}</p>}
-          {companyAddr && <p style={{ fontSize: '10px', color: '#555', margin: '2px 0' }}>{companyAddr}</p>}
+          {company?.cnpj && <p style={{ fontSize: '10px', color: '#6b7280', margin: '2px 0' }}>CNPJ: {company.cnpj}</p>}
+          {company?.telefone && <p style={{ fontSize: '10px', color: '#6b7280', margin: '2px 0' }}>Tel: {company.telefone}</p>}
+          {company?.email && <p style={{ fontSize: '10px', color: '#6b7280', margin: '2px 0' }}>Email: {company.email}</p>}
+          {companyAddr && <p style={{ fontSize: '10px', color: '#6b7280', margin: '2px 0' }}>{companyAddr}</p>}
         </div>
 
         {/* Title */}
         <div style={{ textAlign: 'center', marginBottom: '16px' }}>
-          <h2 style={{ fontSize: '16px', fontWeight: 'bold', border: '2px solid #000', display: 'inline-block', padding: '4px 24px' }}>
+          <h2 style={{ fontSize: '16px', fontWeight: 'bold', border: '2px solid #0f172a', display: 'inline-block', padding: '4px 24px' }}>
             {isPurchase ? 'RECIBO DE COMPRA' : 'RECIBO DE VENDA'}
           </h2>
           <div style={{ marginTop: '6px' }}>
             <span style={{ fontSize: '14px', fontWeight: 'bold' }}>Nº {equipment.code}</span>
           </div>
-          <p style={{ fontSize: '10px', color: '#555', marginTop: '4px' }}>{fmtDate(transactionDate)}</p>
+          <p style={{ fontSize: '10px', color: '#6b7280', marginTop: '4px' }}>{fmtDate(transactionDate)}</p>
         </div>
 
         {/* Client */}
-        <div style={{ border: '1px solid #000', borderRadius: '4px', padding: '8px 10px', marginBottom: '10px' }}>
-          <h3 style={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', borderBottom: '1px solid #ccc', paddingBottom: '4px', marginBottom: '6px' }}>
+        <div style={{ border: '1px solid #e5e7eb', borderRadius: '4px', padding: '8px 10px', marginBottom: '10px' }}>
+          <h3 style={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', borderBottom: '1px solid #e5e7eb', paddingBottom: '4px', marginBottom: '6px' }}>
             {isPurchase ? 'VENDEDOR / FORNECEDOR' : 'COMPRADOR'}
           </h3>
           {transactionClient ? (
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px', fontSize: '10px' }}>
-              <div><span style={{ color: '#777', fontSize: '9px' }}>Nome:</span><br/><strong>{transactionClient.name}</strong></div>
-              {transactionClient.cpf && <div><span style={{ color: '#777', fontSize: '9px' }}>CPF:</span><br/><strong>{transactionClient.cpf}</strong></div>}
-              {transactionClient.cnpj && <div><span style={{ color: '#777', fontSize: '9px' }}>CNPJ:</span><br/><strong>{transactionClient.cnpj}</strong></div>}
-              {transactionClient.phone && <div><span style={{ color: '#777', fontSize: '9px' }}>Telefone:</span><br/><strong>{transactionClient.phone}</strong></div>}
-              {transactionClient.email && <div><span style={{ color: '#777', fontSize: '9px' }}>Email:</span><br/><strong>{transactionClient.email}</strong></div>}
-              {clientAddr && <div style={{ gridColumn: 'span 2' }}><span style={{ color: '#777', fontSize: '9px' }}>Endereço:</span><br/><strong>{clientAddr}</strong></div>}
+              <div><span style={{ color: '#9ca3af', fontSize: '9px' }}>Nome:</span><br/><strong>{transactionClient.name}</strong></div>
+              {transactionClient.cpf && <div><span style={{ color: '#9ca3af', fontSize: '9px' }}>CPF:</span><br/><strong>{transactionClient.cpf}</strong></div>}
+              {transactionClient.cnpj && <div><span style={{ color: '#9ca3af', fontSize: '9px' }}>CNPJ:</span><br/><strong>{transactionClient.cnpj}</strong></div>}
+              {transactionClient.phone && <div><span style={{ color: '#9ca3af', fontSize: '9px' }}>Telefone:</span><br/><strong>{transactionClient.phone}</strong></div>}
+              {transactionClient.email && <div><span style={{ color: '#9ca3af', fontSize: '9px' }}>Email:</span><br/><strong>{transactionClient.email}</strong></div>}
+              {clientAddr && <div style={{ gridColumn: 'span 2' }}><span style={{ color: '#9ca3af', fontSize: '9px' }}>Endereço:</span><br/><strong>{clientAddr}</strong></div>}
             </div>
           ) : (
             <p style={{ fontSize: '10px', color: '#888' }}>Não identificado</p>
@@ -139,23 +139,23 @@ export default function EquipmentReceiptPage() {
         </div>
 
         {/* Equipment */}
-        <div style={{ border: '1px solid #000', borderRadius: '4px', padding: '8px 10px', marginBottom: '10px' }}>
-          <h3 style={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', borderBottom: '1px solid #ccc', paddingBottom: '4px', marginBottom: '6px' }}>DADOS DO EQUIPAMENTO</h3>
+        <div style={{ border: '1px solid #e5e7eb', borderRadius: '4px', padding: '8px 10px', marginBottom: '10px' }}>
+          <h3 style={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', borderBottom: '1px solid #e5e7eb', paddingBottom: '4px', marginBottom: '6px' }}>DADOS DO EQUIPAMENTO</h3>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px', fontSize: '10px' }}>
-            <div><span style={{ color: '#777', fontSize: '9px' }}>Código:</span><br/><strong style={{ fontFamily: 'monospace' }}>{equipment.code}</strong></div>
-            <div><span style={{ color: '#777', fontSize: '9px' }}>Equipamento:</span><br/><strong>{equipment.name}</strong></div>
-            {equipment.brand && <div><span style={{ color: '#777', fontSize: '9px' }}>Marca:</span><br/><strong>{equipment.brand}</strong></div>}
-            {equipment.model && <div><span style={{ color: '#777', fontSize: '9px' }}>Modelo:</span><br/><strong>{equipment.model}</strong></div>}
-            {equipment.serial_number && <div><span style={{ color: '#777', fontSize: '9px' }}>Nº Série:</span><br/><strong style={{ fontFamily: 'monospace' }}>{equipment.serial_number}</strong></div>}
-            {equipment.imei && <div><span style={{ color: '#777', fontSize: '9px' }}>IMEI:</span><br/><strong style={{ fontFamily: 'monospace' }}>{equipment.imei}</strong></div>}
-            <div><span style={{ color: '#777', fontSize: '9px' }}>Condição:</span><br/><strong>{EQUIPMENT_CONDITION_LABELS[equipment.condition as EquipmentCondition] || equipment.condition}</strong></div>
+            <div><span style={{ color: '#9ca3af', fontSize: '9px' }}>Código:</span><br/><strong style={{ fontFamily: 'monospace' }}>{equipment.code}</strong></div>
+            <div><span style={{ color: '#9ca3af', fontSize: '9px' }}>Equipamento:</span><br/><strong>{equipment.name}</strong></div>
+            {equipment.brand && <div><span style={{ color: '#9ca3af', fontSize: '9px' }}>Marca:</span><br/><strong>{equipment.brand}</strong></div>}
+            {equipment.model && <div><span style={{ color: '#9ca3af', fontSize: '9px' }}>Modelo:</span><br/><strong>{equipment.model}</strong></div>}
+            {equipment.serial_number && <div><span style={{ color: '#9ca3af', fontSize: '9px' }}>Nº Série:</span><br/><strong style={{ fontFamily: 'monospace' }}>{equipment.serial_number}</strong></div>}
+            {equipment.imei && <div><span style={{ color: '#9ca3af', fontSize: '9px' }}>IMEI:</span><br/><strong style={{ fontFamily: 'monospace' }}>{equipment.imei}</strong></div>}
+            <div><span style={{ color: '#9ca3af', fontSize: '9px' }}>Condição:</span><br/><strong>{EQUIPMENT_CONDITION_LABELS[equipment.condition as EquipmentCondition] || equipment.condition}</strong></div>
           </div>
         </div>
 
         {/* Checklist */}
         {hasChecklist && (
-          <div style={{ border: '1px solid #000', borderRadius: '4px', padding: '8px 10px', marginBottom: '10px' }}>
-            <h3 style={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', borderBottom: '1px solid #ccc', paddingBottom: '4px', marginBottom: '6px' }}>CHECKLIST</h3>
+          <div style={{ border: '1px solid #e5e7eb', borderRadius: '4px', padding: '8px 10px', marginBottom: '10px' }}>
+            <h3 style={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', borderBottom: '1px solid #e5e7eb', paddingBottom: '4px', marginBottom: '6px' }}>CHECKLIST</h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '3px', fontSize: '9px' }}>
               {Object.entries(equipment.checklist as Record<string, boolean | null>).map(([key, value]) => (
                 <div key={key} style={{
@@ -172,11 +172,11 @@ export default function EquipmentReceiptPage() {
 
         {/* Repair History */}
         {showHistory && repairs && repairs.length > 0 && (
-          <div style={{ border: '1px solid #000', borderRadius: '4px', overflow: 'hidden', marginBottom: '10px' }}>
-            <h3 style={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', background: '#f0f0f0', padding: '6px 10px', borderBottom: '1px solid #000' }}>HISTÓRICO DE REPAROS</h3>
+          <div style={{ border: '1px solid #e5e7eb', borderRadius: '4px', overflow: 'hidden', marginBottom: '10px' }}>
+            <h3 style={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', background: '#f8fafc', padding: '6px 10px', borderBottom: '1px solid #e5e7eb' }}>HISTÓRICO DE REPAROS</h3>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10px' }}>
               <thead>
-                <tr style={{ background: '#f9f9f9', borderBottom: '1px solid #000' }}>
+                <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e5e7eb' }}>
                   <th style={{ textAlign: 'left', padding: '5px 8px' }}>Data</th>
                   <th style={{ textAlign: 'left', padding: '5px 8px' }}>Descrição</th>
                   <th style={{ textAlign: 'right', padding: '5px 8px' }}>Custo</th>
@@ -190,7 +190,7 @@ export default function EquipmentReceiptPage() {
                     <td style={{ padding: '5px 8px', textAlign: 'right' }}>{fmt(Number(r.total_cost))}</td>
                   </tr>
                 ))}
-                <tr style={{ borderTop: '2px solid #000', background: '#f0f0f0', fontWeight: 'bold' }}>
+                <tr style={{ borderTop: '2px solid #0f172a', background: '#f8fafc', fontWeight: 'bold' }}>
                   <td colSpan={2} style={{ padding: '5px 8px' }}>Total em Reparos</td>
                   <td style={{ padding: '5px 8px', textAlign: 'right' }}>{fmt(Number(equipment.repair_cost))}</td>
                 </tr>
@@ -200,8 +200,8 @@ export default function EquipmentReceiptPage() {
         )}
 
         {/* Financial */}
-        <div style={{ border: '1px solid #000', borderRadius: '4px', padding: '8px 10px', marginBottom: '10px' }}>
-          <h3 style={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', borderBottom: '1px solid #ccc', paddingBottom: '4px', marginBottom: '6px' }}>RESUMO FINANCEIRO</h3>
+        <div style={{ border: '1px solid #e5e7eb', borderRadius: '4px', padding: '8px 10px', marginBottom: '10px' }}>
+          <h3 style={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', borderBottom: '1px solid #e5e7eb', paddingBottom: '4px', marginBottom: '6px' }}>RESUMO FINANCEIRO</h3>
           {isPurchase ? (
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '14px', fontWeight: 'bold' }}>
               <span>Valor de Compra:</span>
@@ -217,7 +217,7 @@ export default function EquipmentReceiptPage() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', marginBottom: '2px' }}>
                     <span>Custo de Reparos:</span><span>{fmt(Number(equipment.repair_cost))}</span>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', marginBottom: '6px', paddingBottom: '6px', borderBottom: '1px solid #ddd' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', marginBottom: '6px', paddingBottom: '6px', borderBottom: '1px solid #e5e7eb' }}>
                     <span>Custo Total:</span><span>{fmt(Number(equipment.total_cost))}</span>
                   </div>
                 </>
@@ -227,7 +227,7 @@ export default function EquipmentReceiptPage() {
                 <span style={{ color: '#2e7d32' }}>{fmt(sale?.amount || 0)}</span>
               </div>
               {isInternalReceipt && equipment.profit !== null && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #ddd' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #e5e7eb' }}>
                   <span>Lucro:</span>
                   <span style={{ color: Number(equipment.profit) >= 0 ? '#2e7d32' : '#c62828' }}>{fmt(Number(equipment.profit))}</span>
                 </div>
@@ -248,8 +248,8 @@ export default function EquipmentReceiptPage() {
 
         {/* Notes */}
         {transaction?.notes && (
-          <div style={{ border: '1px solid #000', borderRadius: '4px', padding: '8px 10px', marginBottom: '10px' }}>
-            <h3 style={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', borderBottom: '1px solid #ccc', paddingBottom: '4px', marginBottom: '6px' }}>OBSERVAÇÕES</h3>
+          <div style={{ border: '1px solid #e5e7eb', borderRadius: '4px', padding: '8px 10px', marginBottom: '10px' }}>
+            <h3 style={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', borderBottom: '1px solid #e5e7eb', paddingBottom: '4px', marginBottom: '6px' }}>OBSERVAÇÕES</h3>
             <p style={{ fontSize: '10px' }}>{transaction.notes}</p>
           </div>
         )}
@@ -257,21 +257,21 @@ export default function EquipmentReceiptPage() {
         {/* Signatures */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px', marginTop: '30px' }}>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ borderTop: '1px solid #000', paddingTop: '6px', marginTop: '50px' }}>
+            <div style={{ borderTop: '1px solid #0f172a', paddingTop: '6px', marginTop: '50px' }}>
               <p style={{ fontSize: '10px', fontWeight: '500' }}>{company?.nome_fantasia || 'Empresa'}</p>
-              <p style={{ fontSize: '9px', color: '#777' }}>Responsável</p>
+              <p style={{ fontSize: '9px', color: '#9ca3af' }}>Responsável</p>
             </div>
           </div>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ borderTop: '1px solid #000', paddingTop: '6px', marginTop: '50px' }}>
+            <div style={{ borderTop: '1px solid #0f172a', paddingTop: '6px', marginTop: '50px' }}>
               <p style={{ fontSize: '10px', fontWeight: '500' }}>{transactionClient?.name || 'Cliente'}</p>
-              <p style={{ fontSize: '9px', color: '#777' }}>{isPurchase ? 'Vendedor' : 'Comprador'}</p>
+              <p style={{ fontSize: '9px', color: '#9ca3af' }}>{isPurchase ? 'Vendedor' : 'Comprador'}</p>
             </div>
           </div>
         </div>
 
         {/* Footer */}
-        <div style={{ textAlign: 'center', marginTop: '20px', paddingTop: '8px', borderTop: '1px solid #ddd', fontSize: '9px', color: '#aaa' }}>
+        <div style={{ textAlign: 'center', marginTop: '20px', paddingTop: '8px', borderTop: '1px solid #e5e7eb', fontSize: '9px', color: '#9ca3af' }}>
           Documento gerado em {format(new Date(), "dd/MM/yyyy 'às' HH:mm")}
         </div>
       </div>
