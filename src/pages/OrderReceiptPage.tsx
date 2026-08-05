@@ -6,6 +6,7 @@ import { ArrowLeft, Printer, Download, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
+import * as P from "@/lib/printTheme";
 
 interface OrderData {
   id: string;
