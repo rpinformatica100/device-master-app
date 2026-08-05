@@ -6,6 +6,7 @@ import { ArrowLeft, Printer, Download, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
+import * as P from "@/lib/printTheme";
 
 interface OrderData {
   id: string;
@@ -182,8 +183,8 @@ export default function OrderReceiptPage() {
   const companyAddr = company ? [company.rua, company.numero, company.bairro, company.cidade, company.estado, company.cep].filter(Boolean).join(', ') : '';
   const clientAddr = order.client ? [order.client.address, order.client.numero, order.client.bairro, order.client.city, order.client.state].filter(Boolean).join(', ') : '';
 
-  const lbl: React.CSSProperties = { color: '#777', fontSize: '9px' };
-  const val: React.CSSProperties = { fontWeight: 'bold', fontSize: '10px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const, maxWidth: '180px' };
+  const lbl = P.label;
+  const val = P.value;
 
   return (
     <div className="min-h-screen bg-white print:bg-white">
@@ -200,129 +201,130 @@ export default function OrderReceiptPage() {
       </div>
 
       {/* A4 Content */}
-      <div id="os-print-content" className="max-w-[210mm] mx-auto px-[15mm] py-[10mm] text-black bg-white" style={{ fontSize: '11px', lineHeight: '1.5' }}>
-        {/* Header - Company left, OS details right */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '2px solid #000', paddingBottom: '8px', marginBottom: '10px' }}>
+      <div id="os-print-content" style={P.printPage}>
+        {/* Header */}
+        <div style={P.printHeader}>
           <div>
-            <h1 style={{ fontSize: '18px', fontWeight: 'bold', letterSpacing: '1px', textTransform: 'uppercase', margin: 0 }}>
-              {companyName}
-            </h1>
-            {company?.cnpj && <p style={{ fontSize: '9px', color: '#555', margin: '1px 0' }}>CNPJ: {company.cnpj}</p>}
-            {company?.telefone && <p style={{ fontSize: '9px', color: '#555', margin: '1px 0' }}>Tel: {company.telefone}</p>}
-            {company?.email && <p style={{ fontSize: '9px', color: '#555', margin: '1px 0' }}>{company.email}</p>}
-            {companyAddr && <p style={{ fontSize: '9px', color: '#555', margin: '1px 0' }}>{truncate(companyAddr, 60)}</p>}
+            <h1 style={P.companyTitle}>{companyName}</h1>
+            {company?.cnpj && <p style={P.companyLine}>CNPJ {company.cnpj}</p>}
+            <p style={P.companyLine}>
+              {[company?.telefone, company?.email].filter(Boolean).join('  ·  ')}
+            </p>
+            {companyAddr && <p style={P.companyLine}>{truncate(companyAddr, 70)}</p>}
           </div>
           <div style={{ textAlign: 'right' }}>
-            <p style={{ fontSize: '14px', fontWeight: 'bold', margin: '0 0 4px 0' }}>{order.os_number}</p>
+            <span style={P.docBadge}>Ordem de Serviço</span>
+            <p style={P.docNumber}>{order.os_number}</p>
             <div style={{ display: 'flex', gap: '4px', justifyContent: 'flex-end', marginBottom: '4px' }}>
-              <span style={{ fontSize: '9px', border: '1px solid #999', borderRadius: '3px', padding: '1px 6px', background: '#f5f5f5' }}>{statusLabels[order.status] || order.status}</span>
-              <span style={{ fontSize: '9px', border: '1px solid #999', borderRadius: '3px', padding: '1px 6px', background: '#f5f5f5' }}>Prior: {priorityLabels[order.priority] || order.priority}</span>
+              <span style={P.docBadge}>{statusLabels[order.status] || order.status}</span>
+              <span style={P.docBadge}>Prioridade {priorityLabels[order.priority] || order.priority}</span>
             </div>
-            <p style={{ fontSize: '9px', color: '#555', margin: 0 }}>
-              Abertura: {format(new Date(order.created_at), "dd 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR })}
+            <p style={{ fontSize: '8.5px', color: P.printColors.muted, margin: 0 }}>
+              Abertura: {format(new Date(order.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
             </p>
           </div>
         </div>
 
-        {/* Client + Equipment side by side */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '10px' }}>
-          {/* Client */}
-          <div style={{ border: '1px solid #000', borderRadius: '4px', padding: '6px 8px' }}>
-            <h3 style={{ fontSize: '9px', fontWeight: 'bold', textTransform: 'uppercase', borderBottom: '1px solid #ccc', paddingBottom: '3px', marginBottom: '4px' }}>CLIENTE</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', fontSize: '10px' }}>
-              <div style={{ gridColumn: 'span 2' }}><span style={lbl}>Nome:</span><br/><strong>{truncate(order.client?.name, 50)}</strong></div>
-              <div><span style={lbl}>Telefone:</span><br/><strong>{order.client?.phone || '—'}</strong></div>
-              <div><span style={lbl}>Email:</span><br/><span style={val}>{truncate(order.client?.email, 30)}</span></div>
-              {order.client?.cpf && <div><span style={lbl}>CPF:</span><br/><strong>{order.client.cpf}</strong></div>}
-              {order.client?.cnpj && <div><span style={lbl}>CNPJ:</span><br/><strong>{order.client.cnpj}</strong></div>}
-              {clientAddr && <div style={{ gridColumn: 'span 2' }}><span style={lbl}>Endereço:</span><br/><span style={val}>{truncate(clientAddr, 60)}</span></div>}
+        {/* Client + Equipment */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px' }}>
+          <div style={P.card}>
+            <h3 style={P.sectionTitle}>Cliente</h3>
+            <div style={{ ...P.cardBody, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+              <div style={{ gridColumn: 'span 2' }}><span style={lbl}>Nome</span><span style={val}>{truncate(order.client?.name, 50)}</span></div>
+              <div><span style={lbl}>Telefone</span><span style={val}>{order.client?.phone || '—'}</span></div>
+              <div><span style={lbl}>Email</span><span style={val}>{truncate(order.client?.email, 30)}</span></div>
+              {order.client?.cpf && <div><span style={lbl}>CPF</span><span style={val}>{order.client.cpf}</span></div>}
+              {order.client?.cnpj && <div><span style={lbl}>CNPJ</span><span style={val}>{order.client.cnpj}</span></div>}
+              {clientAddr && <div style={{ gridColumn: 'span 2' }}><span style={lbl}>Endereço</span><span style={val}>{truncate(clientAddr, 60)}</span></div>}
             </div>
           </div>
 
-          {/* Equipment */}
-          <div style={{ border: '1px solid #000', borderRadius: '4px', padding: '6px 8px' }}>
-            <h3 style={{ fontSize: '9px', fontWeight: 'bold', textTransform: 'uppercase', borderBottom: '1px solid #ccc', paddingBottom: '3px', marginBottom: '4px' }}>EQUIPAMENTO</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', fontSize: '10px' }}>
-              <div><span style={lbl}>Dispositivo:</span><br/><span style={val}>{truncate(order.device, 30)}</span></div>
-              <div><span style={lbl}>Categoria:</span><br/><strong style={{ textTransform: 'capitalize' }}>{order.category}</strong></div>
-              <div><span style={lbl}>Nº Série:</span><br/><span style={{ ...val, fontFamily: 'monospace' }}>{truncate(order.serial_number, 25)}</span></div>
-              {csf.brand && <div><span style={lbl}>Marca:</span><br/><strong>{csf.brand}</strong></div>}
-              {csf.model && <div><span style={lbl}>Modelo:</span><br/><span style={val}>{truncate(csf.model, 25)}</span></div>}
-              {csf.imei && <div><span style={lbl}>IMEI:</span><br/><span style={{ ...val, fontFamily: 'monospace' }}>{csf.imei}</span></div>}
-              {csf.color && <div><span style={lbl}>Cor:</span><br/><strong>{csf.color}</strong></div>}
-              {csf.storage && <div><span style={lbl}>Capacidade:</span><br/><strong>{csf.storage}</strong></div>}
-              {order.password && <div><span style={lbl}>Senha:</span><br/><strong>{order.password}</strong></div>}
-              {order.accessories && <div style={{ gridColumn: 'span 2' }}><span style={lbl}>Acessórios:</span><br/><span style={val}>{truncate(order.accessories, 50)}</span></div>}
+          <div style={P.card}>
+            <h3 style={P.sectionTitle}>Equipamento</h3>
+            <div style={{ ...P.cardBody, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+              <div><span style={lbl}>Dispositivo</span><span style={val}>{truncate(order.device, 30)}</span></div>
+              <div><span style={lbl}>Categoria</span><span style={{ ...val, textTransform: 'capitalize' }}>{order.category}</span></div>
+              <div><span style={lbl}>Nº Série</span><span style={{ ...val, fontFamily: 'monospace' }}>{truncate(order.serial_number, 25)}</span></div>
+              {csf.brand && <div><span style={lbl}>Marca</span><span style={val}>{csf.brand}</span></div>}
+              {csf.model && <div><span style={lbl}>Modelo</span><span style={val}>{truncate(csf.model, 25)}</span></div>}
+              {csf.imei && <div><span style={lbl}>IMEI</span><span style={{ ...val, fontFamily: 'monospace' }}>{csf.imei}</span></div>}
+              {csf.color && <div><span style={lbl}>Cor</span><span style={val}>{csf.color}</span></div>}
+              {csf.storage && <div><span style={lbl}>Capacidade</span><span style={val}>{csf.storage}</span></div>}
+              {order.password && <div><span style={lbl}>Senha</span><span style={val}>{order.password}</span></div>}
+              {order.accessories && <div style={{ gridColumn: 'span 2' }}><span style={lbl}>Acessórios</span><span style={val}>{truncate(order.accessories, 50)}</span></div>}
             </div>
           </div>
         </div>
 
         {/* Defect */}
-        <div style={{ border: '1px solid #000', borderRadius: '4px', padding: '6px 8px', marginBottom: '8px' }}>
-          <h3 style={{ fontSize: '9px', fontWeight: 'bold', textTransform: 'uppercase', borderBottom: '1px solid #ccc', paddingBottom: '3px', marginBottom: '4px' }}>DEFEITO RELATADO</h3>
-          <p style={{ fontSize: '10px', margin: 0 }}>{order.issue}</p>
+        <div style={{ ...P.card, marginBottom: '8px' }}>
+          <h3 style={P.sectionTitle}>Defeito Relatado</h3>
+          <p style={{ ...P.cardBody, fontSize: '10px', margin: 0, whiteSpace: 'pre-wrap' }}>{order.issue}</p>
         </div>
 
         {/* Checklist */}
         {hasChecklist && (
-          <div style={{ border: '1px solid #000', borderRadius: '4px', padding: '6px 8px', marginBottom: '8px' }}>
-            <h3 style={{ fontSize: '9px', fontWeight: 'bold', textTransform: 'uppercase', borderBottom: '1px solid #ccc', paddingBottom: '3px', marginBottom: '4px' }}>CHECKLIST DE ENTRADA</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '3px', fontSize: '9px' }}>
-              {Object.entries(checklist).map(([key, value]) => (
-                <div key={key} style={{
-                  padding: '2px 4px', borderRadius: '3px', textAlign: 'center',
-                  background: value === true ? '#e8f5e9' : value === false ? '#ffebee' : '#f5f5f5',
-                  color: value === true ? '#2e7d32' : value === false ? '#c62828' : '#666',
-                }}>
-                  {value === true ? '✓' : value === false ? '✗' : '—'} {checklistLabels[key] || key}
-                </div>
-              ))}
-            </div>
-            {csf.checklist_observations && (
-              <div style={{ marginTop: '4px', padding: '4px', background: '#fffde7', borderRadius: '3px', fontSize: '9px' }}>
-                <strong>Obs:</strong> {csf.checklist_observations}
+          <div style={{ ...P.card, marginBottom: '8px' }}>
+            <h3 style={P.sectionTitle}>Checklist de Entrada</h3>
+            <div style={P.cardBody}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '4px', fontSize: '8.5px' }}>
+                {Object.entries(checklist).map(([key, value]) => (
+                  <div key={key} style={{
+                    padding: '3px 5px', borderRadius: '4px', textAlign: 'center',
+                    border: `1px solid ${value === true ? '#bbf7d0' : value === false ? '#fecaca' : P.printColors.line}`,
+                    background: value === true ? P.printColors.positiveSoft : value === false ? P.printColors.negativeSoft : P.printColors.soft,
+                    color: value === true ? P.printColors.positive : value === false ? P.printColors.negative : P.printColors.muted,
+                  }}>
+                    {value === true ? '✓' : value === false ? '✗' : '—'} {checklistLabels[key] || key}
+                  </div>
+                ))}
               </div>
-            )}
+              {csf.checklist_observations && (
+                <div style={{ marginTop: '6px', padding: '5px 7px', background: P.printColors.warnSoft, border: '1px solid #fde68a', borderRadius: '4px', fontSize: '8.5px', color: P.printColors.body }}>
+                  <strong>Observações:</strong> {csf.checklist_observations}
+                </div>
+              )}
+            </div>
           </div>
         )}
 
         {/* Items */}
-        <div style={{ border: '1px solid #000', borderRadius: '4px', overflow: 'hidden', marginBottom: '8px' }}>
-          <h3 style={{ fontSize: '9px', fontWeight: 'bold', textTransform: 'uppercase', background: '#f0f0f0', padding: '5px 8px', borderBottom: '1px solid #000' }}>PRODUTOS E SERVIÇOS</h3>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10px' }}>
+        <div style={{ ...P.card, marginBottom: '8px' }}>
+          <h3 style={P.sectionTitle}>Produtos e Serviços</h3>
+          <table style={P.tableStyle}>
             <thead>
-              <tr style={{ background: '#f9f9f9', borderBottom: '1px solid #000' }}>
-                <th style={{ textAlign: 'left', padding: '4px 6px', borderRight: '1px solid #ddd' }}>Item</th>
-                <th style={{ textAlign: 'center', padding: '4px', borderRight: '1px solid #ddd', width: '55px' }}>Tipo</th>
-                <th style={{ textAlign: 'center', padding: '4px', borderRight: '1px solid #ddd', width: '35px' }}>Qtd</th>
-                <th style={{ textAlign: 'right', padding: '4px', borderRight: '1px solid #ddd', width: '70px' }}>Vlr Unit.</th>
-                <th style={{ textAlign: 'right', padding: '4px 6px', width: '70px' }}>Total</th>
+              <tr>
+                <th style={P.th}>Item</th>
+                <th style={{ ...P.th, textAlign: 'center', width: '60px' }}>Tipo</th>
+                <th style={{ ...P.th, textAlign: 'center', width: '38px' }}>Qtd</th>
+                <th style={{ ...P.th, textAlign: 'right', width: '75px' }}>Vlr Unit.</th>
+                <th style={{ ...P.th, textAlign: 'right', width: '80px' }}>Total</th>
               </tr>
             </thead>
             <tbody>
               {items.length === 0 ? (
-                <tr><td colSpan={5} style={{ padding: '8px', textAlign: 'center', color: '#999' }}>Nenhum item</td></tr>
+                <tr><td colSpan={5} style={{ ...P.td, textAlign: 'center', color: P.printColors.faint }}>Nenhum item lançado</td></tr>
               ) : items.map((item, i) => (
-                <tr key={item.id} style={{ borderBottom: i < items.length - 1 ? '1px solid #eee' : 'none' }}>
-                  <td style={{ padding: '4px 6px', borderRight: '1px solid #eee' }}>{truncate(item.name, 40)}</td>
-                  <td style={{ padding: '4px', textAlign: 'center', borderRight: '1px solid #eee' }}>{item.item_type === 'product' ? 'Produto' : 'Serviço'}</td>
-                  <td style={{ padding: '4px', textAlign: 'center', borderRight: '1px solid #eee' }}>{item.quantity}</td>
-                  <td style={{ padding: '4px', textAlign: 'right', borderRight: '1px solid #eee' }}>{fmt(Number(item.sale_price))}</td>
-                  <td style={{ padding: '4px 6px', textAlign: 'right' }}>{fmt(Number(item.sale_price) * item.quantity)}</td>
+                <tr key={item.id} style={{ background: i % 2 === 1 ? P.printColors.soft : '#fff' }}>
+                  <td style={P.td}>{truncate(item.name, 45)}</td>
+                  <td style={{ ...P.td, textAlign: 'center', color: P.printColors.muted }}>{item.item_type === 'product' ? 'Produto' : 'Serviço'}</td>
+                  <td style={{ ...P.td, textAlign: 'center' }}>{item.quantity}</td>
+                  <td style={{ ...P.td, textAlign: 'right' }}>{fmt(Number(item.sale_price))}</td>
+                  <td style={{ ...P.td, textAlign: 'right', fontWeight: 600 }}>{fmt(Number(item.sale_price) * item.quantity)}</td>
                 </tr>
               ))}
-              <tr style={{ borderTop: '2px solid #000', background: '#f0f0f0', fontWeight: 'bold' }}>
-                <td colSpan={4} style={{ padding: '5px 6px', textAlign: 'right' }}>TOTAL:</td>
-                <td style={{ padding: '5px 6px', textAlign: 'right' }}>{fmt(total)}</td>
+              <tr style={P.totalRow}>
+                <td colSpan={4} style={{ padding: '7px 9px', textAlign: 'right', fontSize: '9px', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Total</td>
+                <td style={{ padding: '7px 9px', textAlign: 'right', fontSize: '12px' }}>{fmt(total)}</td>
               </tr>
             </tbody>
           </table>
         </div>
 
         {/* Terms */}
-        <div style={{ border: '1px solid #000', borderRadius: '4px', padding: '6px 8px', marginBottom: '10px' }}>
-          <h3 style={{ fontSize: '9px', fontWeight: 'bold', textTransform: 'uppercase', borderBottom: '1px solid #ccc', paddingBottom: '3px', marginBottom: '4px' }}>TERMOS E CONDIÇÕES</h3>
-          <ol style={{ fontSize: '8px', color: '#555', paddingLeft: '12px', margin: 0 }}>
+        <div style={{ ...P.card, marginBottom: '10px' }}>
+          <h3 style={P.sectionTitle}>Termos e Condições</h3>
+          <ol style={{ ...P.termsList, padding: '7px 9px 7px 22px' }}>
             <li>Prazo para retirada: 90 dias após conclusão do serviço.</li>
             <li>Equipamentos não retirados serão descartados conforme legislação.</li>
             <li>Garantia de 90 dias para peças e mão de obra, exceto mau uso.</li>
@@ -332,24 +334,20 @@ export default function OrderReceiptPage() {
         </div>
 
         {/* Signatures */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px', marginTop: '20px' }}>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ borderTop: '1px solid #000', paddingTop: '4px', marginTop: '40px' }}>
-              <p style={{ fontSize: '9px', fontWeight: '500' }}>{companyName}</p>
-              <p style={{ fontSize: '8px', color: '#777' }}>Assinatura</p>
-            </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px', marginTop: '16px' }}>
+          <div style={P.signatureLine}>
+            <p style={{ fontSize: '9px', fontWeight: 600, margin: 0, color: P.printColors.ink }}>{companyName}</p>
+            <p style={{ fontSize: '7.5px', color: P.printColors.faint, margin: 0, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Responsável Técnico</p>
           </div>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ borderTop: '1px solid #000', paddingTop: '4px', marginTop: '40px' }}>
-              <p style={{ fontSize: '9px', fontWeight: '500' }}>{order.client?.name || 'Cliente'}</p>
-              <p style={{ fontSize: '8px', color: '#777' }}>Assinatura</p>
-            </div>
+          <div style={P.signatureLine}>
+            <p style={{ fontSize: '9px', fontWeight: 600, margin: 0, color: P.printColors.ink }}>{order.client?.name || 'Cliente'}</p>
+            <p style={{ fontSize: '7.5px', color: P.printColors.faint, margin: 0, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Cliente</p>
           </div>
         </div>
 
         {/* Footer */}
-        <div style={{ textAlign: 'center', marginTop: '14px', paddingTop: '6px', borderTop: '1px solid #ddd', fontSize: '8px', color: '#aaa' }}>
-          Documento gerado em {format(new Date(), "dd/MM/yyyy 'às' HH:mm")}
+        <div style={P.footerNote}>
+          {companyName} · Documento gerado em {format(new Date(), "dd/MM/yyyy 'às' HH:mm")}
         </div>
       </div>
     </div>

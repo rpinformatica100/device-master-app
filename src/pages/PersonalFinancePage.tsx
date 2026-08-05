@@ -123,66 +123,66 @@ export default function PersonalFinancePage() {
             </div>
 
             {/* Summary Cards */}
-            <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-2.5 grid-cols-2 lg:grid-cols-4">
               <Card className="border-primary/50">
-                <CardContent className="p-4 md:pt-6">
+                <CardContent className="p-3">
                   <div className="flex items-center justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="text-xs md:text-sm text-muted-foreground">Saldo</p>
-                      <p className={`text-lg md:text-2xl font-bold truncate ${summary.balance >= 0 ? 'text-primary' : 'text-destructive'}`}>
+                      <p className="text-xs text-muted-foreground">Saldo Pessoal</p>
+                      <p className={`text-base md:text-xl font-bold truncate ${summary.balance >= 0 ? 'text-primary' : 'text-destructive'}`}>
                         R$ {summary.balance.toFixed(2)}
                       </p>
                     </div>
-                    <div className="p-2 md:p-3 rounded-full bg-primary/10 shrink-0">
-                      <Wallet className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+                    <div className="p-2 rounded-lg bg-primary/10 shrink-0">
+                      <Wallet className="h-4 w-4 text-primary" />
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
               <Card>
-                <CardContent className="p-4 md:pt-6">
+                <CardContent className="p-3">
                   <div className="flex items-center justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="text-xs md:text-sm text-muted-foreground">Receitas</p>
-                      <p className="text-lg md:text-2xl font-bold text-green-500 truncate">
+                      <p className="text-xs text-muted-foreground">Receitas do Mês</p>
+                      <p className="text-base md:text-xl font-bold text-success truncate">
                         R$ {summary.monthlyIncome.toFixed(2)}
                       </p>
                     </div>
-                    <div className="p-2 md:p-3 rounded-full bg-green-500/10 shrink-0">
-                      <TrendingUp className="h-4 w-4 md:h-5 md:w-5 text-green-500" />
+                    <div className="p-2 rounded-lg bg-success/10 shrink-0">
+                      <TrendingUp className="h-4 w-4 text-success" />
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
               <Card>
-                <CardContent className="p-4 md:pt-6">
+                <CardContent className="p-3">
                   <div className="flex items-center justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="text-xs md:text-sm text-muted-foreground">Despesas</p>
-                      <p className="text-lg md:text-2xl font-bold text-red-500 truncate">
+                      <p className="text-xs text-muted-foreground">Despesas do Mês</p>
+                      <p className="text-base md:text-xl font-bold text-destructive truncate">
                         R$ {summary.monthlyExpenses.toFixed(2)}
                       </p>
                     </div>
-                    <div className="p-2 md:p-3 rounded-full bg-red-500/10 shrink-0">
-                      <TrendingDown className="h-4 w-4 md:h-5 md:w-5 text-red-500" />
+                    <div className="p-2 rounded-lg bg-destructive/10 shrink-0">
+                      <TrendingDown className="h-4 w-4 text-destructive" />
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
               <Card>
-                <CardContent className="p-4 md:pt-6">
+                <CardContent className="p-3">
                   <div className="flex items-center justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="text-xs md:text-sm text-muted-foreground">Pro-labore</p>
-                      <p className="text-lg md:text-2xl font-bold text-foreground truncate">
+                      <p className="text-xs text-muted-foreground">Pro-labore Recebido</p>
+                      <p className="text-base md:text-xl font-bold text-foreground truncate">
                         R$ {summary.totalProlabore.toFixed(2)}
                       </p>
                     </div>
-                    <div className="p-2 md:p-3 rounded-full bg-blue-500/10 shrink-0">
-                      <ArrowUpCircle className="h-4 w-4 md:h-5 md:w-5 text-blue-500" />
+                    <div className="p-2 rounded-lg bg-blue-500/10 shrink-0">
+                      <ArrowUpCircle className="h-4 w-4 text-blue-500" />
                     </div>
                   </div>
                 </CardContent>
@@ -191,7 +191,7 @@ export default function PersonalFinancePage() {
 
             {/* Filters */}
             <Card>
-              <CardContent className="py-3 md:py-4">
+              <CardContent className="p-3">
                 <div className="flex flex-col gap-3">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -234,25 +234,25 @@ export default function PersonalFinancePage() {
 
             {/* Transactions */}
             <Card>
-              <CardHeader className="py-3 md:py-6">
-                <CardTitle className="text-base md:text-lg">Transações</CardTitle>
-                <CardDescription className="text-xs md:text-sm">
+              <CardHeader className="p-3 pb-2">
+                <CardTitle className="text-sm">Transações</CardTitle>
+                <CardDescription className="text-xs">
                   {filteredTransactions.length} transação(ões)
                 </CardDescription>
               </CardHeader>
-              <CardContent className="pt-0">
+              <CardContent className="p-3 pt-0">
                 {loading ? (
                   <div className="flex items-center justify-center py-8">
                     <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
                   </div>
                 ) : filteredTransactions.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
-                    <Wallet className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                    <p>Nenhuma transação encontrada.</p>
+                    <Wallet className="h-10 w-10 mx-auto mb-2 opacity-40" />
+                    <p className="text-xs">Nenhuma transação encontrada.</p>
                   </div>
                 ) : isMobile ? (
                   /* Mobile Cards */
-                  <div className="space-y-3 -mx-2">
+                  <div className="space-y-2">
                     {filteredTransactions.map(transaction => (
                       <PersonalTransactionCard
                         key={transaction.id}
@@ -264,7 +264,7 @@ export default function PersonalFinancePage() {
                   </div>
                 ) : (
                   /* Desktop Table */
-                  <div className="overflow-x-auto -mx-6">
+                  <div className="overflow-x-auto -mx-3">
                     <table className="w-full">
                       <thead>
                         <tr className="border-b border-border">

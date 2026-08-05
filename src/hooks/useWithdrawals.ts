@@ -77,7 +77,7 @@ export function useWithdrawals() {
           amount: amount,
           status: 'pago',
           payment_method: 'transferencia',
-          date: new Date().toISOString().split('T')[0],
+          date: (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; })(),
         }])
         .select()
         .single();
@@ -94,7 +94,7 @@ export function useWithdrawals() {
           user_id: user.id,
           amount: amount,
           description: description || 'Pro-labore',
-          reference_month: referenceMonth.toISOString().split('T')[0],
+          reference_month: `${referenceMonth.getFullYear()}-${String(referenceMonth.getMonth() + 1).padStart(2, '0')}-01`,
           status: 'confirmado',
           confirmed_at: new Date().toISOString(),
           financial_transaction_id: financialTx.id,
@@ -181,15 +181,26 @@ export function useWithdrawals() {
     }
   };
 
+  const monthKey = (date: Date) =>
+    `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+
   const getWithdrawalsForMonth = (month: Date) => {
-    const monthStr = month.toISOString().slice(0, 7); // YYYY-MM
-    return withdrawals.filter(w => 
+    const monthStr = monthKey(month);
+    return withdrawals.filter(w =>
       w.reference_month.startsWith(monthStr) && w.status === 'confirmado'
     );
   };
 
   const getTotalWithdrawnForMonth = (month: Date) => {
     return getWithdrawalsForMonth(month).reduce((sum, w) => sum + Number(w.amount), 0);
+  };
+
+  /** Total retirado desde sempre até o fim do mês informado (saldo acumulado). */
+  const getTotalWithdrawnUntil = (month: Date) => {
+    const limit = monthKey(month);
+    return withdrawals
+      .filter(w => w.status === 'confirmado' && w.reference_month.slice(0, 7) <= limit)
+      .reduce((sum, w) => sum + Number(w.amount), 0);
   };
 
   useEffect(() => {
@@ -203,6 +214,7 @@ export function useWithdrawals() {
     cancelWithdrawal,
     getWithdrawalsForMonth,
     getTotalWithdrawnForMonth,
+    getTotalWithdrawnUntil,
     refetch: fetchWithdrawals,
   };
 }
