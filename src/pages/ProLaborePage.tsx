@@ -165,11 +165,11 @@ export default function ProLaborePage() {
   ];
 
   return (
-    <div className="p-3 md:p-6 space-y-4">
+    <div className="space-y-4">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
         <div>
-          <h1 className="text-xl md:text-2xl font-bold text-foreground">Pro-labore</h1>
+          <h2 className="text-base font-semibold text-foreground">Pro-labore</h2>
           <p className="text-xs text-muted-foreground">
             Retiradas de lucro da empresa para sua conta pessoal
           </p>
