@@ -83,7 +83,7 @@ export default function PaymentDialog({ open, onOpenChange, users, payment }: Pr
   const handleUserChange = (userId: string) => {
     const selectedUser = users.find(u => u.id === userId);
     const userPlan = selectedUser?.subscription?.plan;
-    const currentPlan = plans.some(p => p.plan_key === userPlan) ? userPlan! : "mensal";
+    const currentPlan = plans.some(p => p.plan_key === userPlan && Number(p.price) > 0) ? userPlan! : "mensal";
     const plan = plans.find(p => p.plan_key === currentPlan);
     setForm(prev => ({
       ...prev,
