@@ -41,6 +41,9 @@ import {
 const brl = (v: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v || 0);
 
+// Retiradas não são custo; compra de seminovo já entra no custo da venda (evita contar duas vezes)
+const NON_OPERATIONAL_EXPENSES = ['prolabore', 'compra_seminovo'];
+
 export default function ProLaborePage() {
   const [selectedMonth, setSelectedMonth] = useState(new Date());
   const [withdrawalDialogOpen, setWithdrawalDialogOpen] = useState(false);
@@ -71,7 +74,7 @@ export default function ProLaborePage() {
 
       if (t.type === 'receita') {
         accumulatedProfit += Number(t.profit_amount);
-      } else if (t.type === 'despesa' && t.category !== 'prolabore') {
+      } else if (t.type === 'despesa' && !NON_OPERATIONAL_EXPENSES.includes(t.category ?? '')) {
         // Despesas operacionais reduzem o lucro real disponível
         accumulatedProfit -= Number(t.amount);
       }
@@ -80,7 +83,7 @@ export default function ProLaborePage() {
         if (t.type === 'receita') {
           monthly.revenue += Number(t.amount);
           monthly.profit += Number(t.profit_amount);
-        } else if (t.type === 'despesa' && t.category !== 'prolabore') {
+        } else if (t.type === 'despesa' && !NON_OPERATIONAL_EXPENSES.includes(t.category ?? '')) {
           monthly.expenses += Number(t.amount);
           monthly.profit -= Number(t.amount);
         }
