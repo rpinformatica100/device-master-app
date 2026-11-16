@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
+import * as P from "@/lib/printTheme";
 
 interface OrderData {
   id: string;
@@ -86,6 +87,8 @@ export default function OrderQuotePage() {
   const total = items.reduce((s, i) => s + (Number(i.sale_price) || 0) * i.quantity, 0);
   const csf = order.category_specific_fields || {};
   const companyAddr = company ? [company.rua, company.numero, company.bairro, company.cidade, company.estado, company.cep].filter(Boolean).join(', ') : '';
+  const lbl = { ...P.label, display: 'block' };
+  const val = P.value;
   const installmentOptions = [2, 3, 4, 5, 6, 10, 12].filter(n => n <= maxInstallments);
 
   return (
@@ -107,115 +110,99 @@ export default function OrderQuotePage() {
       </div>
 
       {/* A4 Content */}
-      <div className="max-w-[210mm] mx-auto px-[15mm] py-[10mm] text-black bg-white print:px-0 print:py-0" style={{ fontSize: '11px', lineHeight: '1.5' }}>
-        {/* Header */}
-        <div style={{ textAlign: 'center', borderBottom: '2px solid #000', paddingBottom: '10px', marginBottom: '14px' }}>
-          <h1 style={{ fontSize: '20px', fontWeight: 'bold', letterSpacing: '1px', textTransform: 'uppercase', margin: 0 }}>
-            {company?.nome_fantasia || company?.razao_social || 'Assistência Técnica'}
-          </h1>
-          {company?.cnpj && <p style={{ fontSize: '10px', color: '#555', margin: '2px 0' }}>CNPJ: {company.cnpj}</p>}
-          {company?.telefone && <p style={{ fontSize: '10px', color: '#555', margin: '2px 0' }}>Tel: {company.telefone}</p>}
-          {company?.email && <p style={{ fontSize: '10px', color: '#555', margin: '2px 0' }}>Email: {company.email}</p>}
-          {companyAddr && <p style={{ fontSize: '10px', color: '#555', margin: '2px 0' }}>{companyAddr}</p>}
-        </div>
-
-        {/* Title */}
-        <div style={{ textAlign: 'center', marginBottom: '16px' }}>
-          <h2 style={{ fontSize: '16px', fontWeight: 'bold', border: '2px solid #000', display: 'inline-block', padding: '4px 24px' }}>ORÇAMENTO</h2>
-          <div style={{ marginTop: '6px' }}>
-            <span style={{ fontSize: '14px', fontWeight: 'bold' }}>{order.os_number}</span>
+      <div style={P.printPage}>
+        <div style={P.printHeader}>
+          <div style={{ minWidth: 0 }}>
+            <h1 style={P.companyTitle}>{company?.nome_fantasia || company?.razao_social || 'Assistência Técnica'}</h1>
+            {company?.cnpj && <p style={P.companyLine}>CNPJ {company.cnpj}</p>}
+            {(company?.telefone || company?.email) && <p style={P.companyLine}>{[company?.telefone, company?.email].filter(Boolean).join(' · ')}</p>}
+            {companyAddr && <p style={P.companyLine}>{companyAddr}</p>}
           </div>
-          <p style={{ fontSize: '10px', color: '#555', marginTop: '4px' }}>
-            Data: {format(new Date(order.created_at), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-          </p>
-          <p style={{ fontSize: '9px', color: '#888', marginTop: '2px' }}>Validade: 7 dias</p>
-        </div>
-
-        {/* Client */}
-        <div style={{ border: '1px solid #000', borderRadius: '4px', padding: '8px 10px', marginBottom: '10px' }}>
-          <h3 style={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', borderBottom: '1px solid #ccc', paddingBottom: '4px', marginBottom: '6px' }}>DADOS DO CLIENTE</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px', fontSize: '10px' }}>
-            <div><span style={{ color: '#777', fontSize: '9px' }}>Nome:</span><br/><strong>{order.client?.name || '—'}</strong></div>
-            <div><span style={{ color: '#777', fontSize: '9px' }}>Telefone:</span><br/><strong>{order.client?.phone || '—'}</strong></div>
-            <div><span style={{ color: '#777', fontSize: '9px' }}>Email:</span><br/><strong>{order.client?.email || '—'}</strong></div>
+          <div style={{ textAlign: 'right', flexShrink: 0 }}>
+            <span style={P.docBadge}>Orçamento</span>
+            <p style={P.docNumber}>{order.os_number}</p>
+            <p style={{ fontSize: '8.5px', color: P.printColors.muted, margin: 0 }}>
+              {format(new Date(order.created_at), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })} · Validade 7 dias
+            </p>
           </div>
         </div>
 
-        {/* Equipment */}
-        <div style={{ border: '1px solid #000', borderRadius: '4px', padding: '8px 10px', marginBottom: '10px' }}>
-          <h3 style={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', borderBottom: '1px solid #ccc', paddingBottom: '4px', marginBottom: '6px' }}>EQUIPAMENTO</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px', fontSize: '10px' }}>
-            <div><span style={{ color: '#777', fontSize: '9px' }}>Dispositivo:</span><br/><strong>{order.device}</strong></div>
-            <div><span style={{ color: '#777', fontSize: '9px' }}>Categoria:</span><br/><strong style={{ textTransform: 'capitalize' }}>{order.category}</strong></div>
-            {csf.brand && <div><span style={{ color: '#777', fontSize: '9px' }}>Marca:</span><br/><strong>{csf.brand}</strong></div>}
-            {csf.model && <div><span style={{ color: '#777', fontSize: '9px' }}>Modelo:</span><br/><strong>{csf.model}</strong></div>}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px' }}>
+          <div style={P.card}>
+            <h3 style={P.sectionTitle}>Cliente</h3>
+            <div style={{ ...P.cardBody, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+              <div style={{ gridColumn: 'span 2' }}><span style={lbl}>Nome</span><span style={{ ...val, whiteSpace: 'normal' }}>{order.client?.name || '—'}</span></div>
+              <div><span style={lbl}>Telefone</span><span style={val}>{order.client?.phone || '—'}</span></div>
+              <div><span style={lbl}>Email</span><span style={val}>{order.client?.email || '—'}</span></div>
+            </div>
+          </div>
+          <div style={P.card}>
+            <h3 style={P.sectionTitle}>Equipamento</h3>
+            <div style={{ ...P.cardBody, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+              <div><span style={lbl}>Dispositivo</span><span style={val}>{order.device}</span></div>
+              <div><span style={lbl}>Categoria</span><span style={{ ...val, textTransform: 'capitalize' }}>{order.category}</span></div>
+              {csf.brand && <div><span style={lbl}>Marca</span><span style={val}>{csf.brand}</span></div>}
+              {csf.model && <div><span style={lbl}>Modelo</span><span style={val}>{csf.model}</span></div>}
+            </div>
           </div>
         </div>
 
-        {/* Defect */}
-        <div style={{ border: '1px solid #000', borderRadius: '4px', padding: '8px 10px', marginBottom: '10px' }}>
-          <h3 style={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', borderBottom: '1px solid #ccc', paddingBottom: '4px', marginBottom: '6px' }}>DEFEITO RELATADO</h3>
-          <p style={{ fontSize: '11px' }}>{order.issue}</p>
+        <div style={{ ...P.card, marginBottom: '8px' }}>
+          <h3 style={P.sectionTitle}>Defeito relatado</h3>
+          <p style={{ ...P.cardBody, margin: 0, fontSize: '10px' }}>{order.issue}</p>
         </div>
 
-        {/* Items */}
-        <div style={{ border: '1px solid #000', borderRadius: '4px', overflow: 'hidden', marginBottom: '10px' }}>
-          <h3 style={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', background: '#f0f0f0', padding: '6px 10px', borderBottom: '1px solid #000' }}>SERVIÇOS E PRODUTOS</h3>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10px' }}>
+        <div style={{ ...P.card, marginBottom: '8px' }}>
+          <h3 style={P.sectionTitle}>Serviços e produtos</h3>
+          <table style={P.tableStyle}>
             <thead>
-              <tr style={{ background: '#f9f9f9', borderBottom: '1px solid #000' }}>
-                <th style={{ textAlign: 'left', padding: '5px 8px', borderRight: '1px solid #ddd' }}>Item</th>
-                <th style={{ textAlign: 'center', padding: '5px', borderRight: '1px solid #ddd', width: '60px' }}>Tipo</th>
-                <th style={{ textAlign: 'center', padding: '5px', borderRight: '1px solid #ddd', width: '40px' }}>Qtd</th>
-                <th style={{ textAlign: 'right', padding: '5px', borderRight: '1px solid #ddd', width: '80px' }}>Vlr Unit.</th>
-                <th style={{ textAlign: 'right', padding: '5px 8px', width: '80px' }}>Total</th>
+              <tr>
+                <th style={P.th}>Item</th>
+                <th style={{ ...P.th, textAlign: 'center', width: '60px' }}>Tipo</th>
+                <th style={{ ...P.th, textAlign: 'center', width: '40px' }}>Qtd</th>
+                <th style={{ ...P.th, textAlign: 'right', width: '80px' }}>Vlr Unit.</th>
+                <th style={{ ...P.th, textAlign: 'right', width: '80px' }}>Total</th>
               </tr>
             </thead>
             <tbody>
               {items.length === 0 ? (
-                <tr><td colSpan={5} style={{ padding: '10px', textAlign: 'center', color: '#999' }}>Nenhum item</td></tr>
+                <tr><td colSpan={5} style={{ ...P.td, textAlign: 'center', color: P.printColors.faint }}>Nenhum item</td></tr>
               ) : items.map((item, i) => (
-                <tr key={item.id} style={{ borderBottom: i < items.length - 1 ? '1px solid #eee' : 'none' }}>
-                  <td style={{ padding: '5px 8px', borderRight: '1px solid #eee' }}>{item.name}</td>
-                  <td style={{ padding: '5px', textAlign: 'center', borderRight: '1px solid #eee' }}>{item.item_type === 'product' ? 'Produto' : 'Serviço'}</td>
-                  <td style={{ padding: '5px', textAlign: 'center', borderRight: '1px solid #eee' }}>{item.quantity}</td>
-                  <td style={{ padding: '5px', textAlign: 'right', borderRight: '1px solid #eee' }}>{fmt(Number(item.sale_price))}</td>
-                  <td style={{ padding: '5px 8px', textAlign: 'right' }}>{fmt(Number(item.sale_price) * item.quantity)}</td>
+                <tr key={item.id} style={{ background: i % 2 ? P.printColors.soft : '#fff' }}>
+                  <td style={P.td}>{item.name}</td>
+                  <td style={{ ...P.td, textAlign: 'center', color: P.printColors.muted }}>{item.item_type === 'product' ? 'Produto' : 'Serviço'}</td>
+                  <td style={{ ...P.td, textAlign: 'center' }}>{item.quantity}</td>
+                  <td style={{ ...P.td, textAlign: 'right' }}>{fmt(Number(item.sale_price))}</td>
+                  <td style={{ ...P.td, textAlign: 'right', fontWeight: 600 }}>{fmt(Number(item.sale_price) * item.quantity)}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
 
-        {/* Payment Options */}
-        <div style={{ border: '2px solid #000', borderRadius: '4px', overflow: 'hidden', marginBottom: '14px' }}>
-          <h3 style={{ fontSize: '11px', fontWeight: 'bold', textTransform: 'uppercase', background: '#e0e0e0', padding: '6px 10px', borderBottom: '1px solid #000', textAlign: 'center' }}>CONDIÇÕES DE PAGAMENTO</h3>
-          
-          {/* Cash */}
-          <div style={{ padding: '12px', background: '#e8f5e9', borderBottom: '1px solid #000', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ ...P.card, marginBottom: '10px' }}>
+          <h3 style={P.sectionTitle}>Condições de pagamento</h3>
+          <div style={{ padding: '10px 12px', background: P.printColors.positiveSoft, borderBottom: `1px solid ${P.printColors.line}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <span style={{ fontSize: '13px', fontWeight: 'bold' }}>💰 À VISTA</span>
-              <p style={{ fontSize: '9px', color: '#555', margin: '2px 0 0' }}>PIX, Dinheiro ou Débito</p>
+              <span style={{ fontSize: '11px', fontWeight: 700, color: P.printColors.ink, letterSpacing: '0.04em' }}>À VISTA</span>
+              <p style={{ fontSize: '8.5px', color: P.printColors.muted, margin: '2px 0 0' }}>PIX, dinheiro ou débito</p>
             </div>
-            <span style={{ fontSize: '18px', fontWeight: 'bold', color: '#2e7d32' }}>{fmt(total)}</span>
+            <span style={{ fontSize: '16px', fontWeight: 700, color: P.printColors.positive }}>{fmt(total)}</span>
           </div>
-
-          {/* Installments */}
           {interestRate > 0 && installmentOptions.length > 0 && (
-            <div style={{ padding: '12px' }}>
-              <p style={{ fontSize: '9px', color: '#555', textAlign: 'center', marginBottom: '8px' }}>
-                Parcelamento no Cartão de Crédito ({interestRate}% a.m.)
+            <div style={{ padding: '10px 12px' }}>
+              <p style={{ fontSize: '8.5px', color: P.printColors.muted, textAlign: 'center', margin: '0 0 8px' }}>
+                Parcelamento no cartão de crédito ({interestRate}% a.m.)
               </p>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px' }}>
                 {installmentOptions.map(n => {
                   const pmt = calcInstallment(total, n, interestRate);
-                  const totalP = pmt * n;
                   return (
-                    <div key={n} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 8px', border: '1px solid #ddd', borderRadius: '4px', fontSize: '10px' }}>
-                      <span style={{ fontWeight: '500' }}>{n}x de</span>
+                    <div key={n} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '5px 8px', border: `1px solid ${P.printColors.line}`, borderRadius: '6px', fontSize: '9.5px' }}>
+                      <span style={{ color: P.printColors.muted }}>{n}x</span>
                       <div style={{ textAlign: 'right' }}>
-                        <span style={{ fontWeight: 'bold' }}>{fmt(pmt)}</span>
-                        <p style={{ fontSize: '8px', color: '#888', margin: 0 }}>Total: {fmt(totalP)}</p>
+                        <span style={{ fontWeight: 700, color: P.printColors.ink }}>{fmt(pmt)}</span>
+                        <p style={{ fontSize: '7.5px', color: P.printColors.faint, margin: 0 }}>Total {fmt(pmt * n)}</p>
                       </div>
                     </div>
                   );
@@ -225,37 +212,32 @@ export default function OrderQuotePage() {
           )}
         </div>
 
-        {/* Terms */}
-        <div style={{ border: '1px solid #000', borderRadius: '4px', padding: '8px 10px', marginBottom: '14px' }}>
-          <h3 style={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', borderBottom: '1px solid #ccc', paddingBottom: '4px', marginBottom: '6px' }}>OBSERVAÇÕES</h3>
-          <ol style={{ fontSize: '9px', color: '#555', paddingLeft: '14px', margin: 0 }}>
-            <li>Orçamento válido por 7 dias a partir da emissão.</li>
-            <li>Valores sujeitos a alteração após o prazo de validade.</li>
-            <li>Prazo de execução a combinar após aprovação.</li>
-            <li>Garantia de 90 dias para peças e mão de obra, exceto mau uso.</li>
-            <li>Não nos responsabilizamos por dados armazenados no equipamento.</li>
-          </ol>
-        </div>
-
-        {/* Signatures */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px', marginTop: '30px' }}>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ borderTop: '1px solid #000', paddingTop: '6px', marginTop: '50px' }}>
-              <p style={{ fontSize: '10px', fontWeight: '500' }}>{company?.nome_fantasia || 'Responsável Técnico'}</p>
-              <p style={{ fontSize: '9px', color: '#777' }}>Responsável</p>
-            </div>
-          </div>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ borderTop: '1px solid #000', paddingTop: '6px', marginTop: '50px' }}>
-              <p style={{ fontSize: '10px', fontWeight: '500' }}>{order.client?.name || 'Cliente'}</p>
-              <p style={{ fontSize: '9px', color: '#777' }}>Cliente</p>
-            </div>
+        <div style={P.card}>
+          <h3 style={P.sectionTitle}>Observações</h3>
+          <div style={P.cardBody}>
+            <ol style={P.termsList}>
+              <li>Orçamento válido por 7 dias a partir da emissão.</li>
+              <li>Valores sujeitos a alteração após o prazo de validade.</li>
+              <li>Prazo de execução a combinar após aprovação.</li>
+              <li>Garantia de 90 dias para peças e mão de obra, exceto mau uso.</li>
+              <li>Não nos responsabilizamos por dados armazenados no equipamento.</li>
+            </ol>
           </div>
         </div>
 
-        {/* Footer */}
-        <div style={{ textAlign: 'center', marginTop: '20px', paddingTop: '8px', borderTop: '1px solid #ddd', fontSize: '9px', color: '#aaa' }}>
-          Orçamento gerado em {format(new Date(), "dd/MM/yyyy 'às' HH:mm")}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px' }}>
+          <div style={P.signatureLine}>
+            <p style={{ fontSize: '9.5px', fontWeight: 600, color: P.printColors.ink, margin: 0 }}>{company?.nome_fantasia || 'Responsável Técnico'}</p>
+            <p style={{ ...lbl, margin: 0 }}>Responsável</p>
+          </div>
+          <div style={P.signatureLine}>
+            <p style={{ fontSize: '9.5px', fontWeight: 600, color: P.printColors.ink, margin: 0 }}>{order.client?.name || 'Cliente'}</p>
+            <p style={{ ...lbl, margin: 0 }}>Cliente</p>
+          </div>
+        </div>
+
+        <div style={P.footerNote}>
+          {company?.nome_fantasia || 'Assistência Técnica'} · Orçamento gerado em {format(new Date(), "dd/MM/yyyy 'às' HH:mm")}
         </div>
       </div>
     </div>
