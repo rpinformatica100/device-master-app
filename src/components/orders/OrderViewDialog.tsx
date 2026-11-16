@@ -334,16 +334,16 @@ export function OrderViewDialog({ open, onOpenChange, order, onEdit, onOrderUpda
                     <div>
                       <p className="text-sm font-medium">{item.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        {item.quantity}x R$ {(item.price || 0).toFixed(2)}
+                        {item.quantity}x R$ {(item.price || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </p>
                     </div>
                   </div>
-                  <span className="font-medium">R$ {((item.price || 0) * item.quantity).toFixed(2)}</span>
+                  <span className="font-medium">R$ {((item.price || 0) * item.quantity).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                 </div>
               ))}
               <div className="flex items-center justify-between p-3 bg-secondary/30">
                 <span className="font-medium">Total</span>
-                <span className="text-lg font-bold text-primary">R$ {total.toFixed(2)}</span>
+                <span className="text-lg font-bold text-primary">R$ {total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               </div>
             </div>
           </div>

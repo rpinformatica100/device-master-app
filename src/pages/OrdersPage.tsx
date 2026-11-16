@@ -157,7 +157,7 @@ export default function OrdersPage() {
             <h1 className="text-xl md:text-2xl font-bold text-foreground">Ordens de Serviço</h1>
             <p className="text-xs text-muted-foreground mt-0.5 hidden md:block">Gerencie todas as suas ordens de serviço</p>
           </div>
-          <Button className="gap-2" size={isMobile ? "sm" : "default"} onClick={handleNewOrder}>
+          <Button className="gap-2" size={isMobile ? "sm" : "default"} onClick={handleNewOrder} aria-label="Nova OS">
             <Plus className="w-4 h-4" />
             <span className="hidden sm:inline">Nova OS</span>
           </Button>
@@ -206,7 +206,7 @@ export default function OrdersPage() {
             <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-medium text-foreground mb-2">Nenhuma ordem de serviço</h3>
             <p className="text-muted-foreground mb-4">Crie sua primeira OS para começar</p>
-            <Button onClick={handleNewOrder}>
+            <Button onClick={handleNewOrder} aria-label="Nova OS">
               <Plus className="w-4 h-4 mr-2" />
               Nova OS
             </Button>
@@ -324,7 +324,7 @@ export default function OrdersPage() {
                       </td>
                       <td className="p-2 lg:p-3">
                         <span className="text-xs font-medium text-foreground">
-                          R$ {Number(order.total_sale).toFixed(2)}
+                          R$ {Number(order.total_sale).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </span>
                       </td>
                       <td className="p-2 lg:p-3 hidden xl:table-cell">
@@ -332,7 +332,7 @@ export default function OrdersPage() {
                           "text-xs font-medium",
                           Number(order.total_profit) >= 0 ? "text-success" : "text-destructive"
                         )}>
-                          R$ {Number(order.total_profit).toFixed(2)}
+                          R$ {Number(order.total_profit).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </span>
                       </td>
                       <td className="p-2 lg:p-3">

@@ -95,7 +95,7 @@ export function OrderCard({ order, paymentStatus, onView, onEdit, onDelete }: Or
             {format(new Date(order.created_at), "dd/MM/yy", { locale: ptBR })}
           </span>
           <span className="text-xs font-medium text-foreground">
-            R$ {Number(order.total_sale).toFixed(2)}
+            R$ {Number(order.total_sale).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </span>
         </div>
         <div className="flex items-center gap-0.5" onClick={(e) => e.stopPropagation()}>

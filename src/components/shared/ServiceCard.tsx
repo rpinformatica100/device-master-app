@@ -36,13 +36,13 @@ export function ServiceCard({ service, onEdit, onDelete }: ServiceCardProps) {
         <div>
           <p className="text-[9px] text-muted-foreground">Custo</p>
           <p className="text-[10px] text-muted-foreground">
-            R$ {Number(service.cost_price).toFixed(2)}
+            R$ {Number(service.cost_price).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </p>
         </div>
         <div>
           <p className="text-[9px] text-muted-foreground">Venda</p>
           <p className="text-[10px] font-medium text-foreground">
-            R$ {Number(service.sale_price).toFixed(2)}
+            R$ {Number(service.sale_price).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </p>
         </div>
       </div>

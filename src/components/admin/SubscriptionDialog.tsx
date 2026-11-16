@@ -334,7 +334,7 @@ export default function SubscriptionDialog({ open, onOpenChange, user }: Props) 
                       {p.reference_month ? format(new Date(p.reference_month + "T12:00:00"), "MMM/yyyy", { locale: ptBR }) : "—"}
                     </span>
                   </div>
-                  <span className="font-bold text-foreground">R$ {Number(p.amount).toFixed(2)}</span>
+                  <span className="font-bold text-foreground">R$ {Number(p.amount).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                 </div>
               ))}
             </div>

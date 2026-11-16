@@ -299,7 +299,7 @@ export function ClientViewDialog({
                         <Badge variant="outline" className={cn("text-[10px]", statusConfig[order.status]?.className)}>
                           {statusConfig[order.status]?.label || order.status}
                         </Badge>
-                        <span className="text-xs font-medium">R$ {Number(order.total_sale).toFixed(2)}</span>
+                        <span className="text-xs font-medium">R$ {Number(order.total_sale).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                         <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
                       </div>
                     </div>
@@ -356,7 +356,7 @@ export function ClientViewDialog({
                         >
                           {tx.type === 'purchase' ? 'Compra' : 'Venda'}
                         </Badge>
-                        <span className="text-xs font-medium">R$ {Number(tx.amount).toFixed(2)}</span>
+                        <span className="text-xs font-medium">R$ {Number(tx.amount).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                         <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
                       </div>
                     </div>

@@ -63,7 +63,7 @@ export default function AdminDashboard() {
               <Repeat className="w-8 h-8 text-emerald-500" />
               <div>
                 <p className="text-xs text-muted-foreground">MRR (Receita Mensal Recorrente)</p>
-                <p className="text-2xl font-bold text-emerald-500">R$ {mrr.toFixed(2)}</p>
+                <p className="text-2xl font-bold text-emerald-500">R$ {mrr.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                 <p className="text-[10px] text-muted-foreground">
                   {activeMensal} mensal · {activeAnual} anual
                 </p>
@@ -75,7 +75,7 @@ export default function AdminDashboard() {
               <BarChart3 className="w-8 h-8 text-primary" />
               <div>
                 <p className="text-xs text-muted-foreground">ARR (Receita Anual Recorrente)</p>
-                <p className="text-2xl font-bold text-primary">R$ {arr.toFixed(2)}</p>
+                <p className="text-2xl font-bold text-primary">R$ {arr.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                 <p className="text-[10px] text-muted-foreground">Projeção 12 meses</p>
               </div>
             </CardContent>
@@ -148,16 +148,16 @@ export default function AdminDashboard() {
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between p-3 rounded-lg bg-emerald-500/10">
                 <span className="text-sm text-emerald-500">Recebido</span>
-                <span className="text-lg font-bold text-emerald-500">R$ {monthRevenue.toFixed(2)}</span>
+                <span className="text-lg font-bold text-emerald-500">R$ {monthRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               </div>
               <div className="flex items-center justify-between p-3 rounded-lg bg-amber-500/10">
                 <span className="text-sm text-amber-500">Pendente</span>
-                <span className="text-lg font-bold text-amber-500">R$ {monthPending.toFixed(2)}</span>
+                <span className="text-lg font-bold text-amber-500">R$ {monthPending.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               </div>
               <div className="flex items-center justify-between p-3 rounded-lg bg-destructive/10">
                 <span className="text-sm text-destructive">Atrasado ({overduePayments.length})</span>
                 <span className="text-lg font-bold text-destructive">
-                  R$ {overduePayments.reduce((s, p) => s + Number(p.amount), 0).toFixed(2)}
+                  R$ {overduePayments.reduce((s, p) => s + Number(p.amount), 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
               </div>
             </CardContent>

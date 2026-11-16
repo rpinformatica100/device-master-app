@@ -104,7 +104,7 @@ export default function QuotesPage() {
             <h1 className="text-xl md:text-2xl font-bold text-foreground">Orçamentos</h1>
             <p className="text-xs text-muted-foreground mt-0.5 hidden md:block">Gerencie seus orçamentos profissionais</p>
           </div>
-          <Button className="gap-2" size={isMobile ? "sm" : "default"} onClick={handleNewQuote}>
+          <Button className="gap-2" size={isMobile ? "sm" : "default"} onClick={handleNewQuote} aria-label="Novo Orçamento">
             <Plus className="w-4 h-4" />
             <span className="hidden sm:inline">Novo Orçamento</span>
           </Button>

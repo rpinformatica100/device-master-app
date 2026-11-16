@@ -378,7 +378,7 @@ export default function FinancialPage() {
                         </Badge>
                       </td>
                       <td className="p-3 text-right text-xs text-muted-foreground">
-                        R$ {Number(transaction.cost_amount).toFixed(2)}
+                        R$ {Number(transaction.cost_amount).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </td>
                       <td
                         className={cn(
@@ -386,10 +386,10 @@ export default function FinancialPage() {
                           transaction.type === "receita" ? "text-success" : "text-destructive"
                         )}
                       >
-                        {transaction.type === "receita" ? "+" : "-"} R$ {Number(transaction.amount).toFixed(2)}
+                        {transaction.type === "receita" ? "+" : "-"} R$ {Number(transaction.amount).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </td>
                       <td className="p-3 text-right text-xs font-semibold text-primary">
-                        R$ {Number(transaction.profit_amount).toFixed(2)}
+                        R$ {Number(transaction.profit_amount).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </td>
                       <td className="p-3">
                         <div className="flex items-center gap-0.5">
@@ -470,19 +470,19 @@ export default function FinancialPage() {
                   <div className="text-center p-3 rounded-lg bg-muted/50">
                     <p className="text-sm text-muted-foreground">Custo</p>
                     <p className="text-xl font-bold text-destructive">
-                      R$ {Number(selectedTransaction.cost_amount).toFixed(2)}
+                      R$ {Number(selectedTransaction.cost_amount).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
                   </div>
                   <div className="text-center p-3 rounded-lg bg-muted/50">
                     <p className="text-sm text-muted-foreground">Receita</p>
                     <p className="text-xl font-bold text-success">
-                      R$ {Number(selectedTransaction.amount).toFixed(2)}
+                      R$ {Number(selectedTransaction.amount).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
                   </div>
                   <div className="text-center p-3 rounded-lg bg-primary/10">
                     <p className="text-sm text-muted-foreground">Lucro</p>
                     <p className="text-xl font-bold text-primary">
-                      R$ {Number(selectedTransaction.profit_amount).toFixed(2)}
+                      R$ {Number(selectedTransaction.profit_amount).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
                   </div>
                 </div>
@@ -623,12 +623,12 @@ export default function FinancialPage() {
                             </Badge>
                           </td>
                           <td className="py-2 text-right text-muted-foreground">
-                            R$ {item.cost.toFixed(2)}
+                            R$ {item.cost.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </td>
-                          <td className="py-2 text-right">R$ {item.sale.toFixed(2)}</td>
+                          <td className="py-2 text-right">R$ {item.sale.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                           <td className="py-2 text-center">{item.quantity}</td>
                           <td className="py-2 text-right text-success">
-                            R$ {item.profit.toFixed(2)}
+                            R$ {item.profit.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </td>
                         </tr>
                       ))}

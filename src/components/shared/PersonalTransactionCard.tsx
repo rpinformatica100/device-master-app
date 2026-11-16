@@ -90,7 +90,7 @@ export function PersonalTransactionCard({ transaction, onEdit, onDelete }: Perso
           "text-xs font-semibold",
           transaction.type === 'despesa' ? "text-red-500" : "text-green-500"
         )}>
-          {transaction.type === 'despesa' ? '-' : '+'}R$ {Number(transaction.amount).toFixed(2)}
+          {transaction.type === 'despesa' ? '-' : '+'}R$ {Number(transaction.amount).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </p>
       </div>
 

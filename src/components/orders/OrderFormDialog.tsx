@@ -588,7 +588,7 @@ export function OrderFormDialog({ open, onOpenChange, mode = "create", orderData
                           {filteredItems.filter(i => i.type === "product").map((item) => (
                             <CommandItem key={item.id} onSelect={() => addItem(item)} className="flex justify-between">
                               <span className="text-sm">{item.name}</span>
-                              <span className="text-xs text-muted-foreground">R$ {item.sale_price.toFixed(2)}</span>
+                              <span className="text-xs text-muted-foreground">R$ {item.sale_price.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                             </CommandItem>
                           ))}
                         </CommandGroup>
@@ -596,7 +596,7 @@ export function OrderFormDialog({ open, onOpenChange, mode = "create", orderData
                           {filteredItems.filter(i => i.type === "service").map((item) => (
                             <CommandItem key={item.id} onSelect={() => addItem(item)} className="flex justify-between">
                               <span className="text-sm">{item.name}</span>
-                              <span className="text-xs text-muted-foreground">R$ {item.sale_price.toFixed(2)}</span>
+                              <span className="text-xs text-muted-foreground">R$ {item.sale_price.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                             </CommandItem>
                           ))}
                         </CommandGroup>
@@ -633,9 +633,9 @@ export function OrderFormDialog({ open, onOpenChange, mode = "create", orderData
                               <span className="text-xs">{item.name}</span>
                             </div>
                           </td>
-                          <td className="p-2 text-right text-muted-foreground">R$ {item.cost_price.toFixed(2)}</td>
-                          <td className="p-2 text-right">R$ {item.sale_price.toFixed(2)}</td>
-                          <td className="p-2 text-right text-success">R$ {itemMargin.toFixed(2)}</td>
+                          <td className="p-2 text-right text-muted-foreground">R$ {item.cost_price.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                          <td className="p-2 text-right">R$ {item.sale_price.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                          <td className="p-2 text-right text-success">R$ {itemMargin.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                           <td className="p-2">
                             <div className="flex items-center justify-center gap-0.5">
                               <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => updateItemQuantity(item.id, item.quantity - 1)}>-</Button>
@@ -643,7 +643,7 @@ export function OrderFormDialog({ open, onOpenChange, mode = "create", orderData
                               <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => updateItemQuantity(item.id, item.quantity + 1)}>+</Button>
                             </div>
                           </td>
-                          <td className="p-2 text-right font-medium">R$ {itemTotal.toFixed(2)}</td>
+                          <td className="p-2 text-right font-medium">R$ {itemTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                           <td className="p-2"><Button variant="ghost" size="icon" className="h-5 w-5 text-destructive" onClick={() => removeItem(item.id)}><X className="w-3.5 h-3.5" /></Button></td>
                         </tr>
                       );
@@ -653,15 +653,15 @@ export function OrderFormDialog({ open, onOpenChange, mode = "create", orderData
                 <div className="p-3 bg-muted/30 grid grid-cols-4 gap-3 text-xs">
                   <div className="text-center">
                     <p className="text-muted-foreground">Total Custo</p>
-                    <p className="font-bold text-destructive">R$ {totals.cost.toFixed(2)}</p>
+                    <p className="font-bold text-destructive">R$ {totals.cost.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                   </div>
                   <div className="text-center">
                     <p className="text-muted-foreground">Total Venda</p>
-                    <p className="font-bold">R$ {totals.sale.toFixed(2)}</p>
+                    <p className="font-bold">R$ {totals.sale.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                   </div>
                   <div className="text-center">
                     <p className="text-muted-foreground">Lucro Bruto</p>
-                    <p className="font-bold text-success">R$ {totals.profit.toFixed(2)}</p>
+                    <p className="font-bold text-success">R$ {totals.profit.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                   </div>
                   <div className="text-center">
                     <p className="text-muted-foreground">Margem</p>

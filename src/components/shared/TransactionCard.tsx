@@ -60,19 +60,19 @@ export function TransactionCard({ transaction, onView, onDelete }: TransactionCa
         <div>
           <p className="text-[9px] text-muted-foreground">Custo</p>
           <p className="text-[10px] font-medium text-muted-foreground">
-            R$ {Number(transaction.cost_amount).toFixed(2)}
+            R$ {Number(transaction.cost_amount).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </p>
         </div>
         <div>
           <p className="text-[9px] text-muted-foreground">Valor</p>
           <p className={cn("text-[10px] font-semibold", isReceita ? "text-success" : "text-destructive")}>
-            {isReceita ? "+" : "-"} R$ {Number(transaction.amount).toFixed(2)}
+            {isReceita ? "+" : "-"} R$ {Number(transaction.amount).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </p>
         </div>
         <div>
           <p className="text-[9px] text-muted-foreground">Lucro</p>
           <p className="text-[10px] font-semibold text-primary">
-            R$ {Number(transaction.profit_amount).toFixed(2)}
+            R$ {Number(transaction.profit_amount).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </p>
         </div>
       </div>
