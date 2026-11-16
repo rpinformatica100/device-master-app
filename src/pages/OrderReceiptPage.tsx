@@ -210,7 +210,7 @@ export default function OrderReceiptPage() {
             <p style={P.companyLine}>
               {[company?.telefone, company?.email].filter(Boolean).join('  ·  ')}
             </p>
-            {companyAddr && <p style={P.companyLine}>{truncate(companyAddr, 70)}</p>}
+            {companyAddr && <p style={P.companyLine}>{truncate(companyAddr, 140)}</p>}
           </div>
           <div style={{ textAlign: 'right' }}>
             <span style={P.docBadge}>Ordem de Serviço</span>
@@ -230,12 +230,12 @@ export default function OrderReceiptPage() {
           <div style={P.card}>
             <h3 style={P.sectionTitle}>Cliente</h3>
             <div style={{ ...P.cardBody, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
-              <div style={{ gridColumn: 'span 2' }}><span style={lbl}>Nome</span><span style={val}>{truncate(order.client?.name, 50)}</span></div>
+              <div style={{ gridColumn: 'span 2' }}><span style={lbl}>Nome</span><span style={val}>{truncate(order.client?.name, 90)}</span></div>
               <div><span style={lbl}>Telefone</span><span style={val}>{order.client?.phone || '—'}</span></div>
-              <div><span style={lbl}>Email</span><span style={val}>{truncate(order.client?.email, 30)}</span></div>
+              <div><span style={lbl}>Email</span><span style={val}>{truncate(order.client?.email, 45)}</span></div>
               {order.client?.cpf && <div><span style={lbl}>CPF</span><span style={val}>{order.client.cpf}</span></div>}
               {order.client?.cnpj && <div><span style={lbl}>CNPJ</span><span style={val}>{order.client.cnpj}</span></div>}
-              {clientAddr && <div style={{ gridColumn: 'span 2' }}><span style={lbl}>Endereço</span><span style={val}>{truncate(clientAddr, 60)}</span></div>}
+              {clientAddr && <div style={{ gridColumn: 'span 2' }}><span style={lbl}>Endereço</span><span style={val}>{truncate(clientAddr, 120)}</span></div>}
             </div>
           </div>
 
