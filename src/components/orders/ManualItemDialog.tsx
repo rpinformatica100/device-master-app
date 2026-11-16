@@ -150,11 +150,11 @@ export function ManualItemDialog({ open, onOpenChange, onAdd }: ManualItemDialog
             <div className="p-3 bg-muted/50 rounded-lg grid grid-cols-3 gap-2 text-sm text-center">
               <div>
                 <p className="text-muted-foreground">Custo</p>
-                <p className="font-medium text-destructive">R$ {(parseFloat(costPrice) || 0).toFixed(2)}</p>
+                <p className="font-medium text-destructive">R$ {(parseFloat(costPrice) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
               </div>
               <div>
                 <p className="text-muted-foreground">Lucro</p>
-                <p className="font-medium text-success">R$ {profit.toFixed(2)}</p>
+                <p className="font-medium text-success">R$ {profit.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
               </div>
               <div>
                 <p className="text-muted-foreground">Margem</p>

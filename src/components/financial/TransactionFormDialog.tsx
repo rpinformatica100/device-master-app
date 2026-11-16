@@ -405,19 +405,19 @@ export function TransactionFormDialog({
                   <div>
                     <p className="text-sm text-muted-foreground">Receita</p>
                     <p className="text-lg font-bold text-success">
-                      R$ {parsedAmount.toFixed(2)}
+                      R$ {parsedAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Custo</p>
                     <p className="text-lg font-bold text-destructive">
-                      R$ {parsedCost.toFixed(2)}
+                      R$ {parsedCost.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Lucro</p>
                     <p className="text-lg font-bold text-primary">
-                      R$ {profit.toFixed(2)}
+                      R$ {profit.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
                   </div>
                 </div>

@@ -361,8 +361,8 @@ export default function InventoryPage() {
                                 <span className="text-xs text-muted-foreground ml-1">/ mín. {item.min_stock}</span>
                               </div>
                             </td>
-                            <td className="p-4 text-muted-foreground">R$ {Number(item.cost_price).toFixed(2)}</td>
-                            <td className="p-4 font-medium text-foreground">R$ {Number(item.sale_price).toFixed(2)}</td>
+                            <td className="p-4 text-muted-foreground">R$ {Number(item.cost_price).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                            <td className="p-4 font-medium text-foreground">R$ {Number(item.sale_price).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                             <td className="p-4">
                               <div className="flex items-center gap-2">
                                 <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEditDialog(item, "product")}>
@@ -458,8 +458,8 @@ export default function InventoryPage() {
                             <td className="p-4 text-sm text-muted-foreground max-w-[300px] truncate">
                               {item.description || "-"}
                             </td>
-                            <td className="p-4 text-muted-foreground">R$ {Number(item.cost_price).toFixed(2)}</td>
-                            <td className="p-4 font-medium text-foreground">R$ {Number(item.sale_price).toFixed(2)}</td>
+                            <td className="p-4 text-muted-foreground">R$ {Number(item.cost_price).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                            <td className="p-4 font-medium text-foreground">R$ {Number(item.sale_price).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                             <td className="p-4">
                               <div className="flex items-center gap-2">
                                 <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEditDialog(item, "service")}>

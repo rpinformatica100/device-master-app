@@ -301,7 +301,7 @@ export function QuoteFormDialog({ open, onOpenChange, mode, quoteData }: QuoteFo
                     </SelectTrigger>
                     <SelectContent>
                       {products.map(p => (
-                        <SelectItem key={p.id} value={p.id}>{p.name} - R$ {Number(p.sale_price).toFixed(2)}</SelectItem>
+                        <SelectItem key={p.id} value={p.id}>{p.name} - R$ {Number(p.sale_price).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -313,7 +313,7 @@ export function QuoteFormDialog({ open, onOpenChange, mode, quoteData }: QuoteFo
                     </SelectTrigger>
                     <SelectContent>
                       {services.map(s => (
-                        <SelectItem key={s.id} value={s.id}>{s.name} - R$ {Number(s.sale_price).toFixed(2)}</SelectItem>
+                        <SelectItem key={s.id} value={s.id}>{s.name} - R$ {Number(s.sale_price).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -360,7 +360,7 @@ export function QuoteFormDialog({ open, onOpenChange, mode, quoteData }: QuoteFo
                     placeholder="Valor"
                   />
                   <span className="text-xs font-medium w-20 text-right">
-                    R$ {(item.sale_price * item.quantity).toFixed(2)}
+                    R$ {(item.sale_price * item.quantity).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                   <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => removeItem(index)}>
                     <Trash2 className="w-3 h-3" />
@@ -372,7 +372,7 @@ export function QuoteFormDialog({ open, onOpenChange, mode, quoteData }: QuoteFo
             {items.length > 0 && (
               <div className="flex justify-end items-center gap-2 pt-2 border-t border-border">
                 <span className="text-sm font-medium text-muted-foreground">Total:</span>
-                <span className="text-lg font-bold text-primary">R$ {total.toFixed(2)}</span>
+                <span className="text-lg font-bold text-primary">R$ {total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               </div>
             )}
           </div>

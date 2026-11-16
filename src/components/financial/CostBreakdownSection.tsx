@@ -101,15 +101,15 @@ export function CostBreakdownSection({ transactions }: CostBreakdownSectionProps
             <div className="flex gap-3 text-xs">
               <div className="text-center">
                 <p className="text-muted-foreground">Produtos</p>
-                <p className="font-semibold text-destructive">R$ {totalCosts.productsCost.toFixed(2)}</p>
+                <p className="font-semibold text-destructive">R$ {totalCosts.productsCost.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
               </div>
               <div className="text-center">
                 <p className="text-muted-foreground">Serviços</p>
-                <p className="font-semibold text-destructive">R$ {totalCosts.servicesCost.toFixed(2)}</p>
+                <p className="font-semibold text-destructive">R$ {totalCosts.servicesCost.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
               </div>
               <div className="text-center">
                 <p className="text-muted-foreground">Total</p>
-                <p className="font-semibold text-destructive">R$ {totalCosts.totalCost.toFixed(2)}</p>
+                <p className="font-semibold text-destructive">R$ {totalCosts.totalCost.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
               </div>
             </div>
           )}
@@ -125,15 +125,15 @@ export function CostBreakdownSection({ transactions }: CostBreakdownSectionProps
           <div className="grid grid-cols-3 gap-2 text-center text-[10px]">
             <div>
               <p className="text-muted-foreground">Produtos</p>
-              <p className="font-semibold text-destructive">R$ {totalCosts.productsCost.toFixed(2)}</p>
+              <p className="font-semibold text-destructive">R$ {totalCosts.productsCost.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
             </div>
             <div>
               <p className="text-muted-foreground">Serviços</p>
-              <p className="font-semibold text-destructive">R$ {totalCosts.servicesCost.toFixed(2)}</p>
+              <p className="font-semibold text-destructive">R$ {totalCosts.servicesCost.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
             </div>
             <div>
               <p className="text-muted-foreground">Total</p>
-              <p className="font-semibold text-destructive">R$ {totalCosts.totalCost.toFixed(2)}</p>
+              <p className="font-semibold text-destructive">R$ {totalCosts.totalCost.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
             </div>
           </div>
         </div>
@@ -170,15 +170,15 @@ export function CostBreakdownSection({ transactions }: CostBreakdownSectionProps
                   </div>
                   <div>
                     <p className="text-muted-foreground">Custo</p>
-                    <p className="font-medium text-destructive">R${item.totalCost.toFixed(0)}</p>
+                    <p className="font-medium text-destructive">R${item.totalCost.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}</p>
                   </div>
                   <div>
                     <p className="text-muted-foreground">Venda</p>
-                    <p className="font-medium text-success">R${item.salePrice.toFixed(0)}</p>
+                    <p className="font-medium text-success">R${item.salePrice.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}</p>
                   </div>
                   <div>
                     <p className="text-muted-foreground">Lucro</p>
-                    <p className="font-medium text-primary">R${item.profit.toFixed(0)}</p>
+                    <p className="font-medium text-primary">R${item.profit.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}</p>
                   </div>
                 </div>
               </div>
@@ -234,16 +234,16 @@ export function CostBreakdownSection({ transactions }: CostBreakdownSectionProps
                     </td>
                     <td className="p-3 text-center text-xs text-muted-foreground">{item.quantity}</td>
                     <td className="p-3 text-right text-xs text-muted-foreground">
-                      R$ {item.costPerUnit.toFixed(2)}
+                      R$ {item.costPerUnit.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                     <td className="p-3 text-right text-xs font-semibold text-destructive">
-                      R$ {item.totalCost.toFixed(2)}
+                      R$ {item.totalCost.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                     <td className="p-3 text-right text-xs text-success">
-                      R$ {item.salePrice.toFixed(2)}
+                      R$ {item.salePrice.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                     <td className="p-3 text-right text-xs font-semibold text-primary">
-                      R$ {item.profit.toFixed(2)}
+                      R$ {item.profit.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                   </motion.tr>
                 ))}
@@ -254,13 +254,13 @@ export function CostBreakdownSection({ transactions }: CostBreakdownSectionProps
                     TOTAIS:
                   </td>
                   <td className="p-3 text-right text-xs font-bold text-destructive">
-                    R$ {totalCosts.totalCost.toFixed(2)}
+                    R$ {totalCosts.totalCost.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </td>
                   <td className="p-3 text-right text-xs font-bold text-success">
-                    R$ {costBreakdown.reduce((sum, c) => sum + c.salePrice, 0).toFixed(2)}
+                    R$ {costBreakdown.reduce((sum, c) => sum + c.salePrice, 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </td>
                   <td className="p-3 text-right text-xs font-bold text-primary">
-                    R$ {totalCosts.totalProfit.toFixed(2)}
+                    R$ {totalCosts.totalProfit.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </td>
                 </tr>
               </tfoot>

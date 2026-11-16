@@ -130,7 +130,7 @@ export default function PersonalFinancePage() {
                     <div className="min-w-0">
                       <p className="text-xs text-muted-foreground">Saldo Pessoal</p>
                       <p className={`text-base md:text-xl font-bold truncate ${summary.balance >= 0 ? 'text-primary' : 'text-destructive'}`}>
-                        R$ {summary.balance.toFixed(2)}
+                        R$ {summary.balance.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </p>
                     </div>
                     <div className="p-2 rounded-lg bg-primary/10 shrink-0">
@@ -146,7 +146,7 @@ export default function PersonalFinancePage() {
                     <div className="min-w-0">
                       <p className="text-xs text-muted-foreground">Receitas do Mês</p>
                       <p className="text-base md:text-xl font-bold text-success truncate">
-                        R$ {summary.monthlyIncome.toFixed(2)}
+                        R$ {summary.monthlyIncome.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </p>
                     </div>
                     <div className="p-2 rounded-lg bg-success/10 shrink-0">
@@ -162,7 +162,7 @@ export default function PersonalFinancePage() {
                     <div className="min-w-0">
                       <p className="text-xs text-muted-foreground">Despesas do Mês</p>
                       <p className="text-base md:text-xl font-bold text-destructive truncate">
-                        R$ {summary.monthlyExpenses.toFixed(2)}
+                        R$ {summary.monthlyExpenses.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </p>
                     </div>
                     <div className="p-2 rounded-lg bg-destructive/10 shrink-0">
@@ -178,7 +178,7 @@ export default function PersonalFinancePage() {
                     <div className="min-w-0">
                       <p className="text-xs text-muted-foreground">Pro-labore Recebido</p>
                       <p className="text-base md:text-xl font-bold text-foreground truncate">
-                        R$ {summary.totalProlabore.toFixed(2)}
+                        R$ {summary.totalProlabore.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </p>
                     </div>
                     <div className="p-2 rounded-lg bg-blue-500/10 shrink-0">
@@ -286,7 +286,7 @@ export default function PersonalFinancePage() {
                               {personalCategories.find(c => c.value === transaction.category)?.label || '-'}
                             </td>
                             <td className={`p-3 text-right text-xs font-medium ${transaction.type === 'despesa' ? 'text-destructive' : 'text-success'}`}>
-                              {transaction.type === 'despesa' ? '-' : '+'}R$ {Number(transaction.amount).toFixed(2)}
+                              {transaction.type === 'despesa' ? '-' : '+'}R$ {Number(transaction.amount).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </td>
                             <td className="p-3 text-right">
                               <div className="flex justify-end gap-1">

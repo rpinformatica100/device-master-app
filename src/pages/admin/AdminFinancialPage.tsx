@@ -129,7 +129,7 @@ export default function AdminFinancialPage() {
               <DollarSign className="w-8 h-8 text-emerald-500" />
               <div>
                 <p className="text-xs text-muted-foreground">Recebido</p>
-                <p className="text-xl font-bold text-emerald-500">R$ {totalPaid.toFixed(2)}</p>
+                <p className="text-xl font-bold text-emerald-500">R$ {totalPaid.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
               </div>
             </CardContent>
           </Card>
@@ -138,7 +138,7 @@ export default function AdminFinancialPage() {
               <Clock className="w-8 h-8 text-amber-500" />
               <div>
                 <p className="text-xs text-muted-foreground">Pendente</p>
-                <p className="text-xl font-bold text-amber-500">R$ {totalPending.toFixed(2)}</p>
+                <p className="text-xl font-bold text-amber-500">R$ {totalPending.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
               </div>
             </CardContent>
           </Card>
@@ -147,7 +147,7 @@ export default function AdminFinancialPage() {
               <AlertTriangle className="w-8 h-8 text-destructive" />
               <div>
                 <p className="text-xs text-muted-foreground">Atrasado</p>
-                <p className="text-xl font-bold text-destructive">R$ {totalOverdue.toFixed(2)}</p>
+                <p className="text-xl font-bold text-destructive">R$ {totalOverdue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
               </div>
             </CardContent>
           </Card>
@@ -332,7 +332,7 @@ export default function AdminFinancialPage() {
                 payments.map((p) => (
                   <TableRow key={p.id}>
                     <TableCell className="text-sm font-medium">{getUserName(p.user_id)}</TableCell>
-                    <TableCell className="text-sm font-bold">R$ {Number(p.amount).toFixed(2)}</TableCell>
+                    <TableCell className="text-sm font-bold">R$ {Number(p.amount).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
                     <TableCell className="text-xs uppercase text-muted-foreground">{p.payment_method || "—"}</TableCell>
                     <TableCell className="text-xs text-muted-foreground">
                       {p.reference_month ? format(new Date(p.reference_month + "T12:00:00"), "MMM/yyyy", { locale: ptBR }) : "—"}

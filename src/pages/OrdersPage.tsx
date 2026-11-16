@@ -324,7 +324,7 @@ export default function OrdersPage() {
                       </td>
                       <td className="p-2 lg:p-3">
                         <span className="text-xs font-medium text-foreground">
-                          R$ {Number(order.total_sale).toFixed(2)}
+                          R$ {Number(order.total_sale).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </span>
                       </td>
                       <td className="p-2 lg:p-3 hidden xl:table-cell">
@@ -332,7 +332,7 @@ export default function OrdersPage() {
                           "text-xs font-medium",
                           Number(order.total_profit) >= 0 ? "text-success" : "text-destructive"
                         )}>
-                          R$ {Number(order.total_profit).toFixed(2)}
+                          R$ {Number(order.total_profit).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </span>
                       </td>
                       <td className="p-2 lg:p-3">
