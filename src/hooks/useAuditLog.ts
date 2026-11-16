@@ -61,7 +61,7 @@ export function useAdminUserActions() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (input: {
-      action: "reset_password" | "soft_delete" | "hard_delete";
+      action: "reset_password" | "soft_delete" | "reactivate" | "hard_delete";
       target_user_id: string;
       new_password?: string;
     }) => {
