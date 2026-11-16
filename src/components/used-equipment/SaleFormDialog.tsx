@@ -71,7 +71,7 @@ export function SaleFormDialog({ open, onOpenChange, equipment, onSubmit }: Sale
   const formatCurrency = (value: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 
   const profit = equipment ? formData.amount - Number(equipment.total_cost) : 0;
-  const margin = equipment && formData.amount > 0 ? ((profit / formData.amount) * 100).toFixed(1) : "0";
+  const margin = equipment && formData.amount > 0 ? ((profit / formData.amount) * 100).toFixed(1).replace(".", ",") : "0";
 
   return (
     <>

@@ -297,7 +297,7 @@ export function QuoteViewDialog({ open, onOpenChange, quote, onEdit, onQuoteUpda
                 <Button
                   variant="default"
                   className="gap-2 bg-success hover:bg-success/90"
-                  onClick={() => { updateQuoteStatus(quote.id, "aprovado"); onQuoteUpdated?.(); }}
+                  onClick={async () => { await updateQuoteStatus(quote.id, "aprovado"); onQuoteUpdated?.(); onOpenChange(false); }}
                 >
                   <CheckCircle className="w-4 h-4" />
                   Aprovar
@@ -305,7 +305,7 @@ export function QuoteViewDialog({ open, onOpenChange, quote, onEdit, onQuoteUpda
                 <Button
                   variant="destructive"
                   className="gap-2"
-                  onClick={() => { updateQuoteStatus(quote.id, "rejeitado"); onQuoteUpdated?.(); }}
+                  onClick={async () => { await updateQuoteStatus(quote.id, "rejeitado"); onQuoteUpdated?.(); onOpenChange(false); }}
                 >
                   <XCircle className="w-4 h-4" />
                   Rejeitar

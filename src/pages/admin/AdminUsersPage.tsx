@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Settings, Search, Phone, Mail, MapPin, Clock, MoreVertical, KeyRound, Ban, Trash2 } from "lucide-react";
+import { Settings, Search, Phone, Mail, MapPin, Clock, MoreVertical, KeyRound, Ban, Trash2, RotateCcw } from "lucide-react";
 import SubscriptionDialog from "@/components/admin/SubscriptionDialog";
 import type { AdminUser } from "@/hooks/useAdmin";
 import { format } from "date-fns";
@@ -36,6 +36,17 @@ export default function AdminUsersPage() {
   const [newPassword, setNewPassword] = useState("");
   const [deleteUser, setDeleteUser] = useState<AdminUser | null>(null);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [suspendUser, setSuspendUser] = useState<{ user: AdminUser; mode: "suspend" | "reactivate" } | null>(null);
+
+  const handleSuspendConfirm = async () => {
+    if (!suspendUser) return;
+    const { user, mode } = suspendUser;
+    try {
+      await userActions.mutateAsync({ action: mode === "suspend" ? "soft_delete" : "reactivate", target_user_id: user.id });
+      toast.success(mode === "suspend" ? "Usuário suspenso" : "Acesso reativado. Registre um pagamento para liberar o sistema.");
+      setSuspendUser(null);
+    } catch (e: any) { toast.error(e.message); }
+  };
 
   const filtered = nonAdminUsers.filter((u) => {
     const q = search.toLowerCase();
@@ -240,18 +251,17 @@ export default function AdminUsersPage() {
                             <KeyRound className="w-4 h-4 mr-2" />
                             Resetar senha
                           </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={async () => {
-                              if (!confirm(`Suspender ${user.email}? O acesso será bloqueado.`)) return;
-                              try {
-                                await userActions.mutateAsync({ action: "soft_delete", target_user_id: user.id });
-                                toast.success("Usuário suspenso");
-                              } catch (e: any) { toast.error(e.message); }
-                            }}
-                          >
-                            <Ban className="w-4 h-4 mr-2 text-amber-500" />
-                            Suspender acesso
-                          </DropdownMenuItem>
+                          {user.subscription?.status === "suspenso" ? (
+                            <DropdownMenuItem onClick={() => setSuspendUser({ user, mode: "reactivate" })}>
+                              <RotateCcw className="w-4 h-4 mr-2 text-emerald-500" />
+                              Reativar acesso
+                            </DropdownMenuItem>
+                          ) : (
+                            <DropdownMenuItem onClick={() => setSuspendUser({ user, mode: "suspend" })}>
+                              <Ban className="w-4 h-4 mr-2 text-amber-500" />
+                              Suspender acesso
+                            </DropdownMenuItem>
+                          )}
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
                             className="text-destructive focus:text-destructive"
@@ -270,6 +280,25 @@ export default function AdminUsersPage() {
           </Table>
         </div>
       </div>
+
+      <AlertDialog open={!!suspendUser} onOpenChange={(o) => !o && setSuspendUser(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{suspendUser?.mode === "suspend" ? "Suspender acesso?" : "Reativar acesso?"}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {suspendUser?.mode === "suspend"
+                ? `${suspendUser?.user.email} será desconectado e não conseguirá mais entrar até ser reativado.`
+                : `${suspendUser?.user.email} poderá entrar novamente. A assinatura fica como "aguardando" até você registrar um pagamento.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={(e) => { e.preventDefault(); handleSuspendConfirm(); }} disabled={userActions.isPending}>
+              {suspendUser?.mode === "suspend" ? "Suspender" : "Reativar"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <SubscriptionDialog
         open={subDialogOpen}

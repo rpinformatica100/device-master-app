@@ -158,7 +158,7 @@ export function ManualItemDialog({ open, onOpenChange, onAdd }: ManualItemDialog
               </div>
               <div>
                 <p className="text-muted-foreground">Margem</p>
-                <p className="font-medium text-primary">{margin.toFixed(1)}%</p>
+                <p className="font-medium text-primary">{margin.toFixed(1).replace(".", ",")}%</p>
               </div>
             </div>
           )}
