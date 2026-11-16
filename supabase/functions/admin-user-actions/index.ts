@@ -69,6 +69,13 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Capture target info before any destructive change (user may be gone afterwards)
+    let targetEmail: string | null = null;
+    try {
+      const { data: tu } = await adminClient.auth.admin.getUserById(target_user_id);
+      targetEmail = tu?.user?.email ?? null;
+    } catch (_) { /* ignore */ }
+
     let result: any = { ok: true };
 
     if (action === "reset_password") {
@@ -124,7 +131,12 @@ Deno.serve(async (req) => {
       action,
       resource_type: "user",
       resource_id: target_user_id,
-      details: action === "reset_password" ? { method: "admin_reset" } : {},
+      details: {
+        target_email: targetEmail,
+        ...(action === "reset_password" ? { method: "admin_reset" } : {}),
+        ...(action === "soft_delete" ? { ban_duration: "876000h", subscription_status: "suspenso" } : {}),
+        ...(action === "hard_delete" ? { data_purged: true } : {}),
+      },
     });
 
     return new Response(JSON.stringify(result), {
