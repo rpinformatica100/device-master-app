@@ -665,7 +665,7 @@ export function OrderFormDialog({ open, onOpenChange, mode = "create", orderData
                   </div>
                   <div className="text-center">
                     <p className="text-muted-foreground">Margem</p>
-                    <p className="font-bold text-primary">{totals.margin.toFixed(1)}%</p>
+                    <p className="font-bold text-primary">{totals.margin.toFixed(1).replace(".", ",")}%</p>
                   </div>
                 </div>
               </div>
