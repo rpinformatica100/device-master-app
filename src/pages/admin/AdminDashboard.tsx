@@ -41,7 +41,7 @@ export default function AdminDashboard() {
     { label: "Suspensas", value: suspendedUsers, icon: AlertTriangle, color: "text-amber-500" },
     { label: "Expiradas", value: expiredUsers, icon: Clock, color: "text-destructive" },
     { label: "Aguardando", value: awaitingUsers, icon: Clock, color: "text-muted-foreground" },
-    { label: "Receita do Mês", value: `R$ ${monthRevenue.toFixed(2)}`, icon: TrendingUp, color: "text-emerald-500" },
+    { label: "Receita do Mês", value: `R$ ${monthRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, icon: TrendingUp, color: "text-emerald-500" },
   ];
 
   const recentUsers = [...users].sort((a, b) =>

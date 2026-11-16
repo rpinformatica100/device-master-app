@@ -118,7 +118,7 @@ export function useWithdrawals() {
 
       toast({
         title: 'Sucesso',
-        description: `Retirada de R$ ${amount.toFixed(2)} realizada com sucesso!`,
+        description: `Retirada de R$ ${amount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} realizada com sucesso!`,
       });
 
       return withdrawal;
