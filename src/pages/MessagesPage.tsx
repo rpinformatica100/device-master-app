@@ -125,10 +125,10 @@ export default function MessagesPage() {
 
   return (
     <MainLayout>
-      <div className="space-y-6">
+      <div className="p-3 sm:p-4 lg:p-6 space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Mensagens</h1>
-          <p className="text-muted-foreground">Comunicação com o suporte TechOS</p>
+          <h1 className="text-xl md:text-2xl font-bold text-foreground">Mensagens</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">Comunicação com o suporte TechOS</p>
         </div>
 
         <div className="space-y-3">
