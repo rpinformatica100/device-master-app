@@ -19,11 +19,14 @@ interface Props {
   payment?: SubscriptionPayment | null;
 }
 
+const EMPTY_PLANS: any[] = [];
+
 export default function PaymentDialog({ open, onOpenChange, users, payment }: Props) {
   const { createPayment, updatePayment } = useAdminPaymentMutations();
   const { upsertSubscription } = useAdminSubscriptions();
   const { user: currentUser } = useAuth();
-  const { data: plans = [] } = usePlanPricing();
+  const { data: plansData } = usePlanPricing();
+  const plans = plansData ?? EMPTY_PLANS;
   const isEditing = !!payment;
 
   const [form, setForm] = useState({
@@ -39,6 +42,7 @@ export default function PaymentDialog({ open, onOpenChange, users, payment }: Pr
   });
 
   useEffect(() => {
+    if (!open) return;
     if (payment) {
       setForm({
         user_id: payment.user_id,

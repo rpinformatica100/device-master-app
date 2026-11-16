@@ -51,7 +51,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   // Admin always has access
   if (isAdmin) {
-    return <>{children}</>;
+    return <Navigate to="/admin" replace />;
   }
 
   // Check subscription - block null (new users) and non-active statuses
