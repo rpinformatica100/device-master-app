@@ -189,6 +189,7 @@ export default function InventoryPage() {
             className="gap-2" 
             size={isMobile ? "sm" : "default"}
             onClick={() => openNewDialog(activeTab === "products" ? "product" : "service")}
+            aria-label={activeTab === "products" ? "Novo Produto" : "Novo Serviço"}
           >
             <Plus className="w-4 h-4" />
             <span className="hidden sm:inline">Novo Item</span>

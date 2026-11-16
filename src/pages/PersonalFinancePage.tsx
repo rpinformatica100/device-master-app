@@ -116,7 +116,7 @@ export default function PersonalFinancePage() {
           <TabsContent value="transacoes" className="mt-4 md:mt-6 space-y-4 md:space-y-6">
             {/* Header with action */}
             <div className="flex justify-end">
-              <Button onClick={() => setDialogOpen(true)} className="gap-2" size={isMobile ? "sm" : "default"}>
+              <Button onClick={() => setDialogOpen(true)} className="gap-2" size={isMobile ? "sm" : "default"} aria-label="Nova Transação">
                 <Plus className="h-4 w-4" />
                 <span className="hidden sm:inline">Nova Transação</span>
               </Button>
