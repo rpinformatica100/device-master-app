@@ -34,7 +34,12 @@ export default function SettingsPage() {
 
   useEffect(() => {
     setFullName((user?.user_metadata?.full_name as string) || "");
-  }, [user]);
+    // Session data can be stale; read the latest profile from the server.
+    supabase.auth.getUser().then(({ data }) => {
+      const name = data.user?.user_metadata?.full_name as string | undefined;
+      if (name) setFullName(name);
+    });
+  }, [user?.id]);
 
   const handleSaveName = async () => {
     if (!fullName.trim()) return toast.error("Informe seu nome");
