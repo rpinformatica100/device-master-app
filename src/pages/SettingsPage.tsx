@@ -6,13 +6,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Building2, User, Bell, Palette, Loader2 } from "lucide-react";
+import { Building2, User, Palette, Loader2 } from "lucide-react";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { useTheme } from "@/hooks/useTheme";
 import { useAuth } from "@/hooks/useAuth";
 import { MaskedInput, CepInput } from "@/components/ui/masked-input";
 import { fetchAddressByCep } from "@/lib/cep";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useUiPrefs, setUiPref } from "@/lib/uiPrefs";
 
 export default function SettingsPage() {
   const { settings, loading, saveSettings } = useCompanySettings();
@@ -20,6 +22,52 @@ export default function SettingsPage() {
   const { user } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
   const [isFetchingCep, setIsFetchingCep] = useState(false);
+  const uiPrefs = useUiPrefs();
+
+  // User form state
+  const [fullName, setFullName] = useState("");
+  const [savingName, setSavingName] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [savingPassword, setSavingPassword] = useState(false);
+
+  useEffect(() => {
+    setFullName((user?.user_metadata?.full_name as string) || "");
+  }, [user]);
+
+  const handleSaveName = async () => {
+    if (!fullName.trim()) return toast.error("Informe seu nome");
+    setSavingName(true);
+    const { error } = await supabase.auth.updateUser({ data: { full_name: fullName.trim() } });
+    setSavingName(false);
+    if (error) toast.error("Não foi possível salvar o nome");
+    else toast.success("Nome atualizado!");
+  };
+
+  const handleChangePassword = async () => {
+    if (!user?.email) return;
+    if (!currentPassword) return toast.error("Informe a senha atual");
+    if (newPassword.length < 8) return toast.error("A nova senha precisa ter pelo menos 8 caracteres");
+    if (newPassword !== confirmPassword) return toast.error("A confirmação não confere com a nova senha");
+    if (newPassword === currentPassword) return toast.error("A nova senha deve ser diferente da atual");
+    setSavingPassword(true);
+    const { error: signInError } = await supabase.auth.signInWithPassword({ email: user.email, password: currentPassword });
+    if (signInError) {
+      setSavingPassword(false);
+      return toast.error("Senha atual incorreta");
+    }
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    setSavingPassword(false);
+    if (error) {
+      const msg = /weak|pwned|leaked/i.test(error.message)
+        ? "Essa senha é fraca ou já apareceu em vazamentos. Escolha outra."
+        : "Não foi possível alterar a senha";
+      return toast.error(msg);
+    }
+    setCurrentPassword(""); setNewPassword(""); setConfirmPassword("");
+    toast.success("Senha alterada com sucesso!");
+  };
 
   // Company form state
   const [razaoSocial, setRazaoSocial] = useState("");
@@ -125,11 +173,6 @@ export default function SettingsPage() {
                 <User className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Usuário</span>
                 <span className="sm:hidden">User</span>
-              </TabsTrigger>
-              <TabsTrigger value="notificacoes" className="gap-1.5 text-xs sm:text-sm px-2 sm:px-3 py-1.5">
-                <Bell className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Notificações</span>
-                <span className="sm:hidden">Notif.</span>
               </TabsTrigger>
               <TabsTrigger value="aparencia" className="gap-1.5 text-xs sm:text-sm px-2 sm:px-3 py-1.5">
                 <Palette className="w-3.5 h-3.5" />
@@ -310,56 +353,41 @@ export default function SettingsPage() {
               <div className="grid grid-cols-2 gap-2 sm:gap-3">
                 <div className="col-span-2 sm:col-span-1 space-y-1">
                   <Label htmlFor="nome" className="text-xs">Nome Completo</Label>
-                  <Input id="nome" defaultValue="Administrador" className="h-8 text-sm" />
+                  <Input id="nome" value={fullName} onChange={(e) => setFullName(e.target.value)} className="h-8 text-sm" />
                 </div>
                 <div className="col-span-2 sm:col-span-1 space-y-1">
-                  <Label htmlFor="emailUser" className="text-xs">E-mail</Label>
+                  <Label htmlFor="emailUser" className="text-xs">E-mail de acesso</Label>
                   <Input id="emailUser" type="email" value={user?.email || ""} disabled className="h-8 text-sm" />
-                </div>
-                <div className="space-y-1">
-                  <Label htmlFor="senhaAtual" className="text-xs">Senha Atual</Label>
-                  <Input id="senhaAtual" type="password" placeholder="••••••••" className="h-8 text-sm" />
-                </div>
-                <div className="space-y-1">
-                  <Label htmlFor="novaSenha" className="text-xs">Nova Senha</Label>
-                  <Input id="novaSenha" type="password" placeholder="••••••••" className="h-8 text-sm" />
                 </div>
               </div>
               <div className="flex justify-end">
-                <Button size="sm">Atualizar Perfil</Button>
+                <Button size="sm" onClick={handleSaveName} disabled={savingName}>
+                  {savingName && <Loader2 className="w-3 h-3 mr-1.5 animate-spin" />}
+                  Salvar nome
+                </Button>
               </div>
-            </TabsContent>
 
-            <TabsContent value="notificacoes" className="glass rounded-lg p-3 sm:p-4 lg:p-6 space-y-3">
-              <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-foreground">Preferências de Notificação</h3>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between p-2.5 sm:p-3 rounded-lg bg-secondary/30">
-                  <div>
-                    <p className="text-xs sm:text-sm font-medium text-foreground">Nova OS criada</p>
-                    <p className="text-[10px] sm:text-xs text-muted-foreground">Notificação quando uma nova OS for aberta</p>
+              <div className="pt-3 border-t border-border space-y-3">
+                <h4 className="text-xs sm:text-sm font-medium text-foreground">Alterar Senha</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
+                  <div className="space-y-1">
+                    <Label htmlFor="senhaAtual" className="text-xs">Senha Atual</Label>
+                    <Input id="senhaAtual" type="password" autoComplete="current-password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className="h-8 text-sm" />
                   </div>
-                  <Switch defaultChecked />
+                  <div className="space-y-1">
+                    <Label htmlFor="novaSenha" className="text-xs">Nova Senha</Label>
+                    <Input id="novaSenha" type="password" autoComplete="new-password" placeholder="Mínimo 8 caracteres" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="h-8 text-sm" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="confirmarSenha" className="text-xs">Confirmar Nova Senha</Label>
+                    <Input id="confirmarSenha" type="password" autoComplete="new-password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="h-8 text-sm" />
+                  </div>
                 </div>
-                <div className="flex items-center justify-between p-2.5 sm:p-3 rounded-lg bg-secondary/30">
-                  <div>
-                    <p className="text-xs sm:text-sm font-medium text-foreground">Estoque baixo</p>
-                    <p className="text-[10px] sm:text-xs text-muted-foreground">Alertar itens abaixo do mínimo</p>
-                  </div>
-                  <Switch defaultChecked />
-                </div>
-                <div className="flex items-center justify-between p-2.5 sm:p-3 rounded-lg bg-secondary/30">
-                  <div>
-                    <p className="text-xs sm:text-sm font-medium text-foreground">Pagamentos pendentes</p>
-                    <p className="text-[10px] sm:text-xs text-muted-foreground">Notificar pagamentos em atraso</p>
-                  </div>
-                  <Switch defaultChecked />
-                </div>
-                <div className="flex items-center justify-between p-2.5 sm:p-3 rounded-lg bg-secondary/30">
-                  <div>
-                    <p className="text-xs sm:text-sm font-medium text-foreground">Relatórios semanais</p>
-                    <p className="text-[10px] sm:text-xs text-muted-foreground">Resumo semanal por e-mail</p>
-                  </div>
-                  <Switch />
+                <div className="flex justify-end">
+                  <Button size="sm" onClick={handleChangePassword} disabled={savingPassword}>
+                    {savingPassword && <Loader2 className="w-3 h-3 mr-1.5 animate-spin" />}
+                    Alterar senha
+                  </Button>
                 </div>
               </div>
             </TabsContent>
@@ -382,14 +410,14 @@ export default function SettingsPage() {
                     <p className="text-xs sm:text-sm font-medium text-foreground">Animações</p>
                     <p className="text-[10px] sm:text-xs text-muted-foreground">Habilitar animações</p>
                   </div>
-                  <Switch defaultChecked />
+                  <Switch checked={uiPrefs.animations} onCheckedChange={(v) => setUiPref("animations", v)} />
                 </div>
                 <div className="flex items-center justify-between p-2.5 sm:p-3 rounded-lg bg-secondary/30">
                   <div>
                     <p className="text-xs sm:text-sm font-medium text-foreground">Sidebar Compacta</p>
-                    <p className="text-[10px] sm:text-xs text-muted-foreground">Sidebar recolhida por padrão</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground">Menu lateral recolhido (computador)</p>
                   </div>
-                  <Switch />
+                  <Switch checked={uiPrefs.sidebarCompact} onCheckedChange={(v) => setUiPref("sidebarCompact", v)} />
                 </div>
               </div>
             </TabsContent>

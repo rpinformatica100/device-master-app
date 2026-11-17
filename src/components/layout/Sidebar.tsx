@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useUiPrefs, setUiPref } from "@/lib/uiPrefs";
 import { NavLink, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -36,7 +36,8 @@ const menuItems = [
 ];
 
 export function Sidebar() {
-  const [collapsed, setCollapsed] = useState(false);
+  const { sidebarCompact: collapsed } = useUiPrefs();
+  const setCollapsed = (v: boolean) => setUiPref("sidebarCompact", v);
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const { data: unreadCount = 0 } = useUnreadCount();
