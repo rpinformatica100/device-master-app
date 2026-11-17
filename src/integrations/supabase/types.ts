@@ -154,11 +154,15 @@ export type Database = {
           cnpj: string | null
           complemento: string | null
           created_at: string
+          default_os_notes: string | null
+          default_quote_notes: string | null
+          default_warranty_text: string | null
           email: string | null
           endereco: string | null
           estado: string | null
           id: string
           inscricao_estadual: string | null
+          logo_url: string | null
           nome_fantasia: string | null
           numero: string | null
           razao_social: string | null
@@ -174,11 +178,15 @@ export type Database = {
           cnpj?: string | null
           complemento?: string | null
           created_at?: string
+          default_os_notes?: string | null
+          default_quote_notes?: string | null
+          default_warranty_text?: string | null
           email?: string | null
           endereco?: string | null
           estado?: string | null
           id?: string
           inscricao_estadual?: string | null
+          logo_url?: string | null
           nome_fantasia?: string | null
           numero?: string | null
           razao_social?: string | null
@@ -194,11 +202,15 @@ export type Database = {
           cnpj?: string | null
           complemento?: string | null
           created_at?: string
+          default_os_notes?: string | null
+          default_quote_notes?: string | null
+          default_warranty_text?: string | null
           email?: string | null
           endereco?: string | null
           estado?: string | null
           id?: string
           inscricao_estadual?: string | null
+          logo_url?: string | null
           nome_fantasia?: string | null
           numero?: string | null
           razao_social?: string | null
@@ -380,6 +392,7 @@ export type Database = {
           client_id: string | null
           completed_at: string | null
           created_at: string
+          customer_notes: string | null
           device: string
           id: string
           internal_notes: string | null
@@ -394,6 +407,7 @@ export type Database = {
           total_sale: number
           updated_at: string
           user_id: string | null
+          warranty_text: string | null
         }
         Insert: {
           accessories?: string | null
@@ -402,6 +416,7 @@ export type Database = {
           client_id?: string | null
           completed_at?: string | null
           created_at?: string
+          customer_notes?: string | null
           device: string
           id?: string
           internal_notes?: string | null
@@ -416,6 +431,7 @@ export type Database = {
           total_sale?: number
           updated_at?: string
           user_id?: string | null
+          warranty_text?: string | null
         }
         Update: {
           accessories?: string | null
@@ -424,6 +440,7 @@ export type Database = {
           client_id?: string | null
           completed_at?: string | null
           created_at?: string
+          customer_notes?: string | null
           device?: string
           id?: string
           internal_notes?: string | null
@@ -438,6 +455,7 @@ export type Database = {
           total_sale?: number
           updated_at?: string
           user_id?: string | null
+          warranty_text?: string | null
         }
         Relationships: [
           {
@@ -658,6 +676,7 @@ export type Database = {
           updated_at: string
           user_id: string
           validity_days: number
+          warranty_text: string | null
         }
         Insert: {
           approved_at?: string | null
@@ -683,6 +702,7 @@ export type Database = {
           updated_at?: string
           user_id: string
           validity_days?: number
+          warranty_text?: string | null
         }
         Update: {
           approved_at?: string | null
@@ -708,6 +728,7 @@ export type Database = {
           updated_at?: string
           user_id?: string
           validity_days?: number
+          warranty_text?: string | null
         }
         Relationships: [
           {
