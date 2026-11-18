@@ -48,6 +48,7 @@ export function useQuotes() {
       max_installments?: number;
       discount_percentage?: number;
       notes?: string;
+      warranty_text?: string;
       order_id?: string;
     },
     items: QuoteItemInput[]
@@ -76,6 +77,7 @@ export function useQuotes() {
           max_installments: quoteData.max_installments || 12,
           discount_percentage: quoteData.discount_percentage || 0,
           notes: quoteData.notes || null,
+          warranty_text: quoteData.warranty_text || null,
           order_id: quoteData.order_id || null,
           total_cost: totalCost,
           total_sale: totalSale,

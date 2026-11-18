@@ -1,3 +1,4 @@
+import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { useState, useEffect } from "react";
 import {
   Dialog,
@@ -50,6 +51,8 @@ export function QuoteFormDialog({ open, onOpenChange, mode, quoteData }: QuoteFo
   const [discountPercentage, setDiscountPercentage] = useState(0);
   const [enableInstallments, setEnableInstallments] = useState(false);
   const [notes, setNotes] = useState("");
+  const [warrantyText, setWarrantyText] = useState("");
+  const { settings: companySettings } = useCompanySettings();
   const [items, setItems] = useState<QuoteItemInput[]>([]);
   const [addItemType, setAddItemType] = useState<"product" | "service" | "manual">("service");
 
@@ -67,6 +70,7 @@ export function QuoteFormDialog({ open, onOpenChange, mode, quoteData }: QuoteFo
       setDiscountPercentage(Number(quoteData.discount_percentage));
       setEnableInstallments(Number(quoteData.interest_rate) > 0 && quoteData.max_installments > 1);
       setNotes(quoteData.notes || "");
+      setWarrantyText((quoteData as any).warranty_text || "");
       setItems(
         (quoteData.items || []).map(i => ({
           item_type: i.item_type as any,
@@ -90,10 +94,11 @@ export function QuoteFormDialog({ open, onOpenChange, mode, quoteData }: QuoteFo
       setMaxInstallments(1);
       setEnableInstallments(false);
       setDiscountPercentage(0);
-      setNotes("");
+      setNotes(companySettings?.default_quote_notes || "");
+      setWarrantyText(companySettings?.default_warranty_text || "");
       setItems([]);
     }
-  }, [open, mode, quoteData]);
+  }, [open, mode, quoteData, companySettings]);
 
   const addProduct = (productId: string) => {
     const product = products.find(p => p.id === productId);
@@ -161,6 +166,7 @@ export function QuoteFormDialog({ open, onOpenChange, mode, quoteData }: QuoteFo
         max_installments: enableInstallments ? maxInstallments : 1,
         discount_percentage: discountPercentage,
         notes,
+        warranty_text: warrantyText || undefined,
       };
 
       if (mode === "create") {
@@ -178,7 +184,8 @@ export function QuoteFormDialog({ open, onOpenChange, mode, quoteData }: QuoteFo
           max_installments: maxInstallments,
           discount_percentage: discountPercentage,
           notes,
-        }, items);
+          warranty_text: warrantyText || null,
+        } as any, items);
       }
       onOpenChange(false);
     } finally {
@@ -380,6 +387,10 @@ export function QuoteFormDialog({ open, onOpenChange, mode, quoteData }: QuoteFo
           <div className="space-y-1">
             <Label className="text-xs">Observações</Label>
             <Textarea value={notes} onChange={e => setNotes(e.target.value)} className="text-sm min-h-[50px]" placeholder="Observações adicionais..." />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Garantia</Label>
+            <Textarea value={warrantyText} onChange={e => setWarrantyText(e.target.value)} className="text-sm min-h-[50px]" placeholder="Ex.: Garantia de 90 dias..." />
           </div>
         </div>
 

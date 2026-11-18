@@ -205,6 +205,7 @@ export default function OrderReceiptPage() {
         {/* Header */}
         <div style={P.printHeader}>
           <div>
+            {company?.logo_url && <img src={company.logo_url} alt="Logo" style={{ maxHeight: 52, maxWidth: 160, objectFit: "contain", display: "block", marginBottom: 6 }} />}
             <h1 style={P.companyTitle}>{companyName}</h1>
             {company?.cnpj && <p style={P.companyLine}>CNPJ {company.cnpj}</p>}
             <p style={P.companyLine}>
@@ -327,7 +328,8 @@ export default function OrderReceiptPage() {
           <ol style={{ ...P.termsList, padding: '7px 9px 7px 22px' }}>
             <li>Prazo para retirada: 90 dias após conclusão do serviço.</li>
             <li>Equipamentos não retirados serão descartados conforme legislação.</li>
-            <li>Garantia de 90 dias para peças e mão de obra, exceto mau uso.</li>
+            <li style={{ whiteSpace: "pre-line" }}>{(order as any)?.warranty_text || company?.default_warranty_text || "Garantia de 90 dias para peças e mão de obra, exceto mau uso."}</li>
+            {(order as any)?.customer_notes && <li style={{ color: P.printColors.ink, fontWeight: 600, whiteSpace: "pre-line" }}>{(order as any).customer_notes}</li>}
             <li>Não nos responsabilizamos por dados armazenados no equipamento.</li>
             <li>Orçamento com validade de 7 dias.</li>
           </ol>

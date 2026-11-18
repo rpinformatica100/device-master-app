@@ -172,6 +172,7 @@ export default function QuotePrintPage() {
         {/* Header */}
         <div style={P.printHeader}>
           <div>
+            {company?.logo_url && <img src={company.logo_url} alt="Logo" style={{ maxHeight: 52, maxWidth: 160, objectFit: "contain", display: "block", marginBottom: 6 }} />}
             <h1 style={P.companyTitle}>{companyName}</h1>
             {company?.cnpj && <p style={P.companyLine}>CNPJ {company.cnpj}</p>}
             {companyAddr && <p style={P.companyLine}>{truncate(companyAddr, 70)}</p>}
@@ -315,7 +316,7 @@ export default function QuotePrintPage() {
             <li>Orçamento válido por {quote.validity_days} dias a partir da emissão.</li>
             <li>Valores sujeitos a alteração após o prazo de validade.</li>
             <li>Prazo de execução a combinar após aprovação.</li>
-            <li>Garantia de 90 dias para peças e mão de obra, exceto mau uso.</li>
+            <li style={{ whiteSpace: "pre-line" }}>{(quote as any)?.warranty_text || company?.default_warranty_text || "Garantia de 90 dias para peças e mão de obra, exceto mau uso."}</li>
             {quote.notes && <li style={{ color: P.printColors.ink, fontWeight: 600 }}>{quote.notes}</li>}
           </ol>
         </div>

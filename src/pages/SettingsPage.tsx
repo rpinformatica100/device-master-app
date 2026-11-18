@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Building2, User, Palette, Loader2 } from "lucide-react";
@@ -88,6 +89,33 @@ export default function SettingsPage() {
   const [bairro, setBairro] = useState("");
   const [cidade, setCidade] = useState("");
   const [estado, setEstado] = useState("");
+  const [logoUrl, setLogoUrl] = useState("");
+  const [defaultWarranty, setDefaultWarranty] = useState("");
+  const [defaultOsNotes, setDefaultOsNotes] = useState("");
+  const [defaultQuoteNotes, setDefaultQuoteNotes] = useState("");
+
+  // Resize the logo in the browser and keep it as a small PNG data URL,
+  // so prints/PDFs render it without cross-origin issues.
+  const handleLogoFile = (file?: File) => {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) return toast.error("Escolha um arquivo de imagem (PNG, JPG ou SVG)");
+    if (file.size > 5 * 1024 * 1024) return toast.error("Imagem muito grande (máximo 5 MB)");
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, 480 / img.width, 200 / img.height);
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
+        setLogoUrl(canvas.toDataURL("image/png"));
+        toast.success("Logo carregado. Clique em Salvar para confirmar.");
+      };
+      img.src = reader.result as string;
+    };
+    reader.readAsDataURL(file);
+  };
 
   // Load settings into form
   useEffect(() => {
@@ -105,6 +133,10 @@ export default function SettingsPage() {
       setBairro((settings as any).bairro || "");
       setCidade((settings as any).cidade || "");
       setEstado((settings as any).estado || "");
+      setLogoUrl(settings.logo_url || "");
+      setDefaultWarranty(settings.default_warranty_text || "");
+      setDefaultOsNotes(settings.default_os_notes || "");
+      setDefaultQuoteNotes(settings.default_quote_notes || "");
     }
   }, [settings]);
 
@@ -144,6 +176,10 @@ export default function SettingsPage() {
       bairro: bairro || null,
       cidade: cidade || null,
       estado: estado || null,
+      logo_url: logoUrl || null,
+      default_warranty_text: defaultWarranty || null,
+      default_os_notes: defaultOsNotes || null,
+      default_quote_notes: defaultQuoteNotes || null,
     } as any);
     setIsSaving(false);
   };
@@ -339,6 +375,43 @@ export default function SettingsPage() {
                           onChange={(e) => setEstado(e.target.value.toUpperCase())}
                           className="h-8 text-sm"
                         />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Logo */}
+                  <div className="pt-3 border-t border-border space-y-2">
+                    <h4 className="text-xs sm:text-sm font-medium text-foreground">Logo (aparece nas impressões)</h4>
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <div className="h-16 w-40 rounded-md border border-dashed border-border bg-secondary/30 flex items-center justify-center overflow-hidden">
+                        {logoUrl ? <img src={logoUrl} alt="Logo da empresa" className="max-h-full max-w-full object-contain" /> : <span className="text-xs text-muted-foreground">Sem logo</span>}
+                      </div>
+                      <div className="flex gap-2">
+                        <Button asChild size="sm" variant="outline">
+                          <label htmlFor="logoFile" className="cursor-pointer">{logoUrl ? "Trocar logo" : "Enviar logo"}</label>
+                        </Button>
+                        <input id="logoFile" type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp" className="hidden" onChange={(e) => { handleLogoFile(e.target.files?.[0]); e.target.value = ""; }} />
+                        {logoUrl && <Button size="sm" variant="ghost" onClick={() => setLogoUrl("")}>Remover</Button>}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Default texts */}
+                  <div className="pt-3 border-t border-border space-y-2">
+                    <h4 className="text-xs sm:text-sm font-medium text-foreground">Textos padrão</h4>
+                    <p className="text-xs text-muted-foreground">Preenchidos automaticamente em novas OS e orçamentos. Você pode alterar em cada documento.</p>
+                    <div className="space-y-1">
+                      <Label htmlFor="defWarranty" className="text-xs">Garantia</Label>
+                      <Textarea id="defWarranty" rows={2} className="text-sm" placeholder="Garantia de 90 dias para peças e mão de obra, exceto mau uso." value={defaultWarranty} onChange={(e) => setDefaultWarranty(e.target.value)} />
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <div className="space-y-1">
+                        <Label htmlFor="defOsNotes" className="text-xs">Observações da OS</Label>
+                        <Textarea id="defOsNotes" rows={2} className="text-sm" placeholder="Ex.: Aparelhos não retirados em 90 dias..." value={defaultOsNotes} onChange={(e) => setDefaultOsNotes(e.target.value)} />
+                      </div>
+                      <div className="space-y-1">
+                        <Label htmlFor="defQuoteNotes" className="text-xs">Observações do orçamento</Label>
+                        <Textarea id="defQuoteNotes" rows={2} className="text-sm" placeholder="Ex.: Pagamento em até 12x no cartão..." value={defaultQuoteNotes} onChange={(e) => setDefaultQuoteNotes(e.target.value)} />
                       </div>
                     </div>
                   </div>

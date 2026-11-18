@@ -21,6 +21,10 @@ export interface CompanySettings {
   bairro: string | null;
   cidade: string | null;
   estado: string | null;
+  logo_url: string | null;
+  default_warranty_text: string | null;
+  default_os_notes: string | null;
+  default_quote_notes: string | null;
   created_at: string;
   updated_at: string;
 }

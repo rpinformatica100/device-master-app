@@ -113,6 +113,7 @@ export default function OrderQuotePage() {
       <div style={P.printPage}>
         <div style={P.printHeader}>
           <div style={{ minWidth: 0 }}>
+            {company?.logo_url && <img src={company.logo_url} alt="Logo" style={{ maxHeight: 52, maxWidth: 160, objectFit: "contain", display: "block", marginBottom: 6 }} />}
             <h1 style={P.companyTitle}>{company?.nome_fantasia || company?.razao_social || 'Assistência Técnica'}</h1>
             {company?.cnpj && <p style={P.companyLine}>CNPJ {company.cnpj}</p>}
             {(company?.telefone || company?.email) && <p style={P.companyLine}>{[company?.telefone, company?.email].filter(Boolean).join(' · ')}</p>}
@@ -219,7 +220,8 @@ export default function OrderQuotePage() {
               <li>Orçamento válido por 7 dias a partir da emissão.</li>
               <li>Valores sujeitos a alteração após o prazo de validade.</li>
               <li>Prazo de execução a combinar após aprovação.</li>
-              <li>Garantia de 90 dias para peças e mão de obra, exceto mau uso.</li>
+              <li style={{ whiteSpace: "pre-line" }}>{(order as any)?.warranty_text || company?.default_warranty_text || "Garantia de 90 dias para peças e mão de obra, exceto mau uso."}</li>
+            {(order as any)?.customer_notes && <li style={{ color: P.printColors.ink, fontWeight: 600, whiteSpace: "pre-line" }}>{(order as any).customer_notes}</li>}
               <li>Não nos responsabilizamos por dados armazenados no equipamento.</li>
             </ol>
           </div>

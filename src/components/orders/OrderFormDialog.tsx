@@ -1,3 +1,4 @@
+import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { useState, useMemo, useEffect } from "react";
 import {
   Dialog,
@@ -128,6 +129,9 @@ export function OrderFormDialog({ open, onOpenChange, mode = "create", orderData
   const [accessories, setAccessories] = useState("");
   const [issue, setIssue] = useState("");
   const [internalNotes, setInternalNotes] = useState("");
+  const [warrantyText, setWarrantyText] = useState("");
+  const [customerNotes, setCustomerNotes] = useState("");
+  const { settings: companySettings } = useCompanySettings();
   const [priority, setPriority] = useState("media");
   const [status, setStatus] = useState("aguardando");
   const [categorySpecificFields, setCategorySpecificFields] = useState<Record<string, string>>({});
@@ -146,6 +150,8 @@ export function OrderFormDialog({ open, onOpenChange, mode = "create", orderData
         setAccessories(orderData.accessories || "");
         setIssue(orderData.issue || "");
         setInternalNotes(orderData.internal_notes || "");
+        setWarrantyText((orderData as any).warranty_text || "");
+        setCustomerNotes((orderData as any).customer_notes || "");
         setPriority(orderData.priority || "media");
         setStatus(orderData.status || "aguardando");
         
@@ -183,6 +189,8 @@ export function OrderFormDialog({ open, onOpenChange, mode = "create", orderData
         setAccessories("");
         setIssue("");
         setInternalNotes("");
+        setWarrantyText(companySettings?.default_warranty_text || "");
+        setCustomerNotes(companySettings?.default_os_notes || "");
         setPriority("media");
         setStatus("aguardando");
         setOrderItems([]);
@@ -192,7 +200,7 @@ export function OrderFormDialog({ open, onOpenChange, mode = "create", orderData
         setSpecsOpen(false);
       }
     }
-  }, [open, mode, orderData, clients]);
+  }, [open, mode, orderData, clients, companySettings]);
 
   const allItems = useMemo(() => [
     ...products.map(p => ({ 
@@ -315,6 +323,8 @@ export function OrderFormDialog({ open, onOpenChange, mode = "create", orderData
         accessories: accessories || null,
         issue,
         internal_notes: internalNotes || null,
+        warranty_text: warrantyText || null,
+        customer_notes: customerNotes || null,
         priority,
         status,
         category_specific_fields: finalCategoryFields,
@@ -528,6 +538,15 @@ export function OrderFormDialog({ open, onOpenChange, mode = "create", orderData
           <div className="md:col-span-2 space-y-1">
             <Label className="text-xs">Observações Internas</Label>
             <Textarea className="text-sm" placeholder="Notas internas..." value={internalNotes} onChange={(e) => setInternalNotes(e.target.value)} rows={2} />
+          </div>
+
+          <div className="space-y-1">
+            <Label className="text-xs">Garantia (aparece na impressão)</Label>
+            <Textarea className="text-sm" placeholder="Ex.: Garantia de 90 dias..." value={warrantyText} onChange={(e) => setWarrantyText(e.target.value)} rows={2} />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Observações para o cliente (aparece na impressão)</Label>
+            <Textarea className="text-sm" placeholder="Ex.: Retirar em até 30 dias..." value={customerNotes} onChange={(e) => setCustomerNotes(e.target.value)} rows={2} />
           </div>
 
           {/* Checklist para dispositivos mobile */}
