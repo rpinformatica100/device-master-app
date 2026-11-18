@@ -103,7 +103,7 @@ export default function SubscriptionExpiredPage() {
           </div>
 
           <div>
-            <h1 className="text-2xl font-bold text-foreground mb-2">Assinatura Inativa</h1>
+            <h1 className="text-xl font-bold text-foreground mb-2">Assinatura Inativa</h1>
             <p className="text-muted-foreground">
               Sua assinatura do TechOS {statusLabel[subscriptionStatus || ""] ? `está: ${statusLabel[subscriptionStatus || ""]}` : "expirou ou ainda não foi ativada"}.
             </p>

@@ -189,8 +189,8 @@ export default function AdminNotificationsPage() {
     <AdminLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Central de Chamados</h1>
-          <p className="text-muted-foreground">Comunicação bidirecional com as assistências</p>
+          <h1 className="text-xl font-bold text-foreground">Central de Chamados</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">Comunicação bidirecional com as assistências</p>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-6">

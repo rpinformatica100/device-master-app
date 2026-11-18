@@ -27,8 +27,8 @@ const Index = () => {
           transition={{ duration: 0.5 }}
           className="mb-4 sm:mb-6"
         >
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">Dashboard</h1>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Bem-vindo de volta! Aqui está o resumo do seu dia.</p>
+          <h1 className="text-xl font-bold text-foreground">Dashboard</h1>
+          <p className="text-xs text-muted-foreground mt-0.5 mt-0.5">Bem-vindo de volta! Aqui está o resumo do seu dia.</p>
         </motion.div>
 
         {/* Stats Grid */}

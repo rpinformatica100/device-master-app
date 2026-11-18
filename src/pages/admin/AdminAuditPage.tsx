@@ -68,8 +68,8 @@ export default function AdminAuditPage() {
               <ShieldCheck className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <h1 id="audit-title" className="text-2xl font-bold">Auditoria</h1>
-              <p className="text-sm text-muted-foreground">Todas as ações administrativas, incluindo suspensões e exclusões</p>
+              <h1 id="audit-title" className="text-xl font-bold">Auditoria</h1>
+              <p className="text-xs text-muted-foreground mt-0.5">Todas as ações administrativas, incluindo suspensões e exclusões</p>
             </div>
           </div>
           <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching} className="text-xs gap-1">

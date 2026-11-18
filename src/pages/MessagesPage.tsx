@@ -127,7 +127,7 @@ export default function MessagesPage() {
     <MainLayout>
       <div className="p-3 sm:p-4 lg:p-6 space-y-6">
         <div>
-          <h1 className="text-xl md:text-2xl font-bold text-foreground">Mensagens</h1>
+          <h1 className="text-xl font-bold text-foreground">Mensagens</h1>
           <p className="text-xs text-muted-foreground mt-0.5">Comunicação com o suporte TechOS</p>
         </div>
 

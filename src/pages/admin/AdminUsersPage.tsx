@@ -101,8 +101,8 @@ export default function AdminUsersPage() {
     <AdminLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Gestão de Assistências</h1>
-          <p className="text-muted-foreground">{stats.total} assistências cadastradas</p>
+          <h1 className="text-xl font-bold text-foreground">Gestão de Assistências</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">{stats.total} assistências cadastradas</p>
         </div>
 
         {/* Stats cards */}

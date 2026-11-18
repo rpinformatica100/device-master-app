@@ -52,8 +52,8 @@ export default function AdminDashboard() {
     <AdminLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Dashboard Admin</h1>
-          <p className="text-muted-foreground">Visão geral do sistema</p>
+          <h1 className="text-xl font-bold text-foreground">Dashboard Admin</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">Visão geral do sistema</p>
         </div>
 
         {/* MRR / ARR / Churn */}

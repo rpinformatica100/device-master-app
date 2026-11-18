@@ -103,8 +103,8 @@ export default function AdminFinancialPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Controle Financeiro</h1>
-            <p className="text-muted-foreground">Pagamentos de mensalidade das assistências</p>
+            <h1 className="text-xl font-bold text-foreground">Controle Financeiro</h1>
+            <p className="text-xs text-muted-foreground mt-0.5">Pagamentos de mensalidade das assistências</p>
           </div>
           <div className="flex gap-2 flex-wrap">
             <Button className="gradient-primary" onClick={() => { setEditPayment(null); setDialogOpen(true); }}>

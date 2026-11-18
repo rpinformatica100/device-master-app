@@ -97,8 +97,8 @@ export default function PersonalFinancePage() {
           <div className="flex flex-col gap-3">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-xl md:text-2xl font-bold text-foreground">Finanças Pessoais</h1>
-                <p className="text-sm text-muted-foreground hidden md:block">
+                <h1 className="text-xl font-bold text-foreground">Finanças Pessoais</h1>
+                <p className="text-xs text-muted-foreground mt-0.5 hidden md:block">
                   Gerencie pro-labore e finanças pessoais
                 </p>
               </div>

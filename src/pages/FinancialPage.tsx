@@ -221,8 +221,8 @@ export default function FinancialPage() {
           className="mb-4 flex items-center justify-between"
         >
           <div>
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">Financeiro</h1>
-            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Acompanhe receitas, despesas e lucros</p>
+            <h1 className="text-xl font-bold text-foreground">Financeiro</h1>
+            <p className="text-xs text-muted-foreground mt-0.5 mt-0.5">Acompanhe receitas, despesas e lucros</p>
           </div>
           <Button onClick={() => setIsFormOpen(true)} size="sm" className="h-8 text-xs sm:text-sm">
             <Plus className="w-3.5 h-3.5 mr-1" />

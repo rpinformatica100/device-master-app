@@ -149,8 +149,8 @@ export default function UsedEquipmentPage() {
           className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6"
         >
           <div>
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">Seminovos</h1>
-            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+            <h1 className="text-xl font-bold text-foreground">Seminovos</h1>
+            <p className="text-xs text-muted-foreground mt-0.5 mt-0.5">
               Gerencie equipamentos usados
             </p>
           </div>

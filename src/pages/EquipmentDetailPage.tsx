@@ -224,7 +224,7 @@ export default function EquipmentDetailPage() {
                   {EQUIPMENT_STATUS_LABELS[equipment.status as EquipmentStatus]}
                 </Badge>
               </div>
-              <h1 className="text-xl sm:text-2xl font-bold text-foreground">{equipment.name}</h1>
+              <h1 className="text-xl font-bold text-foreground">{equipment.name}</h1>
             </div>
           </div>
 

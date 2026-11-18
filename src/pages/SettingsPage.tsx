@@ -194,8 +194,8 @@ export default function SettingsPage() {
           transition={{ duration: 0.5 }}
           className="mb-4 sm:mb-6"
         >
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">Configurações</h1>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Personalize o sistema de acordo com suas necessidades</p>
+          <h1 className="text-xl font-bold text-foreground">Configurações</h1>
+          <p className="text-xs text-muted-foreground mt-0.5 mt-0.5">Personalize o sistema de acordo com suas necessidades</p>
         </motion.div>
 
         <motion.div

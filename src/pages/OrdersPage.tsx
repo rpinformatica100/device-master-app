@@ -154,7 +154,7 @@ export default function OrdersPage() {
           className="flex items-center justify-between mb-4"
         >
           <div>
-            <h1 className="text-xl md:text-2xl font-bold text-foreground">Ordens de Serviço</h1>
+            <h1 className="text-xl font-bold text-foreground">Ordens de Serviço</h1>
             <p className="text-xs text-muted-foreground mt-0.5 hidden md:block">Gerencie todas as suas ordens de serviço</p>
           </div>
           <Button className="gap-2" size={isMobile ? "sm" : "default"} onClick={handleNewOrder} aria-label="Nova OS">
